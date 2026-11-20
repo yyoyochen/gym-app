@@ -14,7 +14,7 @@ const files = (mode === 'all'
 const CSV_ALLOWED = [/^tools\/benchmarks\/fixtures\//, /^tools\/synthetic\/fixtures\//, /^web\/src\/.*\/__fixtures__\//];
 // Header of the Notion training-log export followed by at least one data row
 // (a row starting with a date). The header alone, e.g. quoted in docs, is fine.
-const LOG_HEADER = /Date,Session,Exercise,Order,Set,Reps,Weight \(kg\)[^\n]*\r?\n\s*"?(\d{4}-\d{2}-\d{2}|[A-Z][a-z]+ \d{1,2}, \d{4})/;
+const LOG_HEADER = /^[^\n]*\bExercise\b[^\n]*Weight \(kg\)[^\n]*\r?\n\s*[^\n]*?(\d{4}-\d{2}-\d{2}|[A-Z][a-z]+ \d{1,2}, \d{4})/m;
 // Optional local markers (Notion IDs etc.), kept in the ignored private folder.
 const markerFile = 'testdata/private/markers.txt';
 const markers = existsSync(markerFile)
