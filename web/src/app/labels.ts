@@ -32,3 +32,12 @@ export function subjectLabel(subject: string, names: Map<string, string>): strin
 export function subjectUnit(subject: string): string {
   return subject === SUBJECT_SESSIONS ? '/wk' : 'kg';
 }
+
+/** Load as a lifter reads it: "100", or for bodyweight lifts "BW", "BW+10", "BW−15". */
+export function formatLoad(weight: number, bodyweightFactor = 0): string {
+  if (bodyweightFactor > 0) {
+    if (weight === 0) return 'BW';
+    return weight > 0 ? `BW+${weight}` : `BW−${Math.abs(weight)}`;
+  }
+  return String(weight);
+}

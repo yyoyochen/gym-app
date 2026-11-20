@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { listSessions } from '../db';
 import { useLive } from '../ui/useLive';
 import { DemoBanner } from '../app/DemoBanner';
+import { formatLoad } from '../app/labels';
 import { formatDate, monthGrid, monthLabel, shiftMonth, todayISO } from '../app/dates';
 import { groupBySession, summarizeSession, type SessionSummary } from '../app/history';
 import { sortSets } from '../db';
@@ -13,6 +14,7 @@ export function History(_props: { params: string[] }) {
     const bySession = groupBySession(sets);
     return sessions.map(s => summarizeSession(s, sortSets(bySession.get(s.id) ?? [])));
   }, []);
+  const bwFactor = useLive(async db => new Map((await db.exercises.toArray()).map(e => [e.id, e.bodyweightFactor])), []);
   const today = todayISO();
   const latest = data?.length ? data[data.length - 1].session.date : today;
   const [ym, setYm] = useState<{ year: number; month: number } | null>(null);
@@ -55,13 +57,13 @@ export function History(_props: { params: string[] }) {
       {data?.length === 0 && <p className="mid">No sessions yet. Logged and imported sessions show up here.</p>}
       {data && data.length > 0 && shown.length === 0 && <p className="mid">No sessions in {monthLabel(cur.year, cur.month)}.</p>}
       <ul className="plain stack">
-        {shown.map(d => <li key={d.session.id}><SessionRow d={d} /></li>)}
+        {shown.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={bwFactor} /></li>)}
       </ul>
     </section>
   );
 }
 
-function SessionRow({ d }: { d: SessionSummary }) {
+function SessionRow({ d, bwFactor }: { d: SessionSummary; bwFactor?: Map<string, number> }) {
   const s = d.session;
   return (
     <a className="card tick session-row" href={`#/history/${encodeURIComponent(s.id)}`}>
@@ -77,7 +79,7 @@ function SessionRow({ d }: { d: SessionSummary }) {
       {d.top.length > 0 && (
         <ul className="plain top-lifts">
           {d.top.map(t => (
-            <li key={t.exerciseId} className="spread"><span className="mid">{t.name}</span><span className="mono num-sm">{t.weight} × {t.reps}</span></li>
+            <li key={t.exerciseId} className="spread"><span className="mid">{t.name}</span><span className="mono num-sm">{formatLoad(t.weight, bwFactor?.get(t.exerciseId))} × {t.reps}</span></li>
           ))}
         </ul>
       )}

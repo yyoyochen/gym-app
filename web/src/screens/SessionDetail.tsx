@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { EffortScale, PainArea, SetEntry, SetKind, Side } from '../domain/types';
 import {
-  changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, updateSet,
+  changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, listExercises, updateSet,
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { go } from '../ui/router';
@@ -12,13 +12,14 @@ import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
-import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS } from '../app/labels';
+import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, formatLoad } from '../app/labels';
 
 export function SessionDetail({ params }: { params: string[] }) {
   const id = params[0];
   const data = useLive(async db => {
-    const [session, sets, commit, profile] = await Promise.all([getSession(db, id), getSessionSets(db, id), getCommit(db, id), getProfile(db)]);
-    return { session: session ?? null, sets, commit: commit ?? null, scale: (profile?.effortScale ?? 'rir') as EffortScale };
+    const [session, sets, commit, profile, exercises] = await Promise.all([getSession(db, id), getSessionSets(db, id), getCommit(db, id), getProfile(db), listExercises(db, { includeArchived: true })]);
+    const bwFactor = new Map(exercises.map(e => [e.id, e.bodyweightFactor]));
+    return { session: session ?? null, sets, commit: commit ?? null, scale: (profile?.effortScale ?? 'rir') as EffortScale, bwFactor };
   }, [id]);
   const [editing, setEditing] = useState<SetEntry | null>(null);
   const [moving, setMoving] = useState(false);
@@ -73,7 +74,7 @@ export function SessionDetail({ params }: { params: string[] }) {
               <li key={s.id}>
                 <button className="set-line" onClick={() => setEditing(s)} aria-label={`Edit set ${i + 1}`}>
                   <span className="mono mid set-no">{i + 1}</span>
-                  <span className="mono num-md">{s.weight} <span className="mid">×</span> {s.reps}</span>
+                  <span className="mono num-md">{formatLoad(s.weight, data.bwFactor.get(s.exerciseId))} <span className="mid">×</span> {s.reps}</span>
                   <span className="mono num-sm mid">{formatRir(s.rir, scale)}</span>
                   <span className="set-tags">
                     {s.kind !== 'working' && <span className="chip inline">{SET_KIND_LABELS[s.kind]}</span>}
