@@ -78,7 +78,7 @@ function StepProfile({ onNext }: { onNext: () => void }) {
       <p className="mid">Used for benchmarks and the effort scale. All optional.</p>
       <div className="card stack">
         <Segmented<Sex | 'none'> label="Sex" value={sex} onChange={setSex}
-          options={[{ value: 'M', label: 'Male' }, { value: 'F', label: 'Female' }, { value: 'none', label: 'Skip' }]} />
+          options={[{ value: 'M', label: 'Male' }, { value: 'F', label: 'Female' }, { value: 'none', label: 'Not set' }]} />
         <label className="stack"><span className="label">Birth year</span>
           <input className="field mono" inputMode="numeric" value={birthYear} onChange={e => setBirthYear(e.target.value)} /></label>
         <label className="stack"><span className="label">Bodyweight (kg)</span>
