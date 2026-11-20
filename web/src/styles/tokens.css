@@ -1,0 +1,140 @@
+/* ==========================================================================
+   GymBro design tokens — "LUME" (instrument-dial dark)
+   Source of truth: docs/DESIGN.md. Dark-first; there is no light theme yet.
+   Consume SEMANTIC aliases in components, never raw palette values.
+   ========================================================================== */
+
+/* Google Fonts (self-hostable later — swap this @import for @font-face) */
+
+:root {
+  /* ---------- Raw palette ---------- */
+  /* Dial (petrol green-black base — never neutral gray) */
+  --ink-950: #0b100e; /* app background */
+  --ink-900: #111917; /* surface / cards */
+  --ink-800: #18211e; /* raised / sheets, inputs, chips */
+  --ink-700: #1f2a26; /* hairline borders, dividers */
+  --ink-600: #2b3833; /* strong hairline, table rules */
+
+  --white-100: #f2f7f4; /* text high */
+  --white-60:  #9fada6; /* text mid */
+  --white-35:  #66736d; /* text low / ghost */
+
+  --lume:      #57e6ae; /* the instrument glow */
+  --lume-deep: #34b48a; /* quieter positive */
+  --gold:      #e8b84b; /* PR + Elite only */
+  --rest-blue: #78aee0; /* rest timer only */
+  --slate:     #8b98a3; /* the "missed" non-color */
+  --ember:     #e06c5f; /* destructive only — never for missed lifts */
+
+  /* Tier ramp: one hue, rising luminance; Elite goes gold */
+  --tier-1: #5c6b64; /* Beginner */
+  --tier-2: #4e8a76; /* Novice */
+  --tier-3: #3fae8c; /* Intermediate */
+  --tier-4: #57e6ae; /* Advanced */
+  --tier-5: #e8b84b; /* Elite */
+
+  /* ---------- Semantic aliases ---------- */
+  --bg:            var(--ink-950);
+  --surface:       var(--ink-900);
+  --raised:        var(--ink-800);
+  --border:        var(--ink-700);
+  --border-strong: var(--ink-600);
+
+  --text:       var(--white-100);
+  --text-mid:   var(--white-60);
+  --text-ghost: var(--white-35); /* placeholder only — never information of record */
+
+  --accent:          var(--lume);      /* CTA, active tab, focus, live numerals */
+  --accent-contrast: var(--ink-950);   /* glyph/text on top of --accent fills */
+
+  --verdict-beat:   var(--lume);       /* filled chip + tick */
+  --verdict-hit:    var(--lume-deep);  /* outline chip + tick */
+  --verdict-missed: var(--slate);      /* outline chip + tick — matter-of-fact */
+
+  --pr:     var(--gold);
+  --timer:  var(--rest-blue);
+  --danger: var(--ember);
+
+  /* Signature: the verdict tick (left-edge rule on promise/verdict pairs) */
+  --tick-width: 3px;
+
+  /* ---------- Typography ---------- */
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Spline Sans Mono', ui-monospace, 'SF Mono', monospace;
+  /* Rule: values are mono, words are sans. */
+
+  --text-display: 600 44px/48px var(--font-mono); /* timer, verdict count, percentile */
+  --text-num-lg:  600 28px/32px var(--font-mono);
+  --text-num-md:  500 20px/24px var(--font-mono);
+  --text-num-sm:  500 15px/20px var(--font-mono);
+  --text-title:   650 22px/28px var(--font-sans);
+  --text-heading: 600 17px/24px var(--font-sans);
+  --text-body:    450 15px/22px var(--font-sans);  /* 15px floor — nothing readable is smaller */
+  --text-label:   550 12px/16px var(--font-sans);  /* + uppercase + tracking-wide */
+  --text-micro:   500 11px/14px var(--font-mono);  /* chart ticks, plate denominations only */
+
+  --tracking-label: 0.08em;
+  --tracking-stamp: 0.10em; /* BEAT / HIT / MISSED chips */
+
+  /* ---------- Spacing (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --gutter: var(--space-4);
+  --touch-min: 48px;   /* every mid-workout target */
+  --touch-commit: 56px; /* the set-commit button */
+
+  /* ---------- Radii ---------- */
+  --radius-sm: 8px;    /* chips, inputs */
+  --radius-md: 12px;   /* buttons, set rows */
+  --radius-lg: 16px;   /* cards, sheets */
+  --radius-full: 999px;
+  /* Verdict ticks and hairline rules are square: no radius. */
+
+  /* ---------- Elevation ---------- */
+  /* Layering is luminosity + hairline; the ONLY shadow is for sheets/modals. */
+  --shadow-sheet: 0 -8px 32px rgb(0 0 0 / 0.5);
+
+  /* ---------- Motion ---------- */
+  --dur-fast: 120ms;    /* taps, chips */
+  --dur-base: 180ms;    /* set commit, timer-done flash */
+  --dur-slow: 320ms;    /* verdict row reveal */
+  --dur-reveal: 480ms;  /* tier progress fill */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Numbers never count up. Reveal animations play once. */
+}
+
+/* Global numeric behavior: columns align, timers never jitter. */
+html {
+  font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-reveal: 0ms;
+  }
+}
+
+/* ==========================================================================
+   Tailwind v4 @theme variant
+   Drop this block into the app's main CSS (replacing the :root block above,
+   or alongside it) to expose tokens as Tailwind utilities:
+   bg-dial, text-lume, text-verdict-missed, font-mono, rounded-lg,
+   duration-base, etc.
+   ========================================================================== */
+
