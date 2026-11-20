@@ -153,11 +153,11 @@ describe('program edits', () => {
   });
   it('model change adds/drops top-set fields; describeSlot', () => {
     const top = programFromTemplate().sessions[0].slots[0];
-    expect(describeSlot(top)).toBe('top 2 + 3×6–8 @ 85%');
+    expect(describeSlot(top)).toBe('top 2 + 3×8–10 @ 75%');
     const dbl = changeModel(top, 'double');
     expect(dbl.params.topReps).toBeUndefined();
     expect(dbl.params.sets).toBe(3);
-    expect(describeSlot(dbl)).toBe('3×6–8');
+    expect(describeSlot(dbl)).toBe('3×8–10');
     const back = changeModel(dbl, 'topset');
     expect(back.params).toMatchObject({ sets: 1, topReps: 2, backoffSets: 3, backoffPct: 85 });
     expect(describeSlot(changeModel(dbl, 'linear5x5'))).toBe('5×5');

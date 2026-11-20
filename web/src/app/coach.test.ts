@@ -303,14 +303,14 @@ describe('rotation', () => {
 });
 
 describe('slot params', () => {
-  it('back-off % from templates is a percentage end to end (85 = 85%)', async () => {
+  it('back-off % from templates is a percentage end to end (75 = 75%)', async () => {
     const prog = programFromTemplate(DEFAULT_TEMPLATE_ID);
-    expect(effectiveSlot(prog.sessions[0].slots[0], prog, TODAY).params.backoffPct).toBe(85);
+    expect(effectiveSlot(prog.sessions[0].slots[0], prog, TODAY).params.backoffPct).toBe(75);
     const db = await setup();
     await logSession(db, 'A', '2026-11-17', [{ ex: EX.squat, slotOrder: 1, sets: [[100, 2, 'top', 2]] }]);
     const t = (await planToday(db, TODAY, at(TODAY), { sessionKey: 'A' })).slots[0].target;
     expect(t.topWeight).toBe(100);
-    expect(t.weight).toBe(85);
+    expect(t.weight).toBe(75); // 75% of 100, floored to the 5 kg squat step
   });
 });
 

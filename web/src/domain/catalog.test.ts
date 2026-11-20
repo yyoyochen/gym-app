@@ -106,7 +106,7 @@ describe('templates', () => {
     expect(a.slots.slice(0, 2).map(x => [x.exerciseId, x.model])).toEqual([[EX.squat, 'topset'], [EX.bench, 'topset']]);
     expect(b.slots.slice(0, 2).map(x => [x.exerciseId, x.model])).toEqual([[EX.deadlift, 'topset'], [EX.ohp, 'topset']]);
     expect(c.slots.every(x => x.model === 'double')).toBe(true);
-    expect(a.slots[0].params).toMatchObject({ topReps: 2, backoffSets: 3, backoffPct: 85 });
+    expect(a.slots[0].params).toMatchObject({ topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10 });
   });
 
   it('5×5 uses linear5x5 everywhere; hypertrophy split uses double everywhere', () => {

@@ -104,11 +104,11 @@ export function prescribe(slot: Slot, exercise: Exercise, history: LiftSession[]
     case 'double':
     case 'linear5x5': {
       let lt = slot.model === 'double'
-        ? progressionTarget(last ? toWR(last.sets) : [], [p.repMin, p.repMax], inc, exercise.name, ctx.startingWeight ?? null)
+        ? progressionTarget(last ? toWR(workingSetsOf(last)) : [], [p.repMin, p.repMax], inc, exercise.name, ctx.startingWeight ?? null)
         : linearTarget(exercise, hist, inc, ctx);
       if (ctx.readiness === 'red') lt = easeTarget(lt, [p.repMin, p.repMax], inc);
       if (last && !lt.is_new) {
-        const anchor = slot.model === 'double' ? Math.max(...last.sets.map((s) => s.weight)) : workedLoad(toWR(last.sets));
+        const anchor = slot.model === 'double' ? Math.max(...workingSetsOf(last).map((s) => s.weight)) : workedLoad(toWR(last.sets));
         const capped = capLoad(lt.weight, { ...jump, lastWeight: anchor });
         if (capped.capped) {
           lt = lt.mode === 'hypertrophy' && lt.added_weight
@@ -173,6 +173,26 @@ function reentryAnchor(sets: SetEntry[], exercise: Exercise, inc: number): numbe
   const best = Math.max(0, ...sets.filter((s) => s.kind !== 'warmup' && s.reps > 0).map((s) => epley(s.weight, s.reps)));
   const cap = floorTo(best * 30 / (30 + REENTRY_REPS + 3) + EPS, inc);
   return Math.min(worked, cap);
+}
+
+/**
+ * The sets double progression should read from a past session: those at the
+ * load you actually worked. Ramp-up sets aren't marked as warm-ups in
+ * imported logs, so "the heaviest set" is often a single ramp set (40 × 10,
+ * 60 × 8, 60 × 8, 80 × 5 → 80 × 5). Order of preference: the committed
+ * target weight if sets were logged at it; else the load with the most
+ * working sets (ties → heavier). Warm-ups and drops never count.
+ */
+function workingSetsOf(session: LiftSession): SetEntry[] {
+  const work = session.sets.filter((s) => s.kind !== 'warmup' && s.kind !== 'drop' && s.reps > 0);
+  if (!work.length) return session.sets;
+  const committed = session.target?.weight;
+  if (committed !== undefined && work.some((s) => s.weight === committed)) return work.filter((s) => s.weight === committed);
+  const counts = new Map<number, number>();
+  for (const s of work) counts.set(s.weight, (counts.get(s.weight) ?? 0) + 1);
+  let best = work[0].weight;
+  for (const [w, n] of counts) if (n > (counts.get(best) ?? 0) || (n === counts.get(best) && w > best)) best = w;
+  return work.filter((s) => s.weight === best);
 }
 
 function backoffsOf(sets: SetEntry[], top: SetEntry): SetEntry[] {

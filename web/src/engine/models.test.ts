@@ -234,3 +234,11 @@ describe('property: a session logged exactly as prescribed grades hit', () => {
     });
   }
 });
+
+describe('double progression reads the worked load, not a ramp set', () => {
+  it('ramp 40×10, 60×8, 60×8, 80×5 → progresses from 60 kg, not the single 80 × 5', () => {
+    const rampSets = [...sets(40, [10]), ...sets(60, [8, 8]), ...sets(80, [5])];
+    const t = prescribe(slot('double', { sets: 3, repMin: 8, repMax: 12 }), bench, [session('2026-11-18', rampSets)], ctx());
+    expect(t.weight).toBe(60);
+  });
+});

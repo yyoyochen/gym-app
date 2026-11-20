@@ -44,14 +44,14 @@ function fullBody(): Program {
     id: t, name: 'Full body A/B/C', templateId: t, rotation: ['A', 'B', 'C'], phases: [],
     sessions: [
       session(t, 'A', 'A · Squat + Bench', [
-        [EX.squat, 'topset', top(2, 3, 6, 8)],
-        [EX.bench, 'topset', top(2, 3, 6, 8)],
+        [EX.squat, 'topset', top(2, 3, 8, 10, 75)],
+        [EX.bench, 'topset', top(2, 3, 8, 10, 75)],
         ['barbell-row', 'double', dbl(3, 8, 12)],
         ['db-lateral-raise', 'double', dbl(3, 12, 20, true)],
       ], [0, 1]),
       session(t, 'B', 'B · Deadlift + OHP', [
-        [EX.deadlift, 'topset', top(2, 2, 5, 6)],
-        [EX.ohp, 'topset', top(2, 3, 6, 8)],
+        [EX.deadlift, 'topset', top(2, 2, 8, 10, 75)],
+        [EX.ohp, 'topset', top(2, 3, 8, 10, 75)],
         ['pull-up', 'double', dbl(3, 6, 10)],
         ['cable-tricep-pushdown', 'double', dbl(3, 10, 15, true)],
       ], [0, 1]),
