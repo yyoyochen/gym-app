@@ -1,0 +1,19 @@
+# --- Private data: never commit (see docs/PWA-SPEC.md §6.4) ---
+testdata/private/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+config.yaml
+strength_standards.csv
+backups/
+
+# --- Build / deps ---
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+tools/benchmarks/raw/
+.DS_Store

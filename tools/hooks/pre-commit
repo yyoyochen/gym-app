@@ -1,0 +1,6 @@
+#!/bin/sh
+# Installed via: git config core.hooksPath tools/hooks
+# Fails closed: if Node can't be found, the commit is blocked.
+NODE=$(command -v node || echo "$HOME/.local/toolchains/node-v22.14.0-darwin-arm64/bin/node")
+[ -x "$NODE" ] || { echo "pre-commit: node not found; commit blocked" >&2; exit 1; }
+exec "$NODE" tools/check-private.mjs
