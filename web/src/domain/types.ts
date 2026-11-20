@@ -58,7 +58,11 @@ export interface SetEntry {
   pain?: PainFlag;
   note?: string;
   loggedAt: Millis;
+  /** Set by imports when the source row was incomplete (value stored as 0). */
+  importFlags?: ImportFlag[];
 }
+
+export type ImportFlag = 'blank_weight' | 'blank_reps';
 
 export type Readiness = 'green' | 'amber' | 'red';
 
