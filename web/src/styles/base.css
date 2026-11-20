@@ -1,6 +1,7 @@
 @import '@fontsource-variable/instrument-sans';
 @import '@fontsource-variable/spline-sans-mono';
 @import './tokens.css';
+@import './screens.css';
 
 :root { --font-sans: 'Instrument Sans Variable', system-ui, -apple-system, sans-serif;
         --font-mono: 'Spline Sans Mono Variable', ui-monospace, 'SF Mono', monospace; }
