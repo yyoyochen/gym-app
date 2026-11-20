@@ -29,8 +29,16 @@ describe('consistency', () => {
     const sessions = ['2026-01-05', '2026-01-07', '2026-01-09', '2026-01-12', '2026-01-14', '2026-01-16', '2026-01-20']
       .map(date => ({ date }));
     const s = yearSummary(sessions, '2026-01-21', 3);
-    // Weeks from Sun 28 Dec: (0), 4 Jan (3), 11 Jan (3); 18 Jan is current with 1 → not counted.
-    expect(s).toEqual({ sessions: 7, weeksAtTarget: 2, weeks: 3, longestRun: 2 });
-    expect(summaryLine(s)).toBe('This year: 7 sessions · 2 of 3 weeks at target · longest run 2 weeks');
+    // Counting starts at the first session's week (4 Jan): 4 Jan (3), 11 Jan (3); 18 Jan is current with 1 → not counted.
+    expect(s).toEqual({ sessions: 7, weeksAtTarget: 2, weeks: 2, longestRun: 2 });
+    expect(summaryLine(s)).toBe('This year: 7 sessions · 2 of 2 weeks at target · longest run 2 weeks');
+  });
+});
+
+describe('yearSummary starts at the first logged session', () => {
+  it('weeks before the first session are not counted as missed', () => {
+    const s = yearSummary([{ date: '2026-11-02' }, { date: '2026-11-04' }, { date: '2026-11-06' }], '2026-11-07', 3);
+    expect(s.weeks).toBe(1);
+    expect(s.weeksAtTarget).toBe(1);
   });
 });

@@ -76,7 +76,10 @@ export function yearSummary(sessions: { date: ISODate }[], today: ISODate, targe
   const mine = sessions.filter(s => s.date.slice(0, 4) === year && s.date <= today);
   const perWeek = sessionsPerWeek(mine);
   const thisWeek = weekStart(today);
-  let w = weekStart(`${year}-01-01`);
+  // Count from the later of 1 Jan and the first logged session this year:
+  // weeks before you started logging aren't missed weeks.
+  const first = mine.reduce<ISODate | null>((m, x) => (m === null || x.date < m ? x.date : m), null);
+  let w = weekStart(first && first > `${year}-01-01` ? first : `${year}-01-01`);
   let weeks = 0, at = 0, run = 0, longest = 0;
   while (isoToEpochDays(w) <= isoToEpochDays(thisWeek)) {
     const n = perWeek.get(w) ?? 0;
