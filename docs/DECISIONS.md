@@ -17,3 +17,25 @@ Build decisions not already settled in [PWA-SPEC.md](PWA-SPEC.md). Newest last.
 **No Tailwind, React Query, Zustand or chart library.** Plain CSS on the LUME tokens; Dexie live queries for data; small SVG charts drawn by hand. Each removed dependency is one less thing to update.
 
 **Fonts bundled, not loaded from Google Fonts.** The app makes no network calls (spec §7); `@fontsource-variable` packages ship the same two typefaces as files.
+
+**Benchmarks exclude Wraps.** Raw only, one best result per lifter (by total), deduped per population, Mx excluded, age from `Age` or the `AgeClass` midpoint. A tested bucket with fewer than ~200 lifters (after pooling neighbouring bodyweight bands) falls back to the all-raw table and says so.
+
+**Back-off % is a percentage everywhere** (85 = 85% of the top set): templates, editor, engine.
+
+**Default template = Yoyo's current plan shape.** Full body A/B/C top sets are a double at ≥ 2 RIR, then 3 × 8–10 back-offs at 75% (deadlift 2 × 8–10). Strength templates keep 85% back-offs.
+
+**Double progression reads the worked load.** Imported logs don't mark ramp sets as warm-ups, so "the heaviest set" is often one ramp single. The engine uses the committed target weight if sets were logged at it, otherwise the load with the most working sets (ties → heavier). Strength mode uses the same idea (bug (a) in the old KNOWN-ISSUES).
+
+**Re-entry 3 × 8 is capped at an ~11-rep load.** After 21+ days off, 3 × 8 anchors on the last working weight but never above `e1RM × 30 / 41` (8 reps + 3 in reserve). This stops it from anchoring on a heavy single, which imported sessions don't label as a top set.
+
+**Extra planned sets repeat the last promised set.** The "as planned" ghost rows used to pad with the top of the rep range (12, 20 reps), which made a normal session read as BEAT.
+
+**Engine text is cleaned for display, not changed at source.** The Python parity fixtures pin the engine's exact strings. Every screen passes criterion/why text through `ui/readable.ts` (no `[8, 8]`, × between numbers, "bodyweight" instead of "0kg"), so all screens show identical words.
+
+**Consistency counts weeks from the first logged session** of the year, not 1 January.
+
+**A frozen promise keeps the effort scale it was committed in.** Switching RIR → RPE re-labels sets and future plans; a committed criterion still reads "≥ 2 RIR".
+
+**Weeks run Sunday → Saturday** (heatmap, "n of 3 this week", consistency).
+
+**Imported sessions don't advance the program rotation** and have no verdicts (they have no commit).
