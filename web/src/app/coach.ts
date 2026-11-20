@@ -255,7 +255,11 @@ export function ghostSets(t: Target, planned: number): PlannedSet[] {
   const base = minimumToKeep(t);
   const padKind: PlannedSet['kind'] = t.model === 'topset' ? 'backoff' : 'working';
   const rows = base.slice();
-  while (rows.length < planned) rows.push({ kind: padKind, weight: t.weight, reps: t.targetReps });
+  // Extra planned sets repeat the last promised set. Padding with targetReps
+  // would put the top of the rep range (12, 20) on a set with no history and
+  // make "log as planned" an inflated BEAT.
+  const padReps = t.model === 'double' && rows.length ? rows[rows.length - 1].reps : t.targetReps;
+  while (rows.length < planned) rows.push({ kind: padKind, weight: t.weight, reps: padReps });
   return rows.map(r => ({ ...r, rir: r.rir ?? t.rirFloor }));
 }
 

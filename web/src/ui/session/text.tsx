@@ -1,10 +1,11 @@
 import { Fragment } from 'react';
+import { readable } from '../readable';
 
 const NUM = /(\d+(?:\.\d+)?(?:\s?kg)?(?:\s?[×x]\s?\d+\+?)?)/g;
 
 /** Words stay sans, values go mono (DESIGN §3): wraps numerals in a sentence. */
 export function MonoNums({ text }: { text: string }) {
-  const parts = text.split(NUM);
+  const parts = readable(text).split(NUM);
   return (
     <>
       {parts.map((p, i) => (i % 2 ? <span key={i} className="num-inline">{p}</span> : <Fragment key={i}>{p}</Fragment>))}

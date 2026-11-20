@@ -1,6 +1,7 @@
 // TargetCard (DESIGN §6): eyebrow, criterion, the visible why, effort floor,
 // last time. The ghost tick says the promise is not judged yet.
 import type { ReactNode } from 'react';
+import { readable } from '../readable';
 import type { SlotPlan } from '../../app/coach';
 import { MonoNums } from './text';
 
@@ -13,7 +14,7 @@ export function TargetCard({ sp, children }: { sp: SlotPlan; children?: ReactNod
         {sp.inMinimum && <span className="ghost micro">min</span>}
       </div>
       <p className="criterion"><MonoNums text={t.criterion} /></p>
-      <p className="mid">Why: {t.why}</p>
+      <p className="mid">Why: {readable(t.why)}</p>
       <div className="meta">
         <span className="mid">Effort floor <span className="num-inline">{sp.floorLabel}</span></span>
         {sp.lastTime && <span className="mono micro ghost">{sp.lastTime}</span>}

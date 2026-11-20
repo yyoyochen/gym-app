@@ -1,6 +1,7 @@
 // Session detail (spec §4 History): the ledger — promise + sets — with edit,
 // delete set, change date and delete session.
 import { useState } from 'react';
+import { readable } from '../ui/readable';
 import type { EffortScale, PainArea, SetEntry, SetKind, Side } from '../domain/types';
 import {
   changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, listExercises, updateSet,
@@ -58,8 +59,8 @@ export function SessionDetail({ params }: { params: string[] }) {
                 {/* TODO(engine): verdict chip (BEAT / HIT / MISSED / NEW) + detail string from the coach engine's grading. */}
                 <span className="verdict new">—</span>
               </div>
-              <p className="mid">“{t.criterion}”</p>
-              {t.why && <p className="mid">Why: {t.why}</p>}
+              <p className="mid">“{readable(t.criterion)}”</p>
+              {t.why && <p className="mid">Why: {readable(t.why)}</p>}
             </div>
           ))}
         </div>

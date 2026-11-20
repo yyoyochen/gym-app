@@ -2,6 +2,7 @@
 // COMMITTED promise, safety events, next-session preview, pace lines.
 // The reveal plays once per session (never on revisit).
 import { useEffect, useState } from 'react';
+import { readable } from '../ui/readable';
 import type { EffortScale, Verdict } from '../domain/types';
 import { getProfile, getSession } from '../db';
 import { addDays, formatEffort } from '../engine';
@@ -133,7 +134,7 @@ export function Review({ params }: { params: string[] }) {
             <div key={sp.target.slotId} className="stack tight">
               <span className="heading">{sp.target.exerciseName}</span>
               <p className="line"><MonoNums text={sp.target.criterion} /></p>
-              <p className="line mid">Why: {sp.target.why}</p>
+              <p className="line mid">Why: {readable(sp.target.why)}</p>
             </div>
           ))}
           <p className="mid line">Preview only — the promise is set when you start it.</p>
