@@ -198,6 +198,8 @@ export interface Target {
   why: string;
   /** Rule id for the reason (e.g. "double_progression"). */
   rule: string;
+  /** The training principle behind the rule (criteria.why in the old engine). */
+  principle?: string;
 }
 
 export interface Commit {
