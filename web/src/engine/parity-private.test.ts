@@ -55,7 +55,7 @@ describe.skipIf(!enabled)('new models on the real log (private)', () => {
       const hist = [...days].map(([date, sets]) => ({ date, sessionId: date, sets }));
       for (const h of hist) {
         for (const model of ['double', 'linear5x5', 'topset', 'fixed'] as const) {
-          const t = prescribe(slot(model, { sets: 3, repMin: 6, repMax: 8, topReps: 1, backoffPct: 0.8, backoffSets: 3 }, lift), ex, hist,
+          const t = prescribe(slot(model, { sets: 3, repMin: 6, repMax: 8, topReps: 1, backoffPct: 80, backoffSets: 3 }, lift), ex, hist,
             { today: h.date, bodyweightKg: 80 });
           const planned = minimumToKeep(t).map((p, i) => ({ ...h.sets[0], id: `p${i}`, kind: p.kind, weight: p.weight, reps: p.reps,
             ...(p.rir !== undefined ? { rir: p.rir } : {}) }));

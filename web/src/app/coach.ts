@@ -34,17 +34,12 @@ export function kg(n: number): string {
 
 // ---------------------------------------------------------------- slot params
 
-/**
- * Templates and the program editor store backoffPct as a percentage (85 =
- * 85%); the engine multiplies by it as a fraction. Normalise here, and apply
- * the phase overrides active on `today`.
- */
+/** Applies the phase overrides active on `today` to a slot's params. */
 export function effectiveSlot(slot: Slot, program: Program | undefined, today: ISODate): Slot {
   let params: SlotParams = { ...slot.params };
   for (const ph of program?.phases ?? []) {
     if (ph.start <= today && today <= ph.end) params = { ...params, ...(ph.overrides?.[slot.model] ?? {}) };
   }
-  if (params.backoffPct !== undefined && params.backoffPct > 1) params.backoffPct = params.backoffPct / 100;
   return { ...slot, params };
 }
 
@@ -185,13 +180,7 @@ export async function planToday(db: GymDb, today: ISODate, now: Millis, opts: Pl
       exercise, events: painEvents, today, injuries: profile?.injuries ?? [],
       history: hist.map((h): ExerciseSession => ({ date: h.date, sessionId: h.sessionId, exerciseId: exercise.id })),
     });
-    // Re-entry block on a top-set lift: 3 × 8 belongs at the back-off load, not
-    // at the top double (the engine anchors on workedLoad, which picks the top
-    // set when back-offs sit under 90% of it). Workaround until the engine does it.
-    const engineHist = reentry.reentry === 'block' && slot.model === 'topset'
-      ? hist.map(h => (h.sets.some(s => s.kind === 'backoff') ? { ...h, sets: h.sets.filter(s => s.kind !== 'top') } : h))
-      : hist;
-    const target = prescribe(slot, exercise, engineHist, {
+    const target = prescribe(slot, exercise, hist, {
       today, readiness, effortScale, bodyweightKg, gapDays, reentry: reentry.reentry, afterLayoff: reentry.afterLayoff, pain,
     });
     out.push(slotPlan(i + 1, raw, exercise, target, hist, effortScale, plates, ps.minimumSlotIds.includes(raw.id), pain));

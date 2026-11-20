@@ -239,14 +239,16 @@ describe('gap scenarios → Today state (spec §3.5)', () => {
     expect(p.slots[0].floorLabel).toBe('≥ 3 RIR');
   });
 
-  it('30 days: re-entry block, 3 × 8 at the last logged working weight', async () => {
+  it('30 days: re-entry block, 3 × 8 at a safe load from the last session', async () => {
     const db = await withLastSessionDaysAgo(30);
     const st = await todayState(db, TODAY, at(TODAY, 10));
     expect(st.gap).toEqual({ kind: 'reentry_block', days: 30 });
     const p = await planToday(db, TODAY, at(TODAY, 10), { sessionKey: 'A' });
     expect(p.reentry.reentry).toBe('block');
     for (const sp of p.slots.slice(0, 2)) expect(sp.target).toMatchObject({ rule: 'reentry_block', targetSets: 3, targetReps: 8, model: 'fixed' });
-    expect(p.slots[0].target.weight).toBe(85); // the back-off load, not the 100 kg top double
+    // Never the 100 kg top double. Back-offs were 85 × 8 (e1RM ~108); 3 × 8 at
+    // 3 RIR after 30 days off is capped at an 11-rep load → 75 on a 5 kg step.
+    expect(p.slots[0].target.weight).toBe(75);
   });
 
   it('first run: no sessions', async () => {
@@ -301,9 +303,9 @@ describe('rotation', () => {
 });
 
 describe('slot params', () => {
-  it('back-off % from templates (85 = 85%) is normalised for the engine', async () => {
+  it('back-off % from templates is a percentage end to end (85 = 85%)', async () => {
     const prog = programFromTemplate(DEFAULT_TEMPLATE_ID);
-    expect(effectiveSlot(prog.sessions[0].slots[0], prog, TODAY).params.backoffPct).toBeCloseTo(0.85);
+    expect(effectiveSlot(prog.sessions[0].slots[0], prog, TODAY).params.backoffPct).toBe(85);
     const db = await setup();
     await logSession(db, 'A', '2026-11-17', [{ ex: EX.squat, slotOrder: 1, sets: [[100, 2, 'top', 2]] }]);
     const t = (await planToday(db, TODAY, at(TODAY), { sessionKey: 'A' })).slots[0].target;

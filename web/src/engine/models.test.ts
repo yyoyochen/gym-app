@@ -79,7 +79,7 @@ describe('prescribe: linear 5x5', () => {
 });
 
 describe('prescribe: top set + back-offs', () => {
-  const sl = slot('topset', { sets: 3, repMin: 6, repMax: 8, topReps: 1, backoffPct: 0.8, backoffSets: 3, rirFloor: 2 });
+  const sl = slot('topset', { sets: 3, repMin: 6, repMax: 8, topReps: 1, backoffPct: 80, backoffSets: 3, rirFloor: 2 });
   const last = (topRir: number | undefined, backReps = [6, 6, 6], over: Partial<SetEntry> = {}) =>
     [session('2026-11-18', [top(100, 1, topRir, over), ...backs(80, backReps)])];
 
@@ -136,14 +136,20 @@ describe('prescribe: fixed, re-entry and pain regression', () => {
     expect(t).toMatchObject({ model: 'fixed', weight: 20, targetReps: 10, targetSets: 3, rule: 'fixed_hold' });
     expect(t.criterion).toBe('Do 3 × 10 at 20kg — done is the goal; there is no beat.');
   });
-  it('21+ day gap: 3 × 8 at the last logged working weight', () => {
+  it('21+ day gap: 3 × 8 at the last working weight, capped at an ~11-rep load (8 reps + 3 RIR)', () => {
+    // 80 × 8 → e1RM 101.3 → 11-rep load 74.1 → 72.5 on a 2.5 kg increment.
     const t = prescribe(slot('double'), bench, [session('2026-10-01', sets(80, [8, 8, 7]))], ctx({ gapDays: 51, reentry: 'block' }));
-    expect(t).toMatchObject({ model: 'fixed', weight: 80, targetReps: 8, targetSets: 3, rule: 'reentry_block', rirFloor: 3 });
+    expect(t).toMatchObject({ model: 'fixed', weight: 72.5, targetReps: 8, targetSets: 3, rule: 'reentry_block', rirFloor: 3 });
+  });
+  it('21+ day gap after heavy singles (imported logs mark no top sets): never anchors 3 × 8 on a single', () => {
+    const t = prescribe(slot('double'), bench, [session('2026-10-01', [...sets(60, [8, 8]), ...sets(100, [1, 1])])], ctx({ gapDays: 30, reentry: 'block' }));
+    expect(t.weight).toBeLessThanOrEqual(72.5);
+    expect(t.weight).toBeGreaterThan(0);
   });
   it('pain regression takes 10% off and raises the floor', () => {
     const pain: PainStatus = { exerciseId: 'bench', hold: false, painCheck: false, regressPct: 0.1, raiseRir: 1,
       reasons: ['two pain flags (severity 2+) on the left shoulder within 14 days — regress 10% and +1 RIR until a clean session'] };
-    const t = prescribe(slot('topset', { topReps: 1, backoffPct: 0.8, backoffSets: 3 }), bench,
+    const t = prescribe(slot('topset', { topReps: 1, backoffPct: 80, backoffSets: 3 }), bench,
       [session('2026-11-18', [top(100, 1, 2), ...backs(80, [6, 6, 6])])], ctx({ pain }));
     expect(t).toMatchObject({ weight: 90, rule: 'pain_regress', rirFloor: 3 });
   });
@@ -210,7 +216,7 @@ describe('property: a session logged exactly as prescribed grades hit', () => {
       for (let i = 0; i < 300; i++) {
         const lo = r.pick([5, 6, 8, 10]);
         const sl = slot(model, { sets: r.int(2, 5), repMin: lo, repMax: lo + r.pick([0, 2, 4]), rirFloor: r.pick([1, 2, 3]),
-          topReps: r.pick([1, 2, 3]), backoffPct: r.pick([0.75, 0.8, 0.85]), backoffSets: r.int(2, 4) });
+          topReps: r.pick([1, 2, 3]), backoffPct: r.pick([75, 80, 85]), backoffSets: r.int(2, 4) });
         const c = ctx({
           readiness: r.pick(['green', 'amber', 'red'] as const), effortScale: r.pick(['rir', 'rpe'] as const),
           startingWeight: r.pick([undefined, 40]), gapDays: r.pick([null, 2, 9]), bodyweightKg: 80,

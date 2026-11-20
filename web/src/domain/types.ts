@@ -93,7 +93,7 @@ export interface SlotParams {
   repMax: number;
   /** Minimum reps in reserve for working sets (effort floor). */
   rirFloor: number;
-  /** Top-set model: reps for the top set (1–3) and the back-off percentage of the top weight. */
+  /** Top-set model: reps for the top set (1–3); backoffPct is a PERCENTAGE of the top weight (85 = 85%). */
   topReps?: number;
   backoffPct?: number;
   backoffSets?: number;

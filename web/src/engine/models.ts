@@ -77,7 +77,7 @@ export function prescribe(slot: Slot, exercise: Exercise, history: LiftSession[]
   const base = { slotId: slot.id, exerciseId: exercise.id, exerciseName: exercise.name, rirFloor: floor.floor };
 
   if (last && reentry === 'block') {
-    const anchor = workedLoad(toWR(last.sets));
+    const anchor = reentryAnchor(last.sets, exercise, inc);
     return fixedTarget(base, anchor, REENTRY_SETS, REENTRY_REPS,
       `re-entry after ${ctx.gapDays ?? 21}+ days: ${REENTRY_SETS} × ${REENTRY_REPS} at your last logged working weight (${pyG(anchor)}kg on ${last.date}), then normal progression`,
       'reentry_block');
@@ -158,6 +158,23 @@ function topSetOf(sets: SetEntry[]): SetEntry {
   return pool.reduce((best, s) => (s.weight > best.weight ? s : best), pool[0]);
 }
 
+/**
+ * Load for a 3 × 8 re-entry block. The last session's "worked load" can be a
+ * heavy top single or double (imported logs don't mark top sets), which would
+ * make 3 × 8 a near-max effort after three weeks off. So the anchor is capped
+ * at the load you could do for ~11 reps (8 reps + 3 in reserve) from the
+ * session's best e1RM. Bodyweight lifts keep their added load as logged.
+ */
+function reentryAnchor(sets: SetEntry[], exercise: Exercise, inc: number): number {
+  const work = sets.filter((s) => s.kind !== 'warmup' && s.kind !== 'top' && s.reps > 0);
+  const pool = work.length ? work : sets.filter((s) => s.reps > 0);
+  const worked = workedLoad(toWR(pool));
+  if (exercise.bodyweightFactor > 0) return worked;
+  const best = Math.max(0, ...sets.filter((s) => s.kind !== 'warmup' && s.reps > 0).map((s) => epley(s.weight, s.reps)));
+  const cap = floorTo(best * 30 / (30 + REENTRY_REPS + 3) + EPS, inc);
+  return Math.min(worked, cap);
+}
+
 function backoffsOf(sets: SetEntry[], top: SetEntry): SetEntry[] {
   return sets.some((s) => s.kind === 'top') ? sets.filter((s) => s.kind !== 'top') : sets.filter((s) => s !== top);
 }
@@ -169,7 +186,8 @@ function topsetTarget(
   const p = slot.params;
   const inc = jump.increment;
   const topReps = p.topReps ?? 1;
-  const pct = p.backoffPct ?? 0.8;
+  // backoffPct is a percentage everywhere (85 = 85% of the top set).
+  const pct = (p.backoffPct ?? 80) / 100;
   const nB = p.backoffSets ?? p.sets;
   const last = hist[hist.length - 1];
   const base = { slotId: slot.id, exerciseId: exercise.id, exerciseName: exercise.name, rirFloor: floor.floor };
