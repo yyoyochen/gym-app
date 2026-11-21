@@ -9,7 +9,7 @@ import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { SUBJECT_BODYWEIGHT } from '../app/labels';
 import { useLive } from '../ui/useLive';
-import { DitherBar, LabelValueGrid, SquareHeatmap, Lockup, Verdict, go, type VerdictKind } from '../ui/kit';
+import { DitherBar, LabelValueGrid, Lockup, Verdict, type VerdictKind } from '../ui/kit';
 import { useScrollTop } from '../ui/session/useNow';
 import { goalRows, latestBodyweight, liftStats, trendOf, type LiftStats } from '../ui/progress/data';
 import { BENCH_CAVEAT, LIFT_WORD, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
@@ -18,7 +18,7 @@ import { rateExercise, type LiftRating } from '../benchmarks/liftRating';
 import { STANDARDS_CAVEAT, contextText, missingForStandards, sourceMeta, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
-import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats, trendGlyphs, weeksSince } from '../ui/progress/stats';
+import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats, trendGlyphs } from '../ui/progress/stats';
 
 const BENCH_LIFTS: BenchLift[] = ['squat', 'bench', 'deadlift'];
 const FEAS_KIND: Record<string, VerdictKind> = { comfortable: 'beat', ambitious: 'hit', unlikely: 'missed' };
@@ -36,10 +36,6 @@ export function Progress(_props: { params: string[] }) {
     const byId = new Map(exercises.map(e => [e.id, e]));
     const stats = trainingStats(sessions, sets);
     // Heatmap: working sets per date; tap a day → its first session.
-    const counts: Record<string, number> = {};
-    for (const s of sets) if (s.kind !== 'warmup' && s.date <= today) counts[s.date] = (counts[s.date] ?? 0) + 1;
-    const sessionByDate: Record<string, string> = {};
-    for (const s of [...sessions].sort((a, b) => a.startedAt - b.startedAt)) sessionByDate[s.date] ??= s.id;
     // Lifts trained in the last 90 days, most sets first.
     const since90 = addDays(today, -90);
     const recent = new Map<string, number>();
@@ -59,11 +55,11 @@ export function Progress(_props: { params: string[] }) {
       const st = lifts.find(x => x.exercise.benchmarkKey === l);
       return { lift: l, e1rm: st?.best90 ?? null };
     });
-    return { today, profile, bw, stats, counts, sessionByDate, lifts, goals, benchEx, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined };
+    return { today, profile, bw, stats, lifts, goals, benchEx, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined };
   }, []);
 
   if (!data) return <section className="screen" aria-busy="true" />;
-  const { today, profile, bw, stats, counts, sessionByDate, lifts, goals, benchEx, fun, funWord, favName } = data;
+  const { today, profile, bw, stats, lifts, goals, benchEx, fun, funWord, favName } = data;
   const benchIn = { profile, bodyweightKg: bw, year: Number(today.slice(0, 4)) };
   const missing = missingForBenchmark(benchIn);
   const stdMissing = missingForStandards(benchIn);
@@ -91,31 +87,7 @@ export function Progress(_props: { params: string[] }) {
       <DemoBanner />
       <Lockup mid={first ? `Progress //Since ${short(first, today)}` : 'Progress'} />
 
-      {stats.sessions === 0 ? (
-        <p className="tk-quiet">Nothing logged yet. Sessions you log or import show up here.</p>
-      ) : (
-        <section className="tk-block" aria-label="Training summary">
-          <SquareHeatmap counts={counts} weeks={weeksSince(first!, today)} end={today} legend label="Working sets per day"
-            onSelect={d => { const id = sessionByDate[d]; if (id) go(`history/${encodeURIComponent(id)}`); }} />
-          <LabelValueGrid variant="stats" className="tk-stats" items={[
-            { label: 'Favourite lift:', value: favName ?? '—' },
-            { label: 'Sessions:', value: stats.sessions.toLocaleString('en-GB') },
-            { label: 'Sets logged:', value: stats.sets.toLocaleString('en-GB') },
-            { label: 'Sets per session:', value: stats.setsPerSession !== null ? kg(stats.setsPerSession) : '—' },
-            { label: 'Busiest day:', value: stats.busiestDay !== null ? WEEKDAY_LONG[stats.busiestDay] : '—' },
-            { label: 'Longest break:', value: stats.longestBreak !== null ? `${stats.longestBreak} day${stats.longestBreak === 1 ? '' : 's'}` : '—' },
-          ]} />
-
-          {topRated.length > 0 && (
-            <div className="tk-bars" aria-label="Levels vs gym-goers">
-              {topRated.map(({ l, r }, i) => <RatedBar key={l.exercise.id} l={l} r={r} label={i === 0 ? `${l.exercise.name} vs gym-goers` : l.exercise.name} />)}
-            </div>
-          )}
-
-          {fun && first && <p className="tk-fun">{funLine(funWord, short(first, today), fun)}</p>}
-          {first && last && <p className="tk-since">Stats from {stats.sessions} session{stats.sessions === 1 ? '' : 's'}, {short(first, today)} to {short(last, today)}</p>}
-        </section>
-      )}
+      {stats.sessions === 0 && <p className="tk-quiet">Nothing logged yet. Sessions you log or import show up here.</p>}
 
       <section className="tk-sec" aria-label="Goal board">
         <SecHead title="Goal board" meta={goals.length ? `${goals.length} target${goals.length === 1 ? '' : 's'}` : undefined} />
@@ -152,6 +124,9 @@ export function Progress(_props: { params: string[] }) {
         {gym && ctx && (
           <>
             <p className="tk-quiet">Levels for <ValueText text={contextText(ctx)} />, from each lift’s best e1RM in the last 90 days.</p>
+            {topRated.length > 0 && (
+              <div className="tk-bars">{topRated.map(({ l, r }) => <RatedBar key={l.exercise.id} l={l} r={r} label={l.exercise.name} />)}</div>
+            )}
             {moreRated.length > 0 && (
               <details className="tk-more">
                 <summary>{moreRated.length} more lift{moreRated.length === 1 ? '' : 's'}</summary>
@@ -212,6 +187,22 @@ export function Progress(_props: { params: string[] }) {
           })}
         </ul>
       </section>
+
+      {stats.sessions > 0 && (
+        <section className="tk-sec" aria-label="Training summary">
+          <SecHead title="Training summary" />
+          <LabelValueGrid variant="stats" className="tk-stats" items={[
+            { label: 'Favourite lift:', value: favName ?? '—' },
+            { label: 'Sessions:', value: stats.sessions.toLocaleString('en-GB') },
+            { label: 'Sets logged:', value: stats.sets.toLocaleString('en-GB') },
+            { label: 'Sets per session:', value: stats.setsPerSession !== null ? kg(stats.setsPerSession) : '—' },
+            { label: 'Busiest day:', value: stats.busiestDay !== null ? WEEKDAY_LONG[stats.busiestDay] : '—' },
+            { label: 'Longest break:', value: stats.longestBreak !== null ? `${stats.longestBreak} day${stats.longestBreak === 1 ? '' : 's'}` : '—' },
+          ]} />
+          {fun && first && <p className="tk-fun">{funLine(funWord, short(first, today), fun)}</p>}
+          {first && last && <p className="tk-since">Stats from {stats.sessions} session{stats.sessions === 1 ? '' : 's'}, {short(first, today)} to {short(last, today)}</p>}
+        </section>
+      )}
     </section>
   );
 }
