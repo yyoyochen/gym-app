@@ -3,7 +3,7 @@ import { WEEK_MARK, heatGlyph, heatmapGrid, SHADES, EMPTY } from './dither';
 
 /**
  * Training-days heatmap in glyphs: · empty, ░ ▒ ▓ █ rising. Columns are weeks
- * (Sunday first), month labels on top, Mon/Wed/Fri down the side. Each glyph
+ * (Monday first), month labels on top, Mon/Wed/Fri down the side. Each glyph
  * sits in its own 1ch grid cell, so fallback fonts for the block glyphs can't
  * misalign columns. Scrolls horizontally and opens at the most recent week.
  */

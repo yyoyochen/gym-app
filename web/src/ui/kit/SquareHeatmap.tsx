@@ -41,8 +41,8 @@ export function cellPixels(level: number): [number, number][] {
 }
 
 /**
- * Year-at-a-glance heatmap in shade glyphs: one column per week (Sunday
- * first), one row per weekday, filling the container width. Cell shade is a
+ * Year-at-a-glance heatmap in shade glyphs: one column per week, one row per
+ * weekday (Mon → Sun, all seven named down the left), filling the container width. Cell shade is a
  * tiny ordered dither in the accent colour; empty days are a faint dot.
  */
 export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget, onSelect, label = 'Training days', legend = false, className = '' }: {
@@ -71,6 +71,12 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
           <span key={m.week} style={{ left: `${(m.week * STEP_X / W) * 100}%` }}>{m.text}</span>
         ))}
       </div>
+      <div className="sqheat-body">
+      <div className="sqheat-days" aria-hidden="true">
+        {g.rows.map((r, d) => (
+          <span key={r.day} style={{ top: `${((d * STEP_Y + CELL_H / 2) / H) * 100}%` }}>{r.day}</span>
+        ))}
+      </div>
       <svg className="sqheat-grid" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${label}: ${trained} days in the last ${weeks} weeks`} shapeRendering="crispEdges">
         {g.rows.map((r, d) => r.cells.map((c, w) => {
           const x = w * STEP_X, y = d * STEP_Y;
@@ -93,6 +99,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
           <rect key={`wk${w}`} className={`sqheat-wk ${m}`} x={w * STEP_X} y={gridH + MARK_GAP} width={CELL_W} height={MARK_H} />
         ))}
       </svg>
+      </div>
       {legend && (
         <div className="sqheat-legend" aria-hidden="true">
           <span>Less</span>

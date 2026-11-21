@@ -1,4 +1,4 @@
-// GitHub-style consistency grid (spec §3.2): one column per week (Sun→Sat),
+// GitHub-style consistency grid (spec §3.2): one column per week (Mon→Sun),
 // shade = working sets that day (quartiles), a thin week mark to the right of
 // each column (full = at target, half = at minimum), skips as outlined cells.
 import { useEffect, useRef } from 'react';

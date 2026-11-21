@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { consistency, markFor, summaryLine, weekStart, yearSummary } from './consistency';
 
 describe('consistency', () => {
-  it('weeks start on Sunday, matching the heatmap columns', () => {
-    expect(weekStart('2026-11-21')).toBe('2026-11-15'); // Sat → Sun before
-    expect(weekStart('2026-11-15')).toBe('2026-11-15');
+  it('weeks start on Monday, matching the heatmap columns', () => {
+    expect(weekStart('2026-11-22')).toBe('2026-11-16'); // Sun → Mon before
+    expect(weekStart('2026-11-16')).toBe('2026-11-16');
   });
   it('week marks: full at target, half at min, none below', () => {
     expect([markFor(3, 3, 2), markFor(2, 3, 2), markFor(1, 3, 2), markFor(0, 3, 0)]).toEqual(['full', 'half', 'none', 'none']);
@@ -29,7 +29,7 @@ describe('consistency', () => {
     const sessions = ['2026-01-05', '2026-01-07', '2026-01-09', '2026-01-12', '2026-01-14', '2026-01-16', '2026-01-20']
       .map(date => ({ date }));
     const s = yearSummary(sessions, '2026-01-21', 3);
-    // Counting starts at the first session's week (4 Jan): 4 Jan (3), 11 Jan (3); 18 Jan is current with 1 → not counted.
+    // Counting starts at the first session's week (5 Jan): 5 Jan (3), 12 Jan (3); 19 Jan is current with 1 → not counted.
     expect(s).toEqual({ sessions: 7, weeksAtTarget: 2, weeks: 2, longestRun: 2 });
     expect(summaryLine(s)).toBe('This year: 7 sessions · 2 of 2 weeks at target · longest run 2 weeks');
   });

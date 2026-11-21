@@ -9,6 +9,7 @@ import {
   localIsoOf,
   quartileThresholds,
   weekdayOf,
+  mondayIndex,
 } from './heatmap';
 
 describe('date math (pure string/UTC — no TZ shift)', () => {
@@ -71,7 +72,7 @@ describe('intensity buckets', () => {
 
 describe('buildHeatmap grid alignment', () => {
   // 92-day window ending Sunday 2026-08-02 ⇒ starts Sunday 2026-05-03:
-  // 13 full weeks + one extra Sunday ⇒ 14 columns, last column 1 real day.
+  // column 0 is padded back to Monday 2026-04-27 ⇒ 14 columns, the last full.
   const grid = buildHeatmap('2026-08-02', 92, {
     '2026-05-03': 3,
     '2026-06-10': 6,
@@ -80,21 +81,21 @@ describe('buildHeatmap grid alignment', () => {
     '2026-04-30': 99, // before the window — must not affect thresholds
   });
 
-  it('produces Sun-start columns covering exactly the window', () => {
+  it('produces Mon-start columns covering exactly the window', () => {
     expect(grid.start).toBe('2026-05-03');
     expect(grid.end).toBe('2026-08-02');
     expect(grid.columns).toHaveLength(14);
     for (const col of grid.columns) expect(col).toHaveLength(7);
-    expect(grid.columns[0][0].date).toBe('2026-05-03');
-    expect(grid.columns[0][0].inWindow).toBe(true);
-    expect(grid.columns[13][0].date).toBe('2026-08-02');
-    expect(grid.columns[13][0].inWindow).toBe(true);
-    // Padding cells past the end are out of window.
-    expect(grid.columns[13][1].date).toBe('2026-08-03');
-    expect(grid.columns[13][1].inWindow).toBe(false);
-    // Every cell sits in the row matching its weekday.
+    // Padding cells before the start are out of window.
+    expect(grid.columns[0][0].date).toBe('2026-04-27');
+    expect(grid.columns[0][0].inWindow).toBe(false);
+    expect(grid.columns[0][6].date).toBe('2026-05-03');
+    expect(grid.columns[0][6].inWindow).toBe(true);
+    expect(grid.columns[13][6].date).toBe('2026-08-02');
+    expect(grid.columns[13][6].inWindow).toBe(true);
+    // Every cell sits in the row matching its weekday (Mon = 0).
     for (const col of grid.columns) {
-      col.forEach((cell, row) => expect(weekdayOf(cell.date)).toBe(row));
+      col.forEach((cell, row) => expect(mondayIndex(cell.date)).toBe(row));
     }
   });
 
@@ -110,31 +111,28 @@ describe('buildHeatmap grid alignment', () => {
   });
 
   it('labels columns where the month of the first day changes', () => {
-    // Column first days: May 3,10,17,24,31 · Jun 7,14,21,28 · Jul 5,12,19,26 · Aug 2.
+    // Column first days: Apr 27 · May 4,11,18,25 · Jun 1,8,15,22,29 · Jul 6,13,20,27.
+    // Apr (col 0) sits next to May (col 1), so it is dropped.
     expect(grid.monthLabels).toEqual([
-      { col: 0, label: 'May' },
+      { col: 1, label: 'May' },
       { col: 5, label: 'Jun' },
-      { col: 9, label: 'Jul' },
-      { col: 13, label: 'Aug' },
+      { col: 10, label: 'Jul' },
     ]);
   });
 
   it('drops the column-0 label when the month turns in column 1', () => {
-    // 28-day window ending 2026-08-02 starts Monday 2026-07-06 ⇒ column 0 is
-    // padded back to Sunday Jul 5; column 1 starts Sunday Jul 12 — same month,
-    // so no drop here. Build a window whose second column opens a new month:
-    // end 2026-07-11 (Sat), 14 days ⇒ start Sunday 2026-06-28; columns start
-    // Jun 28 and Jul 5 ⇒ 'Jun' at col 0 collides with 'Jul' at col 1.
-    const tight = buildHeatmap('2026-07-11', 14, {});
-    expect(tight.columns[0][0].date).toBe('2026-06-28');
-    expect(tight.columns[1][0].date).toBe('2026-07-05');
+    // end 2026-07-12 (Sun), 14 days ⇒ start Monday 2026-06-29; columns start
+    // Jun 29 and Jul 6 ⇒ 'Jun' at col 0 collides with 'Jul' at col 1.
+    const tight = buildHeatmap('2026-07-12', 14, {});
+    expect(tight.columns[0][0].date).toBe('2026-06-29');
+    expect(tight.columns[1][0].date).toBe('2026-07-06');
     expect(tight.monthLabels).toEqual([{ col: 1, label: 'Jul' }]);
     // And the helper alone behaves the same way.
     expect(computeMonthLabels(tight.columns)).toEqual([{ col: 1, label: 'Jul' }]);
   });
 
   it('marks today (the window end) as a normal in-window cell for outlining', () => {
-    const todayCell = grid.columns[13][0];
+    const todayCell = grid.columns[13][6];
     expect(todayCell.date).toBe('2026-08-02');
     expect(todayCell.inWindow).toBe(true);
   });

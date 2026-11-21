@@ -158,10 +158,13 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .pr-hint { margin-top: 30px; }
 
 /* ---------- square heatmap (a year, full width, square cells) ---------- */
-.sqheat { display: flex; flex-direction: column; gap: 6px; width: 100%; }
-.sqheat-months { position: relative; height: 14px; font: var(--text-micro); letter-spacing: 0.04em; text-transform: uppercase; color: var(--mid); }
+.sqheat { --sqheat-days: 30px; display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.sqheat-months { margin-left: var(--sqheat-days); position: relative; height: 14px; font: var(--text-micro); letter-spacing: 0.04em; text-transform: uppercase; color: var(--mid); }
 .sqheat-months span { position: absolute; top: 0; white-space: nowrap; }
-.sqheat-grid { display: block; width: 100%; height: auto; overflow: visible; }
+.sqheat-body { display: flex; }
+.sqheat-days { position: relative; flex: none; width: var(--sqheat-days); font: var(--text-micro); letter-spacing: 0.04em; text-transform: uppercase; color: var(--mid); }
+.sqheat-days span { position: absolute; left: 0; transform: translateY(-50%); line-height: 1; }
+.sqheat-grid { display: block; flex: 1; min-width: 0; height: auto; overflow: visible; }
 .sqheat-on { fill: var(--accent); }
 .sqheat-empty { fill: var(--mid); opacity: 0.55; }
 .sqheat-today { fill: none; stroke: var(--ink); stroke-width: 1.5; }

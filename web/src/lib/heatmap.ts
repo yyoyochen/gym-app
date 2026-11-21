@@ -28,7 +28,7 @@ export interface MonthLabel {
 }
 
 export interface HeatmapGrid {
-  /** Week columns, oldest first. Each column is 7 cells, index 0 = Sunday. */
+  /** Week columns, oldest first. Each column is 7 cells, index 0 = Monday. */
   columns: HeatCell[][];
   monthLabels: MonthLabel[];
   /** First / last day of the requested window (inclusive). */
@@ -70,6 +70,11 @@ export function weekdayOf(iso: string): number {
   return (((isoToEpochDays(iso) + 4) % 7) + 7) % 7;
 }
 
+/** Row of a date in a Monday-first week: 0 = Monday … 6 = Sunday. */
+export function mondayIndex(iso: string): number {
+  return (weekdayOf(iso) + 6) % 7;
+}
+
 /** A `Date` instant → the ISO date it falls on in LOCAL time (for "today"). */
 export function localIsoOf(now: Date): string {
   const y = now.getFullYear();
@@ -102,7 +107,7 @@ export function bucketFor(count: number, [q1, q2, q3]: [number, number, number])
 
 /**
  * Month labels: one over the first column, plus every column whose first
- * (Sunday) day starts a new month. If the month turns in column 1, the
+ * (Monday) day starts a new month. If the month turns in column 1, the
  * column-0 label is dropped so two labels never sit shoulder to shoulder.
  */
 export function computeMonthLabels(columns: HeatCell[][]): MonthLabel[] {
@@ -119,7 +124,7 @@ export function computeMonthLabels(columns: HeatCell[][]): MonthLabel[] {
 
 /**
  * Build the full grid for the `days`-long window ending at `end` (inclusive).
- * Columns run Sunday→Saturday; the first column is padded back to the Sunday
+ * Columns run Monday→Sunday; the first column is padded back to the Monday
  * on or before the window start, the last is padded forward past `end`.
  */
 export function buildHeatmap(
@@ -130,7 +135,7 @@ export function buildHeatmap(
   const endDays = isoToEpochDays(end);
   const startDays = endDays - days + 1;
   const start = epochDaysToIso(startDays);
-  const gridStartDays = startDays - weekdayOf(start);
+  const gridStartDays = startDays - mondayIndex(start);
 
   const windowCounts: number[] = [];
   for (let d = startDays; d <= endDays; d++) {

@@ -1,8 +1,8 @@
 // Consistency (spec §3.2): heatmap counts, weekly target marks, skips, and the
-// plain summary line. Pure; weeks run Sunday→Saturday like lib/heatmap.ts so
+// plain summary line. Pure; weeks run Monday→Sunday like lib/heatmap.ts so
 // a week mark always sits next to its own column.
 import type { ISODate } from '../../domain/types';
-import { addDaysIso, buildHeatmap, isoToEpochDays, weekdayOf, type HeatmapGrid } from '../../lib/heatmap';
+import { addDaysIso, buildHeatmap, isoToEpochDays, mondayIndex, type HeatmapGrid } from '../../lib/heatmap';
 
 export type WeekMark = 'full' | 'half' | 'none';
 
@@ -29,9 +29,9 @@ export interface Consistency {
   thisWeek: number;
 }
 
-/** Sunday on or before the date. */
+/** Monday on or before the date. */
 export function weekStart(iso: ISODate): ISODate {
-  return addDaysIso(iso, -weekdayOf(iso));
+  return addDaysIso(iso, -mondayIndex(iso));
 }
 
 export function markFor(n: number, target: number, min: number): WeekMark {

@@ -81,10 +81,10 @@ describe('weekly volume and weeks', () => {
     ]);
     expect(v).toEqual([{ date: '2030-01-07', value: 800 }, { date: '2030-01-14', value: 110 }]);
   });
-  it('weeksSince covers first … today in Sunday-first columns', () => {
-    expect(weeksSince('2030-01-06', '2030-01-12', 1)).toBe(1); // Sun → Sat, same column
-    expect(weeksSince('2030-01-05', '2030-01-06', 1)).toBe(2); // Sat → Sun
-    expect(weeksSince('2030-01-06', '2030-01-12')).toBe(12); // clamped to min
+  it('weeksSince covers first … today in Monday-first columns', () => {
+    expect(weeksSince('2030-01-07', '2030-01-13', 1)).toBe(1); // Mon → Sun, same column
+    expect(weeksSince('2030-01-06', '2030-01-07', 1)).toBe(2); // Sun → Mon
+    expect(weeksSince('2030-01-07', '2030-01-13')).toBe(12); // clamped to min
     expect(weeksSince('2020-01-01', '2030-01-12')).toBe(53); // clamped to max
   });
   it('niceTicks', () => {

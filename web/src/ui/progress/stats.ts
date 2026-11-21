@@ -124,9 +124,10 @@ export function weeklyVolume(days: { date: ISODate; sets: { kind: string; weight
   return [...m.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([date, value]) => ({ date, value }));
 }
 
-/** Weeks the heatmap needs to reach back to `first` (inclusive, Sunday-first columns), clamped. */
+/** Weeks the heatmap needs to reach back to `first` (inclusive, Monday-first columns), clamped. */
 export function weeksSince(first: ISODate, today: ISODate, min = 12, max = 53): number {
-  const back = daysBetween(first, today) + weekday(first) - weekday(today);
+  const row = (d: ISODate) => (weekday(d) + 6) % 7;
+  const back = daysBetween(first, today) + row(first) - row(today);
   const w = Math.floor(back / 7) + 1;
   return Math.max(min, Math.min(max, w));
 }

@@ -35,21 +35,22 @@ describe('heatmap', () => {
     expect(heatLevel(20, 20)).toBe(3);
   });
 
-  it('lays weeks out Sunday-first with Mon/Wed/Fri labels and blank future days', () => {
-    // 2026-11-21 is a Saturday, so the last column is a full week.
-    const g = heatmapGrid({ counts: { '2026-11-21': 20, '2026-11-16': 10, '2026-11-08': 15 }, weeks: 2, end: '2026-11-21' });
-    expect(g.rows.map(r => r.label)).toEqual(['', 'Mon', '', 'Wed', '', 'Fri', '']);
-    expect(g.rows[0].cells[0].date).toBe('2026-11-08');
-    expect(g.rows[6].cells[1].date).toBe('2026-11-21');
+  it('lays weeks out Monday-first with Mon/Wed/Fri labels and blank future days', () => {
+    // 2026-11-22 is a Sunday, so the last column is a full week.
+    const g = heatmapGrid({ counts: { '2026-11-22': 20, '2026-11-16': 10, '2026-11-09': 15 }, weeks: 2, end: '2026-11-22' });
+    expect(g.rows.map(r => r.label)).toEqual(['Mon', '', 'Wed', '', 'Fri', '', '']);
+    expect(g.rows.map(r => r.day)).toEqual(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+    expect(g.rows[0].cells[0].date).toBe('2026-11-09');
+    expect(g.rows[6].cells[1].date).toBe('2026-11-22');
     expect(g.rows[6].cells[1].isEnd).toBe(true);
     expect(heatmapText(g)).toBe([
       '    Nov',
-      '    ▓·',
-      'Mon ·▒',
+      'Mon ▓▒',
       '    ··',
       'Wed ··',
       '    ··',
       'Fri ··',
+      '    ··',
       '    ·█',
     ].join('\n'));
   });
@@ -57,14 +58,14 @@ describe('heatmap', () => {
   it('days after the end are blank; month labels never collide', () => {
     const g = heatmapGrid({ counts: { '2026-11-18': 3 }, weeks: 12, end: '2026-11-18' }); // Wednesday
     const text = heatmapText(g).split('\n');
-    expect(text[4].endsWith('█')).toBe(true);  // Wed row ends on the logged day
-    expect(text[5].endsWith(' ')).toBe(true);  // Thu is in the future
+    expect(text[3].endsWith('█')).toBe(true);  // Wed row ends on the logged day
+    expect(text[4].endsWith(' ')).toBe(true);  // Thu is in the future
     expect(text[0]).toBe('     Sep Oct Nov');
     for (let i = 1; i < g.months.length; i++) expect(g.months[i].week).toBeGreaterThan(g.months[i - 1].week + 3);
   });
 
   it('week-target marks: met / part / none', () => {
-    const counts: Record<string, number> = { '2026-11-15': 1, '2026-11-17': 1, '2026-11-19': 1, '2026-11-10': 1 };
+    const counts: Record<string, number> = { '2026-11-16': 1, '2026-11-18': 1, '2026-11-20': 1, '2026-11-10': 1 };
     const g = heatmapGrid({ counts, weeks: 3, end: '2026-11-21', weekTarget: 3 });
     expect(g.weekMarks).toEqual(['none', 'part', 'met']);
     expect(heatmapText(g).split('\n').pop()).toBe('Wk  ·░█');
