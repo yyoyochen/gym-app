@@ -21,17 +21,23 @@ export function NavBar({ title, backLabel, onBack, fallback = 'today', right, la
 }) {
   const sentinel = useRef<HTMLHeadingElement>(null);
   const [collapsed, setCollapsed] = useState(!large);
+  // The small title stays hidden until the first scroll measurement, so it can't flash while a page slides in.
+  const [measured, setMeasured] = useState(!large);
   useEffect(() => {
     const el = sentinel.current;
     if (!el || !large) return;
     const root = el.closest('.page');
-    const io = new IntersectionObserver(([e]) => setCollapsed(!e.isIntersecting), { root, rootMargin: '-52px 0px 0px 0px', threshold: 0 });
+    const io = new IntersectionObserver(entries => {
+      const e = entries[entries.length - 1];
+      setCollapsed(!e.isIntersecting);
+      setMeasured(true);
+    }, { root, rootMargin: '-52px 0px 0px 0px', threshold: 0 });
     io.observe(el);
     return () => io.disconnect();
   }, [large]);
   return (
     <>
-      <div className={`navbar${collapsed ? ' collapsed' : ''}`}>
+      <div className={`navbar${collapsed ? ' collapsed' : ''}${measured ? '' : ' measuring'}`}>
         <div className="navbar-side">
           {backLabel !== undefined && (
             <button type="button" className="navbar-back" data-press="dim" onClick={() => (onBack ? onBack() : navBack(fallback))} aria-label={`Back to ${backLabel}`}>

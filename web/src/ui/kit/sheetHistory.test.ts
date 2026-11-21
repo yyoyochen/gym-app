@@ -180,4 +180,83 @@ describe('sheet history entries (Android back closes the sheet, not the page)', 
     vi.advanceTimersByTime(1000); // no flush: the traversal never reported
     expect(nav.getNav().path).toBe('review/abc');
   });
+
+  describe('PR moment (full-screen, closes like a sheet)', () => {
+    const moment = { value: '107.5', unit: 'kg × 2' };
+    async function loadPr() {
+      const l = await load();
+      const pr = await import('./PrMoment'); // after load(): shares the fresh navigation / sheetHistory modules
+      return { ...l, pr };
+    }
+
+    it('system back while it is visible closes only the moment, not the page', async () => {
+      const { nav, sh, pr } = await loadPr();
+      nav.go('session/abc');
+      const seq = nav.getNav().seq;
+      pr.showPrMoment(moment);
+      expect(pr.prMomentShown()).not.toBeNull();
+      expect(sh.sheetDepth()).toBe(1);
+      expect(h.state).toMatchObject({ gbIdx: 1, gbSheet: 1 });
+
+      h.systemBack();
+      expect(pr.prMomentShown()).toBeNull();
+      expect(nav.getNav()).toMatchObject({ path: 'session/abc', idx: 1, seq });
+      expect(sh.sheetDepth()).toBe(0);
+
+      h.systemBack(); // the next back pops the page as usual
+      expect(nav.getNav()).toMatchObject({ path: 'today', idx: 0, direction: 'pop' });
+    });
+
+    it('closing it by tap walks back over its entry without a page pop', async () => {
+      const { nav, sh, pr } = await loadPr();
+      nav.go('session/abc');
+      pr.showPrMoment(moment);
+      pr.closePrMoment();
+      h.flush();
+      expect(pr.prMomentShown()).toBeNull();
+      expect(sh.sheetDepth()).toBe(0);
+      expect(h.i).toBe(1);
+      expect(nav.getNav().path).toBe('session/abc');
+      h.systemBack();
+      expect(nav.getNav().path).toBe('today');
+    });
+
+    it('showing a second moment keeps a single history entry', async () => {
+      const { nav, sh, pr } = await loadPr();
+      nav.go('session/abc');
+      pr.showPrMoment(moment);
+      pr.showPrMoment({ value: '110' });
+      expect(sh.sheetDepth()).toBe(1);
+      expect(h.entries).toHaveLength(3);
+      h.systemBack();
+      expect(pr.prMomentShown()).toBeNull();
+      expect(nav.getNav().path).toBe('session/abc');
+    });
+
+    it('opened while a sheet is still walking back, it waits for the landing, then back closes only it', async () => {
+      const { nav, sh, pr } = await loadPr();
+      nav.go('session/abc');
+      const release = sh.pushSheetEntry(() => {});
+      release(); // the set sheet closes (history.go(-1) pending)
+      pr.showPrMoment(moment);
+      expect(sh.sheetDepth()).toBe(0); // not pushed yet
+      h.flush();
+      expect(sh.sheetDepth()).toBe(1);
+      expect(h.entries.map(e => e.url)).toEqual(['#/today', '#/session/abc', '#/session/abc']);
+      h.systemBack();
+      expect(pr.prMomentShown()).toBeNull();
+      expect(nav.getNav().path).toBe('session/abc');
+    });
+
+    it('closed before its deferred entry is pushed, it never pushes one', async () => {
+      const { nav, sh, pr } = await loadPr();
+      nav.go('session/abc');
+      sh.pushSheetEntry(() => {})();
+      pr.showPrMoment(moment);
+      pr.closePrMoment();
+      h.flush();
+      expect(sh.sheetDepth()).toBe(0);
+      expect(h.i).toBe(1);
+    });
+  });
 });

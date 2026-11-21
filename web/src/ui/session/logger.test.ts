@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SetEntry, Target } from '../../domain/types';
 import type { LiveSlot, SlotPlan } from '../../app/coach';
-import { focusSlot, liftRows, nextLabel, rowLabelOf, sessionCount } from './logger';
+import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount } from './logger';
 
 const target = (o: Partial<Target> = {}): Target => ({
   slotId: 'a1', exerciseId: 'squat', exerciseName: 'Back squat', model: 'topset', weight: 70, targetReps: 6, targetSets: 3, rirFloor: 2,
@@ -64,5 +64,17 @@ describe('logger rows', () => {
     expect(focusSlot([done, two, added], null)?.slotOrder).toBe(2);
     expect(focusSlot([done], 1)).toBeNull();
     expect(sessionCount([done, two, added])).toEqual({ done: 4, planned: 8 });
+  });
+});
+
+describe('nextAction (a lift with no history)', () => {
+  it('0 kg on a non-bodyweight lift: hero is an em dash, the primary action sets the weight instead of logging', () => {
+    expect(nextAction({ weight: 0 }, 0)).toEqual({ needsWeight: true, hero: '—', caption: 'set the weight', primaryLabel: 'Set weight' });
+  });
+  it('0 kg added on a bodyweight lift stays loggable and reads BW', () => {
+    expect(nextAction({ weight: 0 }, 1)).toEqual({ needsWeight: false, hero: 'BW', caption: null, primaryLabel: 'Log as planned' });
+  });
+  it('a planned weight logs as planned', () => {
+    expect(nextAction({ weight: 62.5 }, 0)).toEqual({ needsWeight: false, hero: '62.5', caption: null, primaryLabel: 'Log as planned' });
   });
 });

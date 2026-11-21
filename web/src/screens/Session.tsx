@@ -4,6 +4,7 @@
 // notifications or wake lock: rest is a silent elapsed label. One haptic tick
 // on commit, and the PR moment when a set is a new best.
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { SetEntry } from '../domain/types';
 import type { PlannedSet } from '../engine';
 import { formatElapsed } from '../engine';
@@ -16,9 +17,10 @@ import { SetSheet, type SetDraft } from '../ui/session/SetSheet';
 import { PlateSheet } from '../ui/session/PlateSheet';
 import { ExercisePicker } from '../ui/session/ExercisePicker';
 import { useNow, useScrollTop } from '../ui/session/useNow';
-import { focusSlot, liftRows, nextLabel, rowLabelOf, sessionCount, type SheetRow } from '../ui/session/logger';
+import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, type SheetRow } from '../ui/session/logger';
 import { priorFromHistory, prMomentFor } from '../ui/session/prs';
-import { effortWords, loadText, sessionNames } from '../ui/session/text';
+import { effortWords, sessionNames } from '../ui/session/text';
+import { formatDate } from '../app/dates';
 
 const key = (id: string) => `gymbro.session.${id}.overrides`;
 function readOverrides(id: string): SlotOverrides {
@@ -69,18 +71,16 @@ export function Session({ params }: { params: string[] }) {
 
   const updateOverrides = useCallback((o: SlotOverrides) => { setOverrides(o); writeOverrides(id, o); }, [id]);
 
-  const log = useCallback(async (slot: LiveSlot, p: { weight: number; reps: number; kind: SetEntry['kind']; rir?: number }, extra: Partial<SetEntry> = {}) => {
-    const saved = await addSet(getDb(), {
+  const log = useCallback((slot: LiveSlot, p: { weight: number; reps: number; kind: SetEntry['kind']; rir?: number }, extra: Partial<SetEntry> = {}) =>
+    addSet(getDb(), {
       sessionId: id, exerciseId: slot.exercise.id, exerciseNameSnapshot: slot.exercise.name, slotOrder: slot.slotOrder,
       kind: p.kind, weight: p.weight, reps: p.reps, ...(p.rir !== undefined && p.kind !== 'warmup' ? { rir: p.rir } : {}), ...extra,
-    });
-    await celebrate(saved, slot.exercise.name);
-  }, [id]);
+    }), [id]);
 
   const logPlanned = useCallback(async (slot: LiveSlot, p: PlannedSet) => {
     if (busy.current) return; // one tap, one set
     busy.current = true;
-    try { await log(slot, p); } finally { busy.current = false; }
+    try { await celebrate(await log(slot, p), slot.exercise.name); } finally { busy.current = false; }
   }, [log]);
 
   const handlers: BlockHandlers = useMemo(() => ({
@@ -108,6 +108,7 @@ export function Session({ params }: { params: string[] }) {
   const rest = last && lastAt
     ? `Rested ${formatElapsed(now - last.loggedAt)} since ${lastAt.lift !== focus?.exercise.name ? `${lastAt.lift}, ` : ''}${lastAt.label}`
     : null;
+  const act = focus && next ? nextAction(next, focus.exercise.bodyweightFactor) : null;
   const load = focus && next && isBarbell(focus.exercise) ? platesPerSide(next.weight, view.plates.barKg, view.plates.platesKg) : null;
   const note = focus?.nudge
     ? { kind: focus.nudge.kind, text: focus.nudge.text }
@@ -124,7 +125,12 @@ export function Session({ params }: { params: string[] }) {
     if (sheet.set) await updateSet(getDb(), sheet.set.id, fields);
     else {
       const clean = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)) as Partial<SetEntry>;
-      await log(sheet.slot, { weight: d.weight, reps: d.reps, kind: d.kind, ...(fields.rir !== undefined ? { rir: fields.rir } : {}) }, clean);
+      const { slot } = sheet;
+      const saved = await log(slot, { weight: d.weight, reps: d.reps, kind: d.kind, ...(fields.rir !== undefined ? { rir: fields.rir } : {}) }, clean);
+      // Close the sheet (and its history entry) before the PR moment opens its own, so back closes only the moment.
+      flushSync(() => setSheet(null));
+      await celebrate(saved, slot.exercise.name);
+      return;
     }
     setSheet(null);
   };
@@ -144,7 +150,9 @@ export function Session({ params }: { params: string[] }) {
       <header className="lhead">
         <button type="button" className="lhead-close" data-press="dim" onClick={() => back('today')}><PixelIcon name="back" />Close</button>
         <span className="lhead-mid">[{names.short}]{focus ? ` //${focus.exercise.name}` : ''}</span>
-        <span className="lhead-t tnum" aria-label={`Session time ${formatElapsed(now - session.startedAt)}`}>{formatElapsed(now - session.startedAt)}</span>
+        {session.programSessionKey === 'adhoc'
+          ? <span className="lhead-t tnum">{formatDate(session.date, { weekday: false })}</span>
+          : <span className="lhead-t tnum" aria-label={`Session time ${formatElapsed(now - session.startedAt)}`}>{formatElapsed(now - session.startedAt)}</span>}
       </header>
 
       {session.sealed && (
@@ -159,10 +167,11 @@ export function Session({ params }: { params: string[] }) {
       {focus && next && !session.sealed ? (
         <div className="next">
           <span className="label">{nextLabel(next)}</span>
-          <div className="next-hero" aria-label={`${kg(next.weight)} kilograms × ${next.reps}`}>
-            <span className="next-w">{loadText(next.weight, focus.exercise.bodyweightFactor)}</span><span className="next-r"> × {next.reps}</span>
+          <div className="next-hero" aria-label={act!.needsWeight ? `No weight set yet × ${next.reps}` : `${kg(next.weight)} kilograms × ${next.reps}`}>
+            <span className="next-w">{act!.hero}</span><span className="next-r"> × {next.reps}</span>
           </div>
           <div className="next-meta">
+            {act!.caption && <span>{act!.caption}</span>}
             <span>{next.warm ? 'Warm-up' : 'Effort'}{next.rir !== undefined && !next.warm && <b> {effortWords(next.rir, scale)}</b>}</span>
             {load && !load.belowBar && (
               <button type="button" className="next-plates" data-press="dim" onClick={() => setPlates(next.weight)}>
@@ -171,8 +180,14 @@ export function Session({ params }: { params: string[] }) {
             )}
           </div>
           <div className="next-actions">
-            <Button variant="primary" block icon="check" className="log-btn" onClick={() => { void logPlanned(focus, next.planned!); }}>Log as planned</Button>
-            <Button block className="adjust-btn" onClick={() => handlers.adjust(focus, next)}>Adjust weight · reps · effort</Button>
+            {act!.needsWeight ? (
+              <Button variant="primary" block iconEnd="chevron" className="log-btn" onClick={() => handlers.adjust(focus, next)}>{act!.primaryLabel}</Button>
+            ) : (
+              <>
+                <Button variant="primary" block icon="check" className="log-btn" onClick={() => { void logPlanned(focus, next.planned!); }}>{act!.primaryLabel}</Button>
+                <Button block className="adjust-btn" onClick={() => handlers.adjust(focus, next)}>Adjust weight · reps · effort</Button>
+              </>
+            )}
           </div>
         </div>
       ) : graded.length > 0 && (

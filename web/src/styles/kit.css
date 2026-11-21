@@ -65,6 +65,7 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .navbar-back { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 8px; font: var(--text-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--ink); }
 .navbar-title { font: var(--text-heading); opacity: 0; transition: opacity 150ms linear; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 56vw; }
 .navbar.collapsed .navbar-title { opacity: 1; }
+.navbar.measuring .navbar-title { visibility: hidden; }
 .navbar-large { margin-top: 2px; }
 
 /* ---------- tab bar ---------- */
@@ -117,7 +118,7 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .sheet-grabber { position: absolute; top: 6px; left: 50%; width: 36px; height: 4px; margin-left: -18px; background: var(--rule); }
 .sheet-title { margin: 0; font: var(--text-title); letter-spacing: -0.01em; }
 .sheet-x { width: 48px; height: 48px; margin-right: -12px; display: grid; place-items: center; color: var(--ink); }
-.sheet-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px var(--gutter) calc(24px + env(safe-area-inset-bottom)); touch-action: none; }
+.sheet-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 4px var(--gutter) calc(24px + env(safe-area-inset-bottom) + var(--sheet-hide, 0px)); touch-action: none; }
 .sheet.scrolls .sheet-body { touch-action: pan-y; }
 .sheet-content { display: flex; flex-direction: column; gap: 18px; }
 

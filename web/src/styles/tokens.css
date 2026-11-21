@@ -68,33 +68,6 @@
   --ease-spring: cubic-bezier(0.3, 1.15, 0.4, 1); /* CSS stand-in for a lightly underdamped spring */
   --press-scale: 0.97;
   --press-opacity: 0.6;
-
-  /* ---------- legacy aliases (LUME names) ----------
-     Kept so screens not yet restyled still compile and render in the new
-     palette. Screen rewrites should use the tokens above; delete these after. */
-  --bg: var(--paper);
-  --surface: var(--paper);
-  --raised: var(--paper);
-  --border: var(--rule);
-  --border-strong: var(--ink);
-  --text: var(--ink);
-  --text-mid: var(--mid);
-  --text-ghost: var(--mid);
-  --accent-contrast: var(--paper);
-  --verdict-beat: var(--ink);
-  --verdict-hit: var(--ink);
-  --verdict-missed: var(--mid);
-  --pr: var(--accent);
-  --danger: var(--ink);
-  --tick-width: 0px;
-  --radius-sm: 0; --radius-md: 0; --radius-lg: 0; --radius-full: 0;
-  --shadow-sheet: none;
-  /* tier ramp = accent at rising strength (one hue, no new colours) */
-  --tier-1: color-mix(in srgb, var(--accent) 28%, transparent);
-  --tier-2: color-mix(in srgb, var(--accent) 46%, transparent);
-  --tier-3: color-mix(in srgb, var(--accent) 64%, transparent);
-  --tier-4: color-mix(in srgb, var(--accent) 82%, transparent);
-  --tier-5: var(--accent);
 }
 
 /* ---------- light: salmon paper, navy ink, ink is the accent, grain on ---------- */

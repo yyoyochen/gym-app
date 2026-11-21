@@ -1,6 +1,8 @@
 // Bottom sheet with HIG detents (UISheetPresentationController):
 //  · medium + large detents; content shorter than medium gets one "fit" stop
-//  · grabber; drag anywhere that isn't a text field / [data-no-drag] control
+//  · grabber; drag from the header, or from the body when it is scrolled to the
+//    top and the finger moves down (never from a text field / [data-no-drag]
+//    control). The body scrolls natively at every detent, medium included.
 //  · release velocity is projected (UIScrollView deceleration) to pick a stop,
 //    fling down past the lowest stop dismisses; overshoot rubber-bands
 //  · at the large detent the app frame scales back behind it
@@ -51,7 +53,7 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
   const backRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
-  const st = useRef({ y: 0, geo: null as Geo | null, anim: null as SpringHandle | null, closeV: 0, stop: 'medium' as 'medium' | 'large', opener: null as Element | null, alive: true });
+  const st = useRef({ y: 0, geo: null as Geo | null, anim: null as SpringHandle | null, closeV: 0, stop: 'medium' as 'medium' | 'large', hide: 0, opener: null as Element | null, alive: true });
 
   useLayoutEffect(() => {
     const root = rootRef.current!, panel = panelRef.current!, body = bodyRef.current!, back = backRef.current!;
@@ -65,7 +67,7 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
       const head = panel.querySelector<HTMLElement>('.sheet-head')?.offsetHeight ?? 0;
       const cs = getComputedStyle(body);
       const content = body.firstElementChild as HTMLElement | null;
-      const natural = Math.min(H, head + (content?.offsetHeight ?? 0) + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom));
+      const natural = Math.min(H, head + (content?.offsetHeight ?? 0) + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) - s.hide);
       const mediumH = Math.round(window.innerHeight * MEDIUM_FRACTION);
       const large = Math.max(0, H - natural);
       const medium = detents.includes('medium') && natural > mediumH + 48 ? H - mediumH : null;
@@ -82,13 +84,22 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
       let t = 0;
       if (g.large < 40) t = g.medium !== null ? (g.medium - y) / (g.medium - g.large) : 1 - (y - g.large) / (g.hidden - g.large);
       setPresentingProgress(Math.max(0, Math.min(1, t)));
-      panel.classList.toggle('scrolls', y <= g.large + 1 && body.scrollHeight > body.clientHeight + 1);
+      updateScrolls();
+    };
+    // The body scrolls at every detent. At medium its lower part is below the screen edge,
+    // so it gets that much extra bottom padding: scrolling to the end brings the last row above the fold.
+    const updateScrolls = () => { panel.classList.toggle('scrolls', body.scrollHeight > body.clientHeight + 1); };
+    const setHide = (which: 'medium' | 'large') => {
+      const g = s.geo!;
+      s.hide = which === 'medium' && g.medium !== null ? g.medium : 0;
+      body.style.setProperty('--sheet-hide', `${s.hide}px`);
+      updateScrolls();
     };
     const settle = (y: number, velocity = 0) => {
       s.anim?.stop();
       s.anim = animateSpring({ from: s.y, to: y, velocity, ...SPRINGS.sheet, onUpdate: v => paint(v < s.geo!.large ? s.geo!.large - rubberband(s.geo!.large - v, s.geo!.H) : v) });
     };
-    const goStop = (which: 'medium' | 'large', velocity = 0) => { s.stop = which; settle(stopY(s.geo!, which), velocity); };
+    const goStop = (which: 'medium' | 'large', velocity = 0) => { s.stop = which; setHide(which); settle(stopY(s.geo!, which), velocity); };
     const requestClose = (velocity = 0) => {
       s.closeV = velocity;
       onCloseRef.current();
@@ -135,14 +146,16 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
 
     // ---- drag between detents
     const vt = new VelocityTracker();
-    let drag: { y0: number; sy: number; id: number; moved: boolean } | null = null;
+    let drag: { y0: number; sy: number; id: number; moved: boolean; fromBody: boolean } | null = null;
     let suppressClick = false;
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0 || !isTopModal(root)) return;
       const t = e.target as Element;
       if (t.closest(NO_DRAG)) return;
-      if (body.contains(t) && panel.classList.contains('scrolls')) return; // native scroll at the large detent
-      drag = { y0: e.clientY, sy: s.y, id: e.pointerId, moved: false };
+      // In a scrolling body the content owns the gesture, unless it is at the top and the finger goes down.
+      const fromBody = body.contains(t) && panel.classList.contains('scrolls');
+      if (fromBody && body.scrollTop > 0) return;
+      drag = { y0: e.clientY, sy: s.y, id: e.pointerId, moved: false, fromBody };
       vt.reset(); vt.add(e.clientY, e.timeStamp);
     };
     const onMove = (e: PointerEvent) => {
@@ -150,6 +163,7 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
       const dy = e.clientY - drag.y0;
       if (!drag.moved) {
         if (Math.abs(dy) < 6) return;
+        if (drag.fromBody && (dy < 0 || body.scrollTop > 0)) { drag = null; return; } // scrolling the content
         drag.moved = true;
         s.anim?.stop();
         try { panel.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
@@ -171,11 +185,12 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
       const stops = [g.large, ...(g.medium !== null ? [g.medium] : []), g.hidden];
       const target = nearestStop(projectFling(s.y, v), stops);
       if (target === g.hidden) requestClose(v * 1000);
-      else { s.stop = target === g.medium ? 'medium' : 'large'; settle(target, v * 1000); }
+      else { s.stop = target === g.medium ? 'medium' : 'large'; setHide(s.stop); settle(target, v * 1000); }
     };
     const onClickCapture = (e: MouseEvent) => { if (suppressClick) { e.stopPropagation(); e.preventDefault(); } };
-    // Scrolling or focusing inside the medium detent expands to large (iOS behaviour).
-    const onWheel = (e: WheelEvent) => { if (s.stop === 'medium' && e.deltaY > 0 && s.geo!.medium !== null) { e.preventDefault(); goStop('large'); } };
+    // A sheet drag that began in the body must not also scroll it (touch pans are claimed by the browser otherwise).
+    const onTouchMove = (e: TouchEvent) => { if (drag?.moved && e.cancelable) e.preventDefault(); };
+    // Focusing a field inside the medium detent expands to large (iOS behaviour).
     const onFocusIn = (e: FocusEvent) => {
       if (s.stop !== 'medium' || s.geo!.medium === null) return;
       const t = e.target as HTMLElement;
@@ -187,7 +202,7 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
     panel.addEventListener('pointerup', onUp);
     panel.addEventListener('pointercancel', onUp);
     panel.addEventListener('click', onClickCapture, true);
-    panel.addEventListener('wheel', onWheel, { passive: false });
+    panel.addEventListener('touchmove', onTouchMove, { passive: false });
     panel.addEventListener('focusin', onFocusIn);
     back.onclick = () => requestClose();
     panel.querySelector<HTMLButtonElement>('.sheet-x')!.onclick = () => requestClose();

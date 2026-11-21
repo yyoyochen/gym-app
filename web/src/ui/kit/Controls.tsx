@@ -125,13 +125,28 @@ function RepeatButton({ label, icon, disabled, onStep }: { label: string; icon: 
 
 export interface SegOption<T extends string> { value: T; label: string }
 
+/** What choosing segment `i` does: nothing (already selected), pick its value, or (allowDeselect, tapping the selected one) clear. */
+export function segmentedChoice<T extends string>(
+  options: readonly SegOption<T>[], i: number, value: T | undefined, allowDeselect = false,
+): { change: false } | { change: true; value: T | undefined } {
+  const o = options[i];
+  if (!o) return { change: false };
+  if (o.value !== value) return { change: true, value: o.value };
+  return allowDeselect ? { change: true, value: undefined } : { change: false };
+}
+
+type SegmentedProps<T extends string> = { label?: string; options: SegOption<T>[]; value: T | undefined } & (
+  | { allowDeselect?: false; onChange: (v: T) => void }
+  /** Tapping the selected segment again clears it: onChange(undefined). */
+  | { allowDeselect: true; onChange: (v: T | undefined) => void }
+);
+
 /**
  * Segmented control (radio group). The ink thumb slides on a spring; press
  * the thumb and drag it across segments, release to pick. Arrow keys move.
+ * With `allowDeselect`, tapping the selected segment clears the value.
  */
-export function Segmented<T extends string>({ label, options, value, onChange }: {
-  label?: string; options: SegOption<T>[]; value: T | undefined; onChange: (v: T) => void;
-}) {
+export function Segmented<T extends string>({ label, options, value, onChange, allowDeselect }: SegmentedProps<T>) {
   const track = useRef<HTMLDivElement>(null);
   const thumb = useRef<HTMLDivElement>(null);
   const pos = useRef(-1);
@@ -139,7 +154,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
   const [preview, setPreview] = useState<number | null>(null);
   const cur = options.findIndex(o => o.value === value);
   const shown = preview ?? cur;
-  const gesture = useRef<{ onThumb: boolean; i: number } | null>(null);
+  const gesture = useRef<{ onThumb: boolean; i: number; start: number } | null>(null);
 
   const place = (to: number, animate: boolean) => {
     const el = thumb.current;
@@ -158,7 +173,10 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
     const r = track.current!.getBoundingClientRect();
     return Math.max(0, Math.min(options.length - 1, Math.floor(((x - r.left) / r.width) * options.length)));
   };
-  const pick = (i: number) => { const o = options[i]; if (o && o.value !== value) onChange(o.value); };
+  const pick = (i: number) => {
+    const c = segmentedChoice(options, i, value, !!allowDeselect);
+    if (c.change) (onChange as (v: T | undefined) => void)(c.value);
+  };
 
   return (
     <div className="stack" role="radiogroup" aria-label={label}>
@@ -167,7 +185,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
         onPointerDown={e => {
           if (e.button !== 0) return;
           const i = idxAt(e.clientX);
-          gesture.current = { onThumb: i === cur, i };
+          gesture.current = { onThumb: i === cur, i, start: i };
           try { track.current!.setPointerCapture(e.pointerId); } catch { /* gone */ }
           if (i === cur) thumb.current?.classList.add('press');
           setPreview(i);
@@ -184,6 +202,8 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
           gesture.current = null;
           thumb.current?.classList.remove('press');
           setPreview(null);
+          // Dragging off the selected segment and back is not a tap: only a press and release on it clears.
+          if (g.i === cur && g.start !== g.i) return;
           pick(g.i);
         }}
         onPointerCancel={() => { gesture.current = null; thumb.current?.classList.remove('press'); setPreview(null); }}

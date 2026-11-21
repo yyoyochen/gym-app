@@ -33,11 +33,16 @@ export function subjectUnit(subject: string): string {
   return subject === SUBJECT_SESSIONS ? '/wk' : 'kg';
 }
 
-/** Load as a lifter reads it: "100", or for bodyweight lifts "BW", "BW+10", "BW−15". */
+/** A lift with no weight to show: 0 kg on an exercise that isn't a bodyweight lift (box jumps, planks, a lift with no history). */
+export function isUnloaded(weight: number, bodyweightFactor = 0): boolean {
+  return weight === 0 && !(bodyweightFactor > 0);
+}
+
+/** Load as a lifter reads it: "100", for bodyweight lifts "BW", "BW+10", "BW−15", and "—" for 0 kg on anything else. */
 export function formatLoad(weight: number, bodyweightFactor = 0): string {
   if (bodyweightFactor > 0) {
     if (weight === 0) return 'BW';
     return weight > 0 ? `BW+${weight}` : `BW−${Math.abs(weight)}`;
   }
-  return String(weight);
+  return isUnloaded(weight, bodyweightFactor) ? '—' : String(weight);
 }

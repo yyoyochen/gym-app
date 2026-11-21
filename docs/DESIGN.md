@@ -43,9 +43,8 @@ before first paint, and `<meta name="theme-color">` tracks the paper colour.
 **Destructive actions** use ink with a dashed outline and explicit wording
 ("Delete this set?"), never red.
 
-LUME token names (`--bg`, `--text-mid`, `--verdict-*`, `--tier-1..5`…) still
-exist as aliases onto the new tokens so unconverted screens render in the new
-palette. Don't use them in new code; delete them once screens are rewritten.
+The LUME token aliases (`--bg`, `--text-mid`, `--verdict-*`, `--tier-1..5`…) were
+deleted on 2026-11-21; only the tokens above exist.
 
 ## 3. Type
 

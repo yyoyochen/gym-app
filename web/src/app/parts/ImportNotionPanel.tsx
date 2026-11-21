@@ -22,7 +22,7 @@ export function ImportNotionPanel({ onDone }: { onDone?: (r: NotionImportResult)
       }} />
       {aliases && <span className="spec-line"><b>{Object.keys(aliases).length}</b> name aliases loaded</span>}
       {aliasError && <span className="field-error" role="alert">{aliasError}</span>}
-      <FilePicker label={busy ? 'Importing…' : 'Choose Notion CSV'} className="primary" accept=".csv,text/csv" onText={async text => {
+      <FilePicker label={busy ? 'Importing…' : 'Choose Notion CSV'} accept=".csv,text/csv" onText={async text => {
         setBusy(true); setError(''); setResult(null);
         try {
           const r = await importNotionCsv(getDb(), text, { aliases: aliases ?? {} });

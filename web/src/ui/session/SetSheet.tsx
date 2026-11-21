@@ -32,7 +32,7 @@ export function EffortPicker({ rir, scale, onChange }: { rir?: number; scale: Ef
     : RIR_OPTS.map(v => ({ value: String(v), label: v === 5 ? '5+' : String(v) }));
   return (
     <Segmented label={scale === 'rpe' ? 'Effort · RPE' : 'Effort · reps in reserve'} options={opts}
-      value={rir === undefined ? undefined : String(rir)} onChange={v => onChange(Number(v))} />
+      value={rir === undefined ? undefined : String(rir)} allowDeselect onChange={v => onChange(v === undefined ? undefined : Number(v))} />
   );
 }
 

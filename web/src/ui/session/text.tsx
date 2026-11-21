@@ -2,6 +2,7 @@ import { Fragment } from 'react';
 import type { EffortScale } from '../../domain/types';
 import { formatEffort } from '../../engine';
 import { readable } from '../readable';
+import { isUnloaded } from '../../app/labels';
 
 const NUM = /(\d+(?:\.\d+)?(?:\s?kg)?(?:\s?[×x]\s?\d+\+?)?)/g;
 
@@ -31,9 +32,10 @@ export function effortWords(rir: number, scale: EffortScale): string {
   return scale === 'rpe' ? formatEffort(rir, scale) : `${formatEffort(rir, scale).replace(' RIR', '')} in reserve`;
 }
 
-/** A set's load as shown: "BW" for an unloaded bodyweight lift, else kg without trailing zeros. */
+/** A set's load as shown: "BW" for an unloaded bodyweight lift, "—" for 0 kg on any other lift, else kg without trailing zeros. */
 export function loadText(weight: number, bodyweightFactor: number): string {
-  return weight === 0 && bodyweightFactor > 0 ? 'BW' : String(Math.round(weight * 100) / 100);
+  if (weight === 0) return isUnloaded(weight, bodyweightFactor) ? '—' : 'BW';
+  return String(Math.round(weight * 100) / 100);
 }
 
 const REP_WORD: Record<number, string> = { 1: 'single', 2: 'double', 3: 'triple' };

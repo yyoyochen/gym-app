@@ -4,6 +4,8 @@
 import type { SetEntry, SetKind } from '../../domain/types';
 import type { PlannedSet } from '../../engine';
 import { setMeetsPlan, type LiveSlot } from '../../app/coach';
+import { isUnloaded } from '../../app/labels';
+import { loadText } from './text';
 
 export type RowState = 'logged' | 'next' | 'todo';
 
@@ -107,4 +109,26 @@ export function rowLabelOf(slots: readonly LiveSlot[], setId: string): { lift: s
     if (r) return { lift: s.exercise.name, label: r.warm ? `warm-up ${r.n}` : r.label === 'Top' ? 'the top set' : `set ${r.label}` };
   }
   return null;
+}
+
+export interface NextAction {
+  /** The planned load is 0 kg on a lift that isn't a bodyweight lift (no history): logging as planned would record a 0 kg set. */
+  needsWeight: boolean;
+  /** The hero number: the load, or "—" while the weight is unknown. */
+  hero: string;
+  /** Under the hero, only while the weight is unknown. */
+  caption: string | null;
+  /** Primary button: logs as planned, or opens the Adjust sheet when the weight is unknown. */
+  primaryLabel: string;
+}
+
+/** What the logger's hero and primary button say for the next set. A lift with no weight must be set before it can be logged. */
+export function nextAction(r: Pick<SheetRow, 'weight'>, bodyweightFactor: number): NextAction {
+  const needsWeight = isUnloaded(r.weight, bodyweightFactor);
+  return {
+    needsWeight,
+    hero: loadText(r.weight, bodyweightFactor),
+    caption: needsWeight ? 'set the weight' : null,
+    primaryLabel: needsWeight ? 'Set weight' : 'Log as planned',
+  };
 }

@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { haptic } from './haptic';
 import { prefersReducedMotion } from './motion/reduced';
 import { isTopModal, popModal, pushModal } from './modal';
+import { deferNav, pushSheetEntry } from './sheetHistory';
 import { stampDate } from './Display';
 
 export const BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
@@ -94,9 +95,28 @@ let n = 0;
 const subs = new Set<() => void>();
 const setShown = (v: typeof shown) => { shown = v; subs.forEach(f => f()); };
 
-/** Open the full-screen PR moment (haptic included). Tap or Esc closes. */
-export function showPrMoment(d: PrMomentData): void { setShown({ ...d, id: ++n }); }
-export function closePrMoment(): void { setShown(null); }
+// Android back closes the moment, not the page (same history entry as a sheet, sheetHistory.ts).
+let releaseEntry: (() => void) | null = null;
+let entryPending = false;
+const onSystemBack = () => { releaseEntry = null; setShown(null); }; // the entry is already popped
+
+/** Open the full-screen PR moment (haptic included). Tap, Esc or back closes. */
+export function showPrMoment(d: PrMomentData): void {
+  setShown({ ...d, id: ++n });
+  if (releaseEntry || entryPending) return;
+  entryPending = true;
+  // A sheet that just closed is still walking back over its own entry: push ours after it lands.
+  const push = () => { entryPending = false; if (shown && !releaseEntry) releaseEntry = pushSheetEntry(onSystemBack); };
+  if (!deferNav(push)) push();
+}
+export function closePrMoment(): void {
+  const release = releaseEntry;
+  releaseEntry = null;
+  setShown(null);
+  release?.();
+}
+/** The moment on screen, if any. For tests and debugging. */
+export function prMomentShown(): PrMomentData | null { return shown; }
 
 export function PrMomentHost() {
   const d = useSyncExternalStore(fn => { subs.add(fn); return () => { subs.delete(fn); }; }, () => shown, () => null);

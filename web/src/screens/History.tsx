@@ -98,7 +98,6 @@ export function History(_props: { params: string[] }) {
         <ul className="tk-rows">
           {shown.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data?.bwFactor} /></li>)}
         </ul>
-        {/* TODO(logger): the logger owns past-session logging; this route should open it with a date picker. */}
         <LinkButton href="#/session/past" icon="plus" className="tk-past">Log past session</LinkButton>
       </section>
     </section>
