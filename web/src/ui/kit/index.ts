@@ -3,6 +3,7 @@ export { PixelIcon } from './PixelIcon';
 export { ICONS, PR_ICON, iconRuns, type IconName } from './icons';
 export { Lockup, BigNumber, LabelValue, LabelValueGrid, Verdict, DitherBar, stampDate, type LabelValueItem, type VerdictKind } from './Display';
 export { GlyphHeatmap } from './GlyphHeatmap';
+export { SquareHeatmap, cellPixels, SUBPIXELS } from './SquareHeatmap';
 export { ditherBar, ditherBarText, heatmapGrid, heatmapText, heatLevel, heatGlyph, SHADES, EMPTY, type HeatGrid, type HeatCell } from './dither';
 export { Button, LinkButton, Stepper, Segmented, segmentedChoice, Toggle, repeatDelays, type ButtonVariant, type SegOption, type StepperProps } from './Controls';
 export { Sheet, type SheetProps, type Detent } from './Sheet';

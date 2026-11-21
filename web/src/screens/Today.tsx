@@ -14,7 +14,7 @@ import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { readable } from '../ui/readable';
 import {
-  BigNumber, Button, ConfirmButton, DitherBar, GlyphHeatmap, LabelValueGrid, LinkButton, Lockup, PixelIcon, Toggle, go, type LabelValueItem,
+  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, PixelIcon, SquareHeatmap, Toggle, go, type LabelValueItem,
 } from '../ui/kit';
 import { goalRows, loadConsistency } from '../ui/progress/data';
 import { ReadinessCheck } from '../ui/session/Readiness';
@@ -68,7 +68,7 @@ export function Today(_props: { params: string[] }) {
     const [state, plan, heat, backup, demo, goals] = await Promise.all([
       todayState(db, today, now),
       planToday(db, today, now, { readiness, minimum }),
-      loadConsistency(db, today, 12, profile),
+      loadConsistency(db, today, 52, profile),
       backupDue(db, now),
       getMeta(db, 'demoMode'),
       profile ? goalRows(db, profile, today) : Promise.resolve([]),
@@ -193,9 +193,9 @@ export function Today(_props: { params: string[] }) {
       )}
 
       <div className="stack">
-        <span className="label">Last 12 weeks</span>
-        <GlyphHeatmap counts={counts} weeks={12} end={today} weekTarget={target} legend
-          label={`Training days, last 12 weeks. ${heat.thisWeek} of ${target} sessions this week`}
+        <span className="label">Last 52 weeks</span>
+        <SquareHeatmap counts={counts} weeks={52} end={today} weekTarget={target} legend
+          label={`Training days, last 52 weeks. ${heat.thisWeek} of ${target} sessions this week`}
           onSelect={d => heat.sessionByDate[d] && go(`history/${heat.sessionByDate[d]}`)} />
       </div>
 
