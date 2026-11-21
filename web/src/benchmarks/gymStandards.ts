@@ -61,6 +61,12 @@ export interface GymStandardsData {
   age: [number, number, number][];
   loaded: LoadedStandard[];
   bodyweight: BodyweightStandard[];
+  /**
+   * Optional per-standard threshold tables (local testing only: the Strength
+   * Level table, loaded in preview builds). Male only; each `male` row is the
+   * five level thresholds (kg) at the matching `bw`, ascending.
+   */
+  tables?: Record<string, { bw: number[]; male: number[][] }>;
 }
 
 export const LEVEL_NAMES: LevelName[] = ['beginner', 'novice', 'intermediate', 'advanced', 'elite'];
@@ -119,33 +125,50 @@ function levelOf(pct: number): Level {
  * seconds for bodyweight lifts, and added load ÷ bodyweight for the weighted
  * (bw_fraction) standards. Null for an unknown id or a non-finite value.
  */
+/**
+ * The five thresholds from a loaded table for this lifter, or null when there
+ * is no table for the id, the lifter is female, or no tables are loaded.
+ * Bodyweight is clamped to the table's range and interpolated linearly.
+ */
+export function tableThresholds(data: GymStandardsData, id: string, sex: StdSex, bodyweightKg: number): number[] | null {
+  const t = data.tables?.[id];
+  if (!t || sex !== 'male' || !t.bw.length) return null;
+  const last = t.bw.length - 1;
+  if (bodyweightKg <= t.bw[0]) return t.male[0].slice();
+  if (bodyweightKg >= t.bw[last]) return t.male[last].slice();
+  let i = 0;
+  while (t.bw[i + 1] < bodyweightKg) i++;
+  const f = (bodyweightKg - t.bw[i]) / (t.bw[i + 1] - t.bw[i]);
+  return t.male[i].map((v, k) => v + (t.male[i + 1][k] - v) * f);
+}
+
+/** Piecewise-linear percentile (0–1) over the five level thresholds; 0.97 past elite. */
+function pctFromPoints(vals: number[], value: number): number {
+  const pts = vals.map((v, i) => [v, LEVEL_P[LEVEL_NAMES[i]]] as const);
+  if (value <= pts[0][0]) return pts[0][0] ? (0.05 * Math.max(value, 0)) / pts[0][0] : 0.05;
+  if (value >= pts[pts.length - 1][0]) return 0.97;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [v0, p0] = pts[i];
+    const [v1, p1] = pts[i + 1];
+    if (v0 <= value && value <= v1) return p0 + (p1 - p0) * (v1 > v0 ? (value - v0) / (v1 - v0) : 0);
+  }
+  return pts[0][1];
+}
+
 export function rate(data: GymStandardsData, exId: string, sex: StdSex, bodyweightKg: number, value: number, age?: number | null): Rating | null {
   const std = getStandard(data, exId);
   if (!std || !Number.isFinite(value)) return null;
   let pct: number;
-  if (std.kind === 'loaded') {
+  const table = std.kind === 'loaded' ? tableThresholds(data, exId, sex, bodyweightKg) : null;
+  if (table) {
+    pct = pctFromPoints(table, value);
+  } else if (std.kind === 'loaded') {
     if (value <= 0) return { level: 'below beginner', percentile: 0 };
     const med = baseMedian(data, std.base, sex, bodyweightKg, age);
     const sigma = data.fit[std.base][1];
     pct = normCdf(Math.log((value / std.ratio) / med) / sigma);
   } else {
-    const vals = sex === 'male' ? std.male : std.female;
-    const pts = vals.map((v, i) => [v, LEVEL_P[LEVEL_NAMES[i]]] as const);
-    if (value <= pts[0][0]) {
-      pct = pts[0][0] ? (0.05 * Math.max(value, 0)) / pts[0][0] : 0.05;
-    } else if (value >= pts[pts.length - 1][0]) {
-      pct = 0.97;
-    } else {
-      pct = pts[0][1];
-      for (let i = 0; i < pts.length - 1; i++) {
-        const [v0, p0] = pts[i];
-        const [v1, p1] = pts[i + 1];
-        if (v0 <= value && value <= v1) {
-          pct = p0 + (p1 - p0) * (v1 > v0 ? (value - v0) / (v1 - v0) : 0);
-          break;
-        }
-      }
-    }
+    pct = pctFromPoints(sex === 'male' ? std.male : std.female, value);
   }
   return { level: levelOf(pct), percentile: pyRound1(pct * 100) };
 }
@@ -170,6 +193,11 @@ export function levelsAt(data: GymStandardsData, exId: string, sex: StdSex, body
   const std = getStandard(data, exId);
   if (!std) return null;
   const values = {} as Record<LevelName, number>;
+  const table = std.kind === 'loaded' ? tableThresholds(data, exId, sex, bodyweightKg) : null;
+  if (table) {
+    LEVEL_NAMES.forEach((n, i) => { values[n] = table[i]; });
+    return { unit: 'kg', values };
+  }
   if (std.kind === 'loaded') {
     const med = baseMedian(data, std.base, sex, bodyweightKg, age);
     const sigma = data.fit[std.base][1];
