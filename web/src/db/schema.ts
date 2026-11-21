@@ -66,7 +66,28 @@ export const MIGRATIONS: Migration[] = [
       undo: 'key',
     },
   },
+  {
+    // Gym-goer strength standards became the default benchmark (docs/DECISIONS.md).
+    version: 2,
+    stores: {},
+    upgrade: tx => tx.table('profile').toCollection().modify((p: ProfileRecord) => {
+      p.benchmarkPopulation = upgradedPopulation(p);
+    }),
+  },
 ];
+
+/**
+ * Schema 2: benchmarkPopulation gains 'gym', the new default. A 'tested' value
+ * that was never changed (no saved version had anything else) is the old
+ * default, so it becomes 'gym'. A choice the user made ('all', or switching
+ * back to 'tested') is kept. Used by the IndexedDB upgrade and by backup migration.
+ */
+export function upgradedPopulation(p: { benchmarkPopulation?: string; history?: { profile?: { benchmarkPopulation?: string } }[] }): Profile['benchmarkPopulation'] {
+  const cur = p.benchmarkPopulation;
+  if (cur === 'gym' || cur === 'all') return cur;
+  const touched = (p.history ?? []).some(h => (h.profile?.benchmarkPopulation ?? 'tested') !== 'tested');
+  return cur === 'tested' && touched ? 'tested' : 'gym';
+}
 
 export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
 

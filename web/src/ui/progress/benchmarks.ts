@@ -1,8 +1,8 @@
 // Benchmark loading (precached JSON, relative URL so it works on any Pages
 // sub-path and offline) and the plain-language line (spec §3.6).
 import { useEffect, useState } from 'react';
-import { percentileFor, type BenchmarkData, type BenchLift, type PercentileResult } from '../../benchmarks/lookup';
-import type { Profile } from '../../domain/types';
+import { percentileFor, type BenchmarkData, type BenchLift, type PercentileResult, type Population } from '../../benchmarks/lookup';
+import type { BenchmarkPopulation, Profile } from '../../domain/types';
 import { kg } from '../../app/coach';
 
 export interface Benchmarks { data: BenchmarkData; attribution: string; dataDate: string }
@@ -41,11 +41,16 @@ export function missingForBenchmark(inp: BenchInput): string | null {
   return miss.length ? `Add ${miss.join(', ')} on Profile to compare.` : null;
 }
 
+/** The OpenPowerlifting table to use: 'all' only when chosen; 'gym' (the default) opens the tested table. */
+export function oplPopulation(p?: BenchmarkPopulation): Population {
+  return p === 'all' ? 'all' : 'tested';
+}
+
 export function benchPercentile(b: Benchmarks, lift: BenchLift, e1rm: number, inp: BenchInput): PercentileResult | null {
   if (missingForBenchmark(inp)) return null;
   return percentileFor(b.data, {
     sex: inp.profile!.sex!, age: inp.year - inp.profile!.birthYear!, bodyweightKg: inp.bodyweightKg!, lift,
-    population: inp.profile!.benchmarkPopulation ?? 'tested', kg: e1rm,
+    population: oplPopulation(inp.profile!.benchmarkPopulation), kg: e1rm,
   });
 }
 

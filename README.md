@@ -27,7 +27,12 @@ git config core.hooksPath tools/hooks
 
 ## Data credits
 
-Strength benchmarks use data from the OpenPowerlifting project,
+Strength levels use a modeled gym-goer standard ([docs/STANDARDS-METHODOLOGY.md](docs/STANDARDS-METHODOLOGY.md)).
+Its squat, bench and deadlift anchors come from Symmetric Strength self-reported
+gym logs, via FitnessVolt's published aggregates (CC BY 4.0, attribution). The
+licence of the anchor source itself has not been verified.
+
+The optional powerlifter comparison uses data from the OpenPowerlifting project,
 https://www.openpowerlifting.org. A copy of the data can be downloaded at
 https://data.openpowerlifting.org.
 

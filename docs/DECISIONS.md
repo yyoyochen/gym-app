@@ -39,3 +39,18 @@ Build decisions not already settled in [PWA-SPEC.md](PWA-SPEC.md). Newest last.
 **Weeks run Sunday → Saturday** (heatmap, "n of 3 this week", consistency).
 
 **Imported sessions don't advance the program rotation** and have no verdicts (they have no commit).
+
+## 2026-11-21 — gym-goer strength standards
+
+**The modeled gym-goer standards are the default benchmark** (Yoyo's decision). OpenPowerlifting stays as an optional "vs competitive powerlifters" section for squat, bench and deadlift. `Profile.benchmarkPopulation` is now `'gym' | 'tested' | 'all'`, default `'gym'`.
+
+**Schema 2 migrates the setting.** A stored `'tested'` that no saved profile version ever changed is the old default and becomes `'gym'`; `'all'`, or a switch back to `'tested'`, is kept. Backups at schema 1 and older undo copies are migrated the same way.
+
+**The shipped table is rebuilt, not copied.** `tools/standards/build.mjs` recomputes the squat/bench/deadlift lognormal fits at full precision from the anchor percentiles in the model's JSON (the JSON stores them rounded to 4 decimals) and checks them against the rounded values, so the TypeScript `rate()` matches the Python exactly (same level on every case, percentile to the model's own 0.1 rounding). The normal CDF and its inverse are written out in `benchmarks/normal.ts` (no dependency).
+
+**Weighted pull-up / chin-up / dip.** The model's value is added-load 1RM ÷ bodyweight. The app estimates the added-load 1RM as Epley(bw × factor + added, reps) − bw × factor, using the exercise's bodyweight factor (0.95) like every other bodyweight e1RM in the app, and divides by the full bodyweight as the model defines. Using factor 1.0 instead would add ~0.05 × bw × reps / 30 kg (≈ 0.7 kg at 80 kg × 5 reps). The weighted standard is used whenever added-load sets exist in the 90-day window; otherwise the reps table, labelled "best set, not a max test".
+
+**Holds have no seconds field.** Plank, dead hang and L-sit read the logged reps as seconds and say so.
+
+**Dumbbell standards are per dumbbell**, matching how DB lifts are logged. Generic catalog entries that merge lifts with different standards (Leg Curl, Calf Raise, Face Pull incl. band, Rear Delt Fly incl. reverse pec deck, Overhead Tricep Extension, Hanging Knee/Leg Raise) have no standard rather than a guess; Bulgarian Split Squat defaults to the dumbbell version, Preacher Curl to EZ-bar.
+

@@ -1,0 +1,15 @@
+/* Gym-goer strength standards: level ladder, level word, confidence badge.
+   Tier ramp tokens only (docs/DESIGN.md — TierLadderRow). */
+.std-list { display: flex; flex-direction: column; gap: 8px; }
+.std-row { display: flex; flex-direction: column; gap: 8px; }
+.std-row p { margin: 0; }
+.std-row .heading { color: var(--text); text-decoration: none; }
+.std-ladder { position: relative; display: flex; gap: 2px; height: 8px; }
+.std-ladder i { display: block; height: 100%; background: var(--raised); }
+.std-mark { position: absolute; top: -4px; bottom: -4px; width: var(--tick-width); background: var(--text); }
+.std-level { font: 600 12px/16px var(--font-mono); letter-spacing: var(--tracking-stamp); text-transform: uppercase; }
+.std-conf { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; padding: 0 4px;
+  border: 1px solid var(--border-strong); border-radius: 8px; font: 600 12px/16px var(--font-mono); color: var(--text-mid); }
+.std-opl summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; color: var(--accent); }
+.std-opl[open] summary { margin-bottom: 8px; }
+.std-opl > .stack { gap: 8px; }

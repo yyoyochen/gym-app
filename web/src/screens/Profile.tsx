@@ -82,7 +82,7 @@ export function Profile(_props: { params: string[] }) {
       </div>
 
       <div className="card"><GoalsEditor profile={p} onChange={edit} /></div>
-      <TargetsEditor profile={p} onChange={edit} exercises={exercises} />
+      <TargetsEditor profile={p} onChange={edit} exercises={exercises} bodyweightKg={bodyweight[bodyweight.length - 1]?.kg} />
       <div className="card"><CheckpointsEditor profile={p} onChange={edit} /></div>
 
       <Errors errors={errors} />

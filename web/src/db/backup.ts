@@ -4,7 +4,7 @@
 import type {
   AppEvent, BodyweightEntry, Commit, Exercise, Millis, Program, Session,
 } from '../domain/types';
-import { DATA_STORES, SCHEMA_VERSION, type GymDb, type MetaRow, type ProfileRecord, type StoredSet } from './schema';
+import { DATA_STORES, SCHEMA_VERSION, upgradedPopulation, type GymDb, type MetaRow, type ProfileRecord, type StoredSet } from './schema';
 import { DEVICE_META_KEYS, logEvent, setMeta, sortSets } from './repo';
 import { isISODate, localISODate } from './util';
 
@@ -76,7 +76,9 @@ export function migrateExport(doc: ExportDoc): ExportDoc {
   let d = doc;
   while (d.schemaVersion < SCHEMA_VERSION) {
     switch (d.schemaVersion) {
-      // case 1: d = { ...d, schemaVersion: 2, ... }; break;
+      case 1:
+        d = { ...d, schemaVersion: 2, profile: d.profile.map(p => ({ ...p, benchmarkPopulation: upgradedPopulation(p) })) };
+        break;
       default:
         throw new Error(`No migration from backup schema ${d.schemaVersion}`);
     }
@@ -189,7 +191,9 @@ export async function undoLastRestore(db: GymDb): Promise<void> {
   await db.transaction('rw', [...DATA_STORES.map(s => db.table(s)), db.undo], async () => {
     const row = await db.undo.get('lastRestore');
     if (!row) throw new Error('Nothing to undo');
-    await replaceAll(db, row.snapshot as ExportDoc);
+    // The copy may predate an app update: bring it to the current schema first.
+    const snap = row.snapshot as ExportDoc;
+    await replaceAll(db, migrateExport({ ...snap, schemaVersion: snap.schemaVersion ?? SCHEMA_VERSION }));
     await db.undo.delete('lastRestore');
   });
 }

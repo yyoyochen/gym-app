@@ -8,6 +8,10 @@ import {
   GOALS, GOAL_LABELS, SUBJECT_BODYWEIGHT, SUBJECT_SESSIONS, TARGET_TYPE_LABELS, subjectLabel, subjectUnit,
 } from '../labels';
 import { validateTarget, type TargetDraft } from '../validate';
+import { rateTarget, type RateContext } from '../../benchmarks/liftRating';
+import type { GymStandardsData } from '../../benchmarks/gymStandards';
+import { ordinal, standardsContext, useGymStandards } from '../../ui/progress/standards';
+import { LevelWord } from '../../ui/progress/StandardLadder';
 
 type Edit = (p: Profile) => void;
 
@@ -40,8 +44,22 @@ export function GoalsEditor({ profile, onChange }: { profile: Profile; onChange:
 
 const blankDraft = (): TargetDraft => ({ subject: '', value: '', type: 'reach', deadline: '' });
 
-export function TargetsEditor({ profile, onChange, exercises }: { profile: Profile; onChange: Edit; exercises: Exercise[] }) {
+/** "≈ Intermediate · 54th percentile of gym-goers" for a lift target, when the lift has a standard. */
+function TargetLevel({ gym, ctx, ex, value }: { gym: GymStandardsData | null | undefined; ctx: RateContext | null; ex?: Exercise; value: number }) {
+  if (!gym || !ctx || !ex || !(value > 0)) return null;
+  const r = rateTarget(gym, ex, value, ctx);
+  if (!r) return null;
+  return (
+    <span className="mid">≈ <LevelWord rating={r} /> · <span className="num-inline">{ordinal(r.percentile)}</span> percentile of gym-goers
+      {r.basis === 'weighted' ? ' (as added load, 1RM)' : ' (as a 1RM)'}</span>
+  );
+}
+
+export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { profile: Profile; onChange: Edit; exercises: Exercise[]; bodyweightKg?: number }) {
   const [draft, setDraft] = useState<TargetDraft>(blankDraft);
+  const gym = useGymStandards();
+  const ctx = standardsContext({ profile, bodyweightKg, year: new Date().getFullYear() });
+  const byId = new Map(exercises.map(e => [e.id, e]));
   const [errors, setErrors] = useState<string[]>([]);
   const names = new Map(exercises.map(e => [e.id, e.name]));
   const main = exercises.filter(e => e.benchmarkKey || e.id === 'overhead-press');
@@ -66,7 +84,8 @@ export function TargetsEditor({ profile, onChange, exercises }: { profile: Profi
           <div className="stack tight">
             <span className="heading">{subjectLabel(t.subject, names)}</span>
             <span className="mid">{TARGET_TYPE_LABELS[t.type]} <span className="mono num-sm">{t.value} {subjectUnit(t.subject)}</span> by <span className="mono num-sm">{formatDate(t.deadline, { weekday: false })}</span></span>
-            {/* TODO(engine): needed pace vs recent pace, feasibility read, benchmark percentile (spec §3.7). */}
+            <TargetLevel gym={gym} ctx={ctx} ex={byId.get(t.subject)} value={t.value} />
+            {/* TODO(engine): needed pace vs recent pace, feasibility read (spec §3.7). */}
             <span className="ghost">Pace and feasibility: from the coach engine (coming).</span>
           </div>
           <button type="button" className="btn" onClick={() => onChange({ ...profile, targets: profile.targets.filter(x => x.id !== t.id) })}>Remove</button>
@@ -92,6 +111,7 @@ export function TargetsEditor({ profile, onChange, exercises }: { profile: Profi
           <span className="label">Value ({draft.subject ? subjectUnit(draft.subject) : 'kg'})</span>
           <input className="field mono" inputMode="decimal" value={draft.value} onChange={e => setDraft({ ...draft, value: e.target.value })} />
         </label>
+        <TargetLevel gym={gym} ctx={ctx} ex={byId.get(draft.subject)} value={Number(draft.value)} />
         <DateField label="Deadline" value={draft.deadline} min={today} onChange={v => setDraft({ ...draft, deadline: v })} />
         <Errors errors={errors} />
         <button type="button" className="btn" onClick={add}>Add target</button>

@@ -8,7 +8,7 @@
 - Pain areas are a fixed list, not free text — no AI and no API key needed (§3.3.2).
 - Programs start from a built-in template and are edited in the app (§3.8). No YAML.
 - The Python engine is retired once the TypeScript port matches it. The whole repo becomes one language (§7.1).
-- Benchmarks default to drug-tested raw lifters, with "all raw lifters" as a toggle (§3.6).
+- Benchmarks default to drug-tested raw lifters, with "all raw lifters" as a toggle (§3.6). *Superseded 2026-11-21: modeled gym-goer standards are the default; OpenPowerlifting is an optional comparison (§3.6).*
 
 **Changes in v0.2:**
 - No rest alerts of any kind. Rest is a silent elapsed counter.
@@ -202,7 +202,17 @@ Other reminders:
 
 ### 3.6 Benchmarks — compared with lifters like me
 
-**Source: OpenPowerlifting.**
+**Default: modeled gym-goer standards (decided 2026-11-21).** Method and caveats: [STANDARDS-METHODOLOGY.md](STANDARDS-METHODOLOGY.md).
+- Population: modeled self-reported gym-goers, not competitors. Levels: Beginner ≈ p5, Novice ≈ p20, Intermediate ≈ p50, Advanced ≈ p80, Elite ≈ p95 ("below beginner" under p5).
+- Squat, bench and deadlift are anchored on Symmetric Strength self-reported gym logs via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source's own licence is not verified. Everything else is a ratio to a base lift or an editorial rep table, with a confidence grade per exercise: A data-anchored, B coaching ratio, C rough.
+- Data: `web/public/standards/gym-standards.json`, built by `tools/standards/build.mjs` from the model's JSON (the model lives outside the repo). Rating: `web/src/benchmarks/gymStandards.ts`, a port of the model's `rate()`, parity-tested against the Python on a seeded grid.
+- Mapping: each catalog exercise carries `standardId`; imported and custom exercises are matched by name (`benchmarks/standardMatch.ts`). Generic names that cover lifts with different standards (Leg Curl, Calf Raise, Face Pull, Overhead Tricep Extension) get no standard.
+- What is rated (last 90 days): loaded lifts → best e1RM; pull-up / chin-up / dip with added load → the weighted standard (added-load e1RM ÷ bodyweight, with added e1RM = Epley(bw × factor + added, reps) − bw × factor); other bodyweight lifts → the best set's reps ("best set, not a max test"); holds → the best set's logged reps read as seconds.
+- Needs sex and bodyweight on Profile; birth year is optional (none = the 20–29 table).
+- **Progress → Benchmarks:** every mapped lift with its level, percentile, a level ladder in the tier ramp and its confidence badge, plus the caveat and attribution. **Lift page:** level, the table of every level for this lifter and "next: Advanced at X kg". **Profile targets:** the level and percentile a target would mean.
+- **Settings → Benchmark population:** Gym-goers (default) / Tested lifters / All lifters. Levels always use the gym-goer model; Tested or All opens the powerlifter comparison below with that group (otherwise it is a collapsed section using the tested table).
+
+**Optional comparison: competitive powerlifters (OpenPowerlifting), squat, bench and deadlift only.**
 - The competition data is dedicated to the **public domain**. Attribution is requested, not required; the app credits it anyway on the benchmark screen and in the README.
 - Download: https://data.openpowerlifting.org (bulk CSV). Docs: https://openpowerlifting.gitlab.io/opl-csv/.
 - Columns used: `Sex`, `Age` / `AgeClass`, `BodyweightKg`, `Equipment`, `Event`, `Tested`, `Best3SquatKg`, `Best3BenchKg`, `Best3DeadliftKg`, `TotalKg`, `Date`.
@@ -224,7 +234,7 @@ Other reminders:
 - **What it says plainly, every time it appears:**
   - The comparison population is **competitive powerlifters**, who are stronger than the gym population. A middle percentile here is a strong gym lifter.
   - Competition lifts follow federation rules (depth, pause on bench). Gym e1RMs from reps are estimates.
-- **No benchmark:** overhead press, Olympic lifts and accessories have no open benchmark in this dataset. They show "no open benchmark" — the app doesn't fall back to scraped or proprietary standards (the old git-ignored `strength_standards.csv` can't ship in a public repo).
+- **No benchmark:** overhead press, Olympic lifts and accessories have no competition benchmark in this dataset; they are covered by the gym-goer standards above. The old git-ignored `strength_standards.csv` (scraped, proprietary) is still never used.
 - **Later:** Olympic lifts if an openly licensed weightlifting dataset is confirmed (OpenWeightlifting exists; its licence is not yet checked).
 
 ### 3.7 Profile — where I am, where I'm going, by when

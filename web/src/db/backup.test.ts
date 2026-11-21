@@ -60,7 +60,7 @@ describe('export → wipe → restore', () => {
   it('exportBackupJson records lastExportAt and an export event', async () => {
     const db = freshDb();
     const json = await exportBackupJson(db, Date.UTC(2026, 10, 20, 12));
-    expect(JSON.parse(json)).toMatchObject({ format: 'gymbro-backup', schemaVersion: 1, exportedAt: '2026-11-20T12:00:00.000Z' });
+    expect(JSON.parse(json)).toMatchObject({ format: 'gymbro-backup', schemaVersion: 2, exportedAt: '2026-11-20T12:00:00.000Z' });
     expect(await getMeta(db, 'lastExportAt')).toBe(Date.UTC(2026, 10, 20, 12));
     expect((await db.events.toArray()).map(e => e.type)).toEqual(['export']);
   });

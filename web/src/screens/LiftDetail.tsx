@@ -10,10 +10,14 @@ import { latestBodyweight, liftPRs, liftStats, liftVerdicts, trendOf, TREND_GLYP
 import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
 import { E1rmChart } from '../ui/progress/E1rmChart';
 import { useScrollTop } from '../ui/session/useNow';
+import { rateExercise } from '../benchmarks/liftRating';
+import { STANDARDS_CAVEAT, levelTableText, missingForStandards, standardsContext, useGymStandards } from '../ui/progress/standards';
+import { LevelWord, StandardSummary, ValueText } from '../ui/progress/StandardLadder';
 
 export function LiftDetail({ params }: { params: string[] }) {
   const id = params[0];
   const bench = useBenchmarks();
+  const gym = useGymStandards();
   useScrollTop(id);
   const data = useLive(async db => {
     const today = todayISO();
@@ -37,6 +41,9 @@ export function LiftDetail({ params }: { params: string[] }) {
   const then = bestRecentE1rm(st.series, addDays(today, -90));
   const pctNow = bench && key && st.best90 !== null ? benchPercentile(bench, key, st.best90, benchIn) : null;
   const pctThen = bench && key && then !== null ? benchPercentile(bench, key, then, benchIn) : null;
+  const ctx = standardsContext(benchIn);
+  const standing = gym && ctx ? rateExercise(gym, ex, st.history, today, ctx) : null;
+  const pop = profile?.benchmarkPopulation ?? 'gym';
 
   return (
     <section className="screen">
@@ -79,24 +86,48 @@ export function LiftDetail({ params }: { params: string[] }) {
         )}
       </section>
 
-      <section className="stack" aria-label="Benchmark">
-        <span className="label">Benchmark</span>
-        {!key ? <p className="mid line">No open benchmark for this lift.</p>
-          : bench === undefined ? <p className="mid line">Loading…</p>
-          : bench === null ? <p className="mid line">Benchmarks could not be loaded.</p>
-          : missingForBenchmark(benchIn) ? <p className="mid line">{missingForBenchmark(benchIn)}</p>
-          : pctNow && st.best90 !== null ? (
-            <>
-              <div className="pct-strip" role="img" aria-label={benchLine(key, st.best90, pctNow)}>
-                <span className="tick50" />
-                <span className="mark" style={{ left: `calc(${pctNumber(pctNow.percentile)}% - 1px)` }} />
+      <section className="stack" aria-label="Level">
+        <span className="label">Level · vs gym-goers</span>
+        {gym === undefined ? <p className="mid line">Loading…</p>
+          : gym === null ? <p className="mid line">Strength standards could not be loaded.</p>
+          : !ctx ? <p className="mid line">Add {missingForStandards(benchIn).join(' and ')} on <a className="link" href="#/profile">Profile</a> to see your level.</p>
+          : !standing || standing.kind === 'none' ? <p className="mid line">No strength standard for this lift.</p>
+          : standing.kind === 'no-data' ? <p className="mid line">No qualifying sets in the last 90 days (standard: {standing.standardName}).</p>
+          : (
+            <div className="card std-row">
+              <div className="spread">
+                <span className="heading">{standing.standardName}</span>
+                <LevelWord rating={standing} />
               </div>
-              <p className="line">{benchLine(key, st.best90, pctNow)}</p>
-              {pctThen && <p className="mid line">90 days ago: {pctText(pctThen.percentile)} → now {pctText(pctNow.percentile)}.</p>}
-              <p className="mid line">{BENCH_CAVEAT}</p>
-            </>
-          ) : <p className="mid line">No recent sets to place.</p>}
+              <StandardSummary rating={standing} />
+              <p className="mid line"><ValueText text={levelTableText(standing, ctx.bodyweightKg)} /></p>
+              {standing.note && <p className="mid line">Note: {standing.note}.</p>}
+            </div>
+          )}
+        <p className="mid line">{STANDARDS_CAVEAT}</p>
       </section>
+
+      {key && (
+        <details className="std-opl" open={pop !== 'gym'} aria-label="Benchmark">
+          <summary>vs competitive powerlifters</summary>
+          <div className="stack">
+            {bench === undefined ? <p className="mid line">Loading…</p>
+              : bench === null ? <p className="mid line">Benchmarks could not be loaded.</p>
+              : missingForBenchmark(benchIn) ? <p className="mid line">{missingForBenchmark(benchIn)}</p>
+              : pctNow && st.best90 !== null ? (
+                <>
+                  <div className="pct-strip" role="img" aria-label={benchLine(key, st.best90, pctNow)}>
+                    <span className="tick50" />
+                    <span className="mark" style={{ left: `calc(${pctNumber(pctNow.percentile)}% - 1px)` }} />
+                  </div>
+                  <p className="line">{benchLine(key, st.best90, pctNow)}</p>
+                  {pctThen && <p className="mid line">90 days ago: {pctText(pctThen.percentile)} → now {pctText(pctNow.percentile)}.</p>}
+                  <p className="mid line">{BENCH_CAVEAT}</p>
+                </>
+              ) : <p className="mid line">No recent sets to place.</p>}
+          </div>
+        </details>
+      )}
 
       <section className="stack" aria-label="History">
         <span className="label">History</span>

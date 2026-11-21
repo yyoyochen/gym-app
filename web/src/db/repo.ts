@@ -86,7 +86,7 @@ export function defaultProfile(): Profile {
     goals: ['maintain'],
     targets: [],
     checkpoints: [],
-    benchmarkPopulation: 'tested',
+    benchmarkPopulation: 'gym',
   };
 }
 

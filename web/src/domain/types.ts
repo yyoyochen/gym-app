@@ -37,6 +37,8 @@ export interface Exercise {
   /** Fraction of bodyweight moved (dip/pull-up ~0.95). 0 = not a bodyweight lift. */
   bodyweightFactor: number;
   benchmarkKey: BenchmarkKey;
+  /** Gym-goer strength standard id (web/public/standards/gym-standards.json). Unset: matched from the name. */
+  standardId?: string;
   archived?: boolean;
 }
 
@@ -164,8 +166,11 @@ export interface Profile {
   goals: GoalKind[];
   targets: GoalTarget[];
   checkpoints: ISODate[];
-  benchmarkPopulation: 'tested' | 'all';
+  /** 'gym' = modeled gym-goer standards (default); 'tested' / 'all' also open the competitive-powerlifter comparison. */
+  benchmarkPopulation: BenchmarkPopulation;
 }
+
+export type BenchmarkPopulation = 'gym' | 'tested' | 'all';
 
 export interface BodyweightEntry { id: string; date: ISODate; kg: number }
 

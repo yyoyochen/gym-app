@@ -1,7 +1,7 @@
 // Settings (spec §4 Profile → Settings): effort scale, plates, benchmarks,
 // export / import / restore, storage, wipe, about.
 import { useEffect, useState } from 'react';
-import type { EffortScale, Profile } from '../domain/types';
+import type { BenchmarkPopulation, EffortScale, Profile } from '../domain/types';
 import {
   defaultProfile, exportBackupJson, exportSetsCsv, getDb, getMeta, getProfile, requestPersist, saveProfile, wipeAll,
 } from '../db';
@@ -42,8 +42,9 @@ export function Settings(_props: { params: string[] }) {
           <Segmented<EffortScale> label="Effort scale" value={profile.effortScale} onChange={v => setProfile({ effortScale: v })}
             options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
           <p className="mid">Reps in reserve, or RPE (10 − RIR). Stored as RIR either way.</p>
-          <Segmented<'tested' | 'all'> label="Benchmark population" value={profile.benchmarkPopulation} onChange={v => setProfile({ benchmarkPopulation: v })}
-            options={[{ value: 'tested', label: 'Tested lifters' }, { value: 'all', label: 'All lifters' }]} />
+          <Segmented<BenchmarkPopulation> label="Benchmark population" value={profile.benchmarkPopulation ?? 'gym'} onChange={v => setProfile({ benchmarkPopulation: v })}
+            options={[{ value: 'gym', label: 'Gym' }, { value: 'tested', label: 'Tested' }, { value: 'all', label: 'All' }]} />
+          <p className="mid">Levels always compare you with modeled gym-goers (Gym). Tested or All also opens the powerlifter comparison for squat, bench and deadlift, against drug-tested or all raw competitors.</p>
         </div>
       )}
 
@@ -149,7 +150,8 @@ function About() {
       <span className="label">About</span>
       <p>GymBro <span className="mono">{pkg.version}</span>. Local-first: no account, no server, no network calls with your data.</p>
       <span className="label">Data credits</span>
-      <p className="mid">Benchmarks: {attribution}{dataDate && <> Data from <span className="mono">{dataDate}</span>.</>}</p>
+      <p className="mid">Strength levels: modeled gym-goer standards. Squat, bench and deadlift anchors from Symmetric Strength self-reported gym logs, via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source’s licence has not been verified. Method: docs/STANDARDS-METHODOLOGY.md.</p>
+      <p className="mid">Powerlifter comparison: {attribution}{dataDate && <> Data from <span className="mono">{dataDate}</span>.</>}</p>
       <p className="mid">Code under the MIT licence.</p>
     </div>
   );

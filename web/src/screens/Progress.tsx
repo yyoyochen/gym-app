@@ -15,12 +15,16 @@ import { summaryLine, yearSummary } from '../ui/progress/consistency';
 import { goalRows, latestBodyweight, liftStats, loadConsistency, trendOf, TREND_GLYPH, type LiftStats } from '../ui/progress/data';
 import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, useBenchmarks } from '../ui/progress/benchmarks';
 import type { BenchLift } from '../benchmarks/lookup';
+import { rateExercise, type LiftRating } from '../benchmarks/liftRating';
+import { STANDARDS_CAVEAT, contextText, missingForStandards, standardsContext, useGymStandards } from '../ui/progress/standards';
+import { LevelWord, StandardSummary, ValueText } from '../ui/progress/StandardLadder';
 
 const BENCH_LIFTS: BenchLift[] = ['squat', 'bench', 'deadlift'];
 
 export function Progress(_props: { params: string[] }) {
   const [sel, setSel] = useState<ISODate | null>(null);
   const bench = useBenchmarks();
+  const gym = useGymStandards();
   useScrollTop('progress');
   const data = useLive(async db => {
     const today = todayISO();
@@ -54,6 +58,20 @@ export function Progress(_props: { params: string[] }) {
   const selCell = sel ? heat.grid.columns.flat().find(c => c.date === sel) : null;
   const benchIn = { profile, bodyweightKg: bw, year: Number(today.slice(0, 4)) };
   const missing = missingForBenchmark(benchIn);
+  const stdMissing = missingForStandards(benchIn);
+  const ctx = standardsContext(benchIn);
+  const rated: { l: LiftStats; r: LiftRating }[] = [];
+  const noStandard: string[] = [];
+  const notRated: string[] = [];
+  if (gym && ctx) {
+    for (const l of lifts) {
+      const st = rateExercise(gym, l.exercise, l.history, today, ctx);
+      if (st.kind === 'rated') rated.push({ l, r: st });
+      else if (st.kind === 'none') noStandard.push(l.exercise.name);
+      else notRated.push(l.exercise.name);
+    }
+  }
+  const pop = profile?.benchmarkPopulation ?? 'gym';
 
   return (
     <section className="screen">
@@ -95,18 +113,50 @@ export function Progress(_props: { params: string[] }) {
       </section>
 
       <section className="stack" aria-label="Benchmarks">
-        <span className="label">Benchmarks</span>
-        {bench === undefined && <p className="mid line">Loading…</p>}
-        {bench === null && <p className="mid line">Benchmarks could not be loaded.</p>}
-        {bench && missing && <p className="mid line">{missing}</p>}
-        {bench && !missing && benchEx.map(b => {
-          if (b.e1rm === null) return <p key={b.lift} className="mid line">{b.name}: no sets in the last 90 days.</p>;
-          const r = benchPercentile(bench, b.lift, b.e1rm, benchIn);
-          return <p key={b.lift} className="line">{r ? <MonoLine text={benchLine(b.lift, b.e1rm, r)} /> : `${b.name}: no bucket for your profile.`}</p>;
-        })}
-        {bench && <p className="mid line">Overhead press, Olympic lifts and accessories: no open benchmark.</p>}
-        <p className="mid line">{BENCH_CAVEAT}</p>
-        {bench && <p className="ghost micro line">Data: {bench.attribution} ({bench.dataDate}).</p>}
+        <span className="label">Benchmarks · vs gym-goers</span>
+        {gym === undefined && <p className="mid line">Loading…</p>}
+        {gym === null && <p className="mid line">Strength standards could not be loaded.</p>}
+        {gym && !ctx && (
+          <p className="mid line">Add {stdMissing.join(' and ')} on <a className="link" href="#/profile">Profile</a> to see your level for each lift.</p>
+        )}
+        {gym && ctx && (
+          <>
+            <p className="mid line">Levels for <ValueText text={contextText(ctx)} />, from the last 90 days.</p>
+            {!rated.length && <p className="mid line">No lift with a standard logged in the last 90 days.</p>}
+            <div className="std-list">
+              {rated.map(({ l, r }) => (
+                <article key={l.exercise.id} className="card std-row">
+                  <div className="spread">
+                    <a className="heading" href={`#/lift/${encodeURIComponent(l.exercise.id)}`}>{l.exercise.name}</a>
+                    <LevelWord rating={r} />
+                  </div>
+                  <StandardSummary rating={r} showNext={false} />
+                </article>
+              ))}
+            </div>
+            {notRated.length > 0 && <p className="mid line">Not rated (no qualifying sets in 90 days): {notRated.join(', ')}.</p>}
+            {noStandard.length > 0 && <p className="mid line">No standard: {noStandard.join(', ')}.</p>}
+          </>
+        )}
+        <p className="mid line">{STANDARDS_CAVEAT}</p>
+        {gym && <p className="mid line">Data: {gym.meta.attribution} {gym.meta.licenceNote}</p>}
+
+        <details className="std-opl" open={pop !== 'gym'}>
+          <summary>vs competitive powerlifters · squat, bench, deadlift</summary>
+          <div className="stack">
+            {bench === undefined && <p className="mid line">Loading…</p>}
+            {bench === null && <p className="mid line">Benchmarks could not be loaded.</p>}
+            {bench && missing && <p className="mid line">{missing}</p>}
+            {bench && !missing && benchEx.map(b => {
+              if (b.e1rm === null) return <p key={b.lift} className="mid line">{b.name}: no sets in the last 90 days.</p>;
+              const r = benchPercentile(bench, b.lift, b.e1rm, benchIn);
+              return <p key={b.lift} className="line">{r ? <MonoLine text={benchLine(b.lift, b.e1rm, r)} /> : `${b.name}: no bucket for your profile.`}</p>;
+            })}
+            {bench && <p className="mid line">Only squat, bench and deadlift have a competition dataset. Population: {pop === 'all' ? 'all raw lifters' : 'drug-tested raw lifters'} (Settings).</p>}
+            <p className="mid line">{BENCH_CAVEAT}</p>
+            {bench && <p className="mid line">Data: {bench.attribution} ({bench.dataDate}).</p>}
+          </div>
+        </details>
       </section>
 
       <section className="stack" aria-label="Lifts">
