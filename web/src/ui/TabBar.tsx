@@ -11,8 +11,10 @@ const TABS: { key: string; label: string; icon: IconName }[] = [
 ];
 
 /**
- * Four tabs: pixel icon + mono caption, accent on the active one, a 1.5px ink
- * rule on top. Tab switches are instant (no slide). Re-tapping the active tab
+ * Four tabs: pixel icon + mono caption, a 1.5px ink rule on top. The active tab
+ * is a square accent box around icon and caption: the icon half filled, the
+ * caption half outlined, with a dither shadow (kit.css, dither.css).
+ * Tab switches are instant (no slide). Re-tapping the active tab
  * scrolls to the top, or returns to the tab's root from a page below it.
  */
 export function TabBar({ active, path }: { active: string; path: string }) {
@@ -27,8 +29,10 @@ export function TabBar({ active, path }: { active: string; path: string }) {
               if (on && path === t.key) scrollPageTo(0, true);
               else go(t.key, { transition: 'none' });
             }}>
-            <PixelIcon name={t.icon} />
-            <span>{t.label}</span>
+            <span className="tab-box">
+              <span className="tab-ico"><PixelIcon name={t.icon} /></span>
+              <span className="tab-lbl">{t.label}</span>
+            </span>
           </a>
         );
       })}

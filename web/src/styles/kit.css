@@ -72,9 +72,17 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, 1fr);
   height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
   background: var(--paper); border-top: var(--rule-w) solid var(--ink); }
-.tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--mid);
+.tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--mid);
   font: var(--text-micro); letter-spacing: 0.06em; text-transform: uppercase; }
 .tabbar a.on { color: var(--accent); }
+/* Active tab: a square box around icon + caption, accent outline; the icon half
+   is filled (icon in paper colour), the caption half is not. Shadow: dither.css. */
+.tab-box { position: relative; display: flex; flex-direction: column; align-items: stretch; width: 76px;
+  border: var(--rule-w) solid transparent; }
+.tab-ico { display: grid; place-items: center; height: 28px; }
+.tab-lbl { padding: 4px 0 4px; text-align: center; }
+.tabbar a.on .tab-box { border-color: var(--accent); background: var(--paper); }
+.tabbar a.on .tab-ico { background: var(--accent); color: var(--paper); }
 
 /* ---------- buttons inside controls ---------- */
 .btn.stepper-btn { min-width: var(--touch-min); width: var(--touch-min); padding: 0; }
