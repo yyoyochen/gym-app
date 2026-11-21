@@ -20,6 +20,10 @@ export function haptic(kind: HapticKind = 'commit'): boolean {
   try {
     const nav = (globalThis as { navigator?: Navigator }).navigator;
     if (!nav || typeof nav.vibrate !== 'function') return false;
+    // Chrome refuses (and logs an error) until the person has tapped the page;
+    // skip quietly instead of spamming the console.
+    const activation = (nav as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation;
+    if (activation && !activation.hasBeenActive) return false;
     return nav.vibrate(PATTERN[kind]);
   } catch {
     return false;

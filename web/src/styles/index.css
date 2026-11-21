@@ -6,6 +6,7 @@
 @import './tokens.css';
 @import './base.css';
 @import './kit.css';
+@import './dither.css';
 @import './screens.css';
 @import './flow.css';
 @import './standards.css';
