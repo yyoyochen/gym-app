@@ -34,7 +34,7 @@ export function StandardSummary({ rating, label, showNext = true }: { rating: Li
       <LevelBar rating={rating} label={label} />
       <p className="std-ev"><ValueText text={ratedValueText(rating)} /></p>
       <p className="std-ev mid">
-        <ConfidenceBadge confidence={rating.confidence} /> {confidenceWord(rating)}
+        {rating.source === 'model' && <><ConfidenceBadge confidence={rating.confidence} /> </>}{confidenceWord(rating)}
       </p>
       {showNext && (
         <p className="std-next">

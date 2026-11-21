@@ -15,7 +15,7 @@ import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, pctNumbe
 import { LiftChart, type LinePoint } from '../ui/progress/LiftChart';
 import { useScrollTop } from '../ui/session/useNow';
 import { rateExercise } from '../benchmarks/liftRating';
-import { STANDARDS_CAVEAT, confidenceWord, levelTableText, missingForStandards, nextText, ratedValueText, standardsContext, useGymStandards } from '../ui/progress/standards';
+import { STANDARDS_CAVEAT, confidenceWord, sourceMeta, levelTableText, missingForStandards, nextText, ratedValueText, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { ConfidenceBadge, LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
 import { prFlags, weeklyVolume } from '../ui/progress/stats';
@@ -126,7 +126,7 @@ export function LiftDetail({ params }: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Level">
-        <SecHead title="Level" meta="vs gym-goers" />
+        <SecHead title="Level" meta={standing?.kind === 'rated' ? sourceMeta([standing]) : 'vs gym-goers'} />
         {gym === undefined ? <p className="tk-quiet">Loading…</p>
           : gym === null ? <p className="tk-quiet">Strength standards could not be loaded.</p>
           : !ctx ? <p className="tk-quiet">Add {missingForStandards(benchIn).join(' and ')} on <a className="tk-link" href="#/profile">Profile</a> to see your level.</p>
@@ -138,7 +138,7 @@ export function LiftDetail({ params }: { params: string[] }) {
               <p className="tk-fun">{standing.next ? <>Next level: <ValueText text={nextText(standing.next, standing.loadType === 'dumbbell_each')} /></> : 'Top level'}</p>
               <LabelValueGrid variant="stats" items={[
                 { label: 'Rated on:', value: ratedValueText(standing) },
-                { label: 'Confidence:', value: <><ConfidenceBadge confidence={standing.confidence} /> {confidenceWord(standing)}</> },
+                { label: 'Confidence:', value: <>{standing.source === 'model' && <><ConfidenceBadge confidence={standing.confidence} /> </>}{confidenceWord(standing)}</> },
               ]} />
               <p className="tk-quiet"><ValueText text={levelTableText(standing, ctx.bodyweightKg)} /></p>
               {standing.note && <p className="tk-quiet">Note: {standing.note}.</p>}

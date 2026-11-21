@@ -5,7 +5,7 @@ import type { GymStandardsData } from '../../benchmarks/gymStandards';
 import { rateValue } from '../../benchmarks/liftRating';
 import { defaultProfile } from '../../db/repo';
 import {
-  STANDARDS_CAVEAT, contextText, levelTableText, missingForStandards, nextText, ordinal, ratedValueText, standardsContext, standingText,
+  STANDARDS_CAVEAT, confidenceWord, contextText, levelTableText, sourceMeta, missingForStandards, nextText, ordinal, ratedValueText, standardsContext, standingText,
 } from './standards';
 
 const data: GymStandardsData = JSON.parse(readFileSync(fileURLToPath(new URL('../../../public/standards/gym-standards.json', import.meta.url)), 'utf8'));
@@ -50,5 +50,17 @@ describe('plain-language strings', () => {
   it('the caveat names the population and the level percentiles', () => {
     expect(STANDARDS_CAVEAT).toMatch(/gym-goers, not competitors/);
     expect(STANDARDS_CAVEAT).toMatch(/Intermediate ≈ 50th/);
+  });
+});
+
+describe('benchmark source wording', () => {
+  it('names the Strength Level table when a rating came from it', () => {
+    expect(confidenceWord({ confidence: 'B', source: 'table' })).toBe('Strength Level table');
+    expect(confidenceWord({ confidence: 'B', source: 'model' })).toBe('coaching ratio');
+  });
+  it('the section subtitle follows the ratings shown', () => {
+    expect(sourceMeta([{ source: 'model' }, { source: 'table' }])).toBe('vs Strength Level');
+    expect(sourceMeta([{ source: 'model' }])).toBe('vs gym-goers');
+    expect(sourceMeta([])).toBe('vs gym-goers');
   });
 });

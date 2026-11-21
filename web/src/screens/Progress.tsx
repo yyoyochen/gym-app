@@ -15,7 +15,7 @@ import { goalRows, latestBodyweight, liftStats, trendOf, type LiftStats } from '
 import { BENCH_CAVEAT, LIFT_WORD, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
 import type { BenchLift } from '../benchmarks/lookup';
 import { rateExercise, type LiftRating } from '../benchmarks/liftRating';
-import { STANDARDS_CAVEAT, contextText, missingForStandards, standardsContext, useGymStandards } from '../ui/progress/standards';
+import { STANDARDS_CAVEAT, contextText, missingForStandards, sourceMeta, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
 import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats, trendGlyphs, weeksSince } from '../ui/progress/stats';
@@ -143,7 +143,7 @@ export function Progress(_props: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Benchmarks">
-        <SecHead title="Benchmarks" meta="vs gym-goers · 90 days" />
+        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))} · 90 days`} />
         {gym === undefined && <p className="tk-quiet">Loading…</p>}
         {gym === null && <p className="tk-quiet">Strength standards could not be loaded.</p>}
         {gym && !ctx && (

@@ -75,7 +75,12 @@ export function ordinal(n: number): string {
 }
 
 export const levelWord = (r: Pick<LiftRating, 'level'>) => LEVEL_LABEL[r.level];
-export const confidenceWord = (r: Pick<LiftRating, 'confidence'>) => CONFIDENCE_LABEL[r.confidence];
+export const confidenceWord = (r: Pick<LiftRating, 'confidence'> & Partial<Pick<LiftRating, 'source'>>) =>
+  r.source === 'table' ? 'Strength Level table' : CONFIDENCE_LABEL[r.confidence];
+
+/** Subtitle for a set of ratings: Strength Level when any of them came from its table. */
+export const sourceMeta = (ratings: Pick<LiftRating, 'source'>[]) =>
+  ratings.some(r => r.source === 'table') ? 'vs Strength Level' : 'vs gym-goers';
 
 const half = (x: number) => kg(Math.round(x * 2) / 2);
 

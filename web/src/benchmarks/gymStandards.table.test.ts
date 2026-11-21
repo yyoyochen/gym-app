@@ -60,6 +60,13 @@ describe('lift ratings name their source', () => {
     expect((rateExercise(data, bp, h, '2026-11-21', ctx) as LiftRating).source).toBe('table');
     expect((rateExercise(base, bp, h, '2026-11-21', ctx) as LiftRating).source).toBe('model');
   });
+  it("a table rating carries no model note (the model's caveat doesn't apply)", () => {
+    const sq = cat.get('back-squat')!;
+    const withSq: GymStandardsData = { ...base, tables: { back_squat: tables.bench_press } };
+    const h = [{ date: '2026-11-20', sets: [set(sq.id, 100, 1)] }];
+    expect((rateExercise(base, sq, h, '2026-11-21', ctx) as LiftRating).note).toBeTruthy();
+    expect((rateExercise(withSq, sq, h, '2026-11-21', ctx) as LiftRating).note).toBeUndefined();
+  });
   it('rates DB bench on per-dumbbell weight, not doubled', () => {
     const db = cat.get('db-bench-press')!;
     const r = rateExercise(data, db, [{ date: '2026-11-20', sets: [set(db.id, 30, 1)] }], '2026-11-21', ctx) as LiftRating;

@@ -81,11 +81,12 @@ export function rateValue(
   const levels = levelsAt(data, standardId, ctx.sex, ctx.bodyweightKg, ctx.age);
   if (!r || !levels) return null;
   const b: RatingBasis = basis ?? (std.kind === 'loaded' ? 'e1rm' : std.unit === 'bw_fraction' ? 'weighted' : std.unit === 'seconds' ? 'seconds' : 'reps');
+  const source = std.kind === 'loaded' && tableThresholds(data, standardId, ctx.sex, ctx.bodyweightKg) ? 'table' : 'model';
   return {
     kind: 'rated', standardId, standardName: std.name, basis: b, value, ...(addedKg !== undefined ? { addedKg } : {}),
-    level: r.level, percentile: r.percentile, confidence: std.confidence,
-    source: std.kind === 'loaded' && tableThresholds(data, standardId, ctx.sex, ctx.bodyweightKg) ? 'table' : 'model',
-    ...(std.kind === 'loaded' ? { loadType: std.loadType } : {}), ...(std.note ? { note: std.note } : {}),
+    level: r.level, percentile: r.percentile, confidence: std.confidence, source,
+    // The model's note explains its own estimate; it doesn't apply to a table rating.
+    ...(std.kind === 'loaded' ? { loadType: std.loadType } : {}), ...(std.note && source === 'model' ? { note: std.note } : {}),
     levels, next: nextStep(levels, r.level, ctx.bodyweightKg),
   };
 }
