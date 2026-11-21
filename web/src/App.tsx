@@ -1,4 +1,9 @@
-import { useRoute } from './ui/router';
+import { lazy, Suspense } from 'react';
+import { useNav, type NavSnapshot } from './ui/kit/navigation';
+import { PageStack } from './ui/kit/PageStack';
+import { HudHost } from './ui/kit/Hud';
+import { PrMomentHost } from './ui/kit/PrMoment';
+import { APP_ROOT_ID } from './ui/kit/modal';
 import { TabBar } from './ui/TabBar';
 import { Today } from './screens/Today';
 import { Session } from './screens/Session';
@@ -38,13 +43,23 @@ const ROUTES: Record<string, { tab: string | null; render: (p: string[]) => JSX.
   onboarding: { tab: null, render: p => <Onboarding params={p} /> },
 };
 
+// Preview builds only: #/kit, a gallery of the kit (MODE is a build-time constant; prod drops this).
+const KitGallery = import.meta.env.MODE === 'preview' ? lazy(() => import('./dev/KitGallery')) : null;
+if (KitGallery) ROUTES.kit = { tab: null, render: p => <Suspense fallback={null}><KitGallery params={p} /></Suspense> };
+
+const routeOf = (nav: NavSnapshot) => ROUTES[nav.segments[0]] ?? ROUTES.today;
+
 export function App() {
-  const [head, ...rest] = useRoute();
-  const route = ROUTES[head] ?? ROUTES.today;
+  const nav = useNav();
+  const tab = routeOf(nav).tab;
   return (
-    <div className="app">
-      {route.render(rest)}
-      {route.tab && <TabBar active={route.tab} />}
-    </div>
+    <>
+      <div className="app" id={APP_ROOT_ID}>
+        <PageStack nav={nav} render={n => routeOf(n).render(n.segments.slice(1))} pageClass={n => (routeOf(n).tab ? 'with-tabs' : '')} />
+        {tab && <TabBar active={tab} path={nav.path} />}
+      </div>
+      <HudHost />
+      <PrMomentHost />
+    </>
   );
 }

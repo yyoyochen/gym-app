@@ -8,6 +8,7 @@ import {
 import { DEFAULT_TEMPLATE_ID, programFromTemplate } from '../domain/templates';
 import { useLive } from '../ui/useLive';
 import { go } from '../ui/router';
+import { scrollPageTo } from '../ui/kit/PageStack';
 import { Errors, Segmented } from '../ui/common';
 import { loadDemo } from '../app/demo';
 import { todayISO } from '../app/dates';
@@ -35,7 +36,7 @@ async function ensureProfile(): Promise<void> {
 export function Onboarding(_props: { params: string[] }) {
   const [step, setStep] = useState(0);
   useEffect(() => { seedCatalog(getDb()).catch(e => console.error(e)); }, []);
-  const next = async () => { await ensureProfile(); setStep(s => Math.min(s + 1, STEPS.length - 1)); window.scrollTo(0, 0); };
+  const next = async () => { await ensureProfile(); setStep(s => Math.min(s + 1, STEPS.length - 1)); scrollPageTo(0); };
 
   return (
     <section className="screen onboarding">

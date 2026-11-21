@@ -5,16 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite web",
-    "build": "tsc -p web && vite build web",
+    "build": "tsc -p web && vite build web && node tools/check-bundle.mjs dist",
     "preview": "vite preview web",
     "typecheck": "tsc -p web --noEmit",
     "test": "vitest run --root web",
     "test:private": "GYMBRO_PRIVATE=1 vitest run --root web",
-    "check:private": "node tools/check-private.mjs --all"
+    "check:private": "node tools/check-private.mjs --all",
+    "build:preview": "vite build web --mode preview"
   },
   "dependencies": {
-    "@fontsource-variable/instrument-sans": "^5.3.0",
-    "@fontsource-variable/spline-sans-mono": "^5.3.0",
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
+    "@fontsource/space-mono": "^5.3.0",
     "dexie": "^4.4.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

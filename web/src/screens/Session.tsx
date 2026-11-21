@@ -52,6 +52,8 @@ export function Session({ params }: { params: string[] }) {
       sessionId: id, exerciseId: slot.exercise.id, exerciseNameSnapshot: slot.exercise.name, slotOrder: slot.slotOrder,
       kind: p.kind, weight: p.weight, reps: p.reps, ...(p.rir !== undefined && p.kind !== 'warmup' ? { rir: p.rir } : {}), ...extra,
     });
+    // TODO(PrMoment, screen worker): haptic('commit') here (ui/kit), then
+    // isNewBest(set, earlier sets of slot.exercise) from app/bests.ts → showPrMoment({ value, unit, caption, lift, pairs }).
   }, [id]);
 
   const handlers: BlockHandlers = useMemo(() => ({

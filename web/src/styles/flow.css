@@ -1,5 +1,5 @@
 /* Core training flow: Today, Session, Review, Progress, LiftDetail.
-   Imported from base.css after screens.css; tokens only (docs/DESIGN.md).
+   Loaded after screens.css; tokens only (docs/DESIGN.md).
    Motion only at set commit and verdict reveal. */
 
 /* ---------- shared ---------- */
@@ -32,9 +32,9 @@
 .readiness .seg-opt { min-height: 44px; }
 .readiness-row { display: grid; grid-template-columns: 84px 1fr; align-items: center; gap: 8px; }
 .ready-chip { font: 600 12px/16px var(--font-mono); letter-spacing: var(--tracking-stamp); text-transform: uppercase;
-  padding: 4px 8px; border-radius: 8px; border: 1px solid currentColor; }
+  padding: 4px 8px; border-radius: 0; border: 1px solid currentColor; }
 .ready-chip.green { color: var(--accent); }
-.ready-chip.amber { color: var(--gold); }
+.ready-chip.amber { color: var(--accent); }
 .ready-chip.red { color: var(--verdict-missed); }
 .start-bar { display: flex; flex-direction: column; gap: 12px; }
 
@@ -68,7 +68,7 @@
 .lift-head .btn { min-height: 48px; padding: 0 14px; }
 .set-rows { display: flex; flex-direction: column; gap: 6px; }
 .set-row { position: relative; display: grid; grid-template-columns: 28px 1fr 56px; align-items: center; gap: 8px; min-height: 56px;
-  border-radius: var(--radius-md); background: var(--raised); border: 1px solid var(--border); padding-left: 10px; overflow: hidden; }
+  border-radius: 0; background: var(--raised); border: 1px solid var(--border); padding-left: 10px; overflow: hidden; }
 .set-row::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--tick-width); background: transparent; }
 .set-row.logged { background: var(--surface); }
 .set-row.met::before { background: var(--accent); }
@@ -82,12 +82,12 @@
 .set-row.ghost .w-btn, .set-row.ghost .r-btn, .set-row.ghost .eff { color: var(--text-ghost); }
 .set-row.pending .w-btn, .set-row.pending .r-btn { color: var(--text-ghost); }
 .commit-btn { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: var(--accent); color: var(--accent-contrast);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+  border-radius: 0; }
 .commit-btn svg { width: 24px; height: 24px; }
-.set-row.logged .commit-btn { background: transparent; color: var(--lume-deep); }
+.set-row.logged .commit-btn { background: transparent; color: var(--ink); }
 .set-row.warm { min-height: 48px; grid-template-columns: 28px 1fr 48px; }
 .set-row.warm .commit-btn { width: 48px; height: 48px; background: var(--raised); color: var(--text-mid); border-left: 1px solid var(--border); }
-.set-row.warm.logged .commit-btn { background: transparent; color: var(--lume-deep); border-left: 0; }
+.set-row.warm.logged .commit-btn { background: transparent; color: var(--ink); border-left: 0; }
 .set-row.warm .r-btn, .set-row.warm .w-btn { font: var(--text-num-sm); font-family: var(--font-mono); }
 .set-row.logged .vals .val-solid { animation: settle var(--dur-base) var(--ease-out); }
 @keyframes settle { from { color: var(--text-ghost); } to { color: var(--text); } }
@@ -95,15 +95,15 @@
 @keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
 .nudge { margin: 0 0 0 38px; font: var(--text-body); color: var(--text); border-left: var(--tick-width) solid var(--accent); padding-left: 8px; }
 .nudge.stop { border-left-color: var(--verdict-missed); }
-.nudge.info { border-left-color: var(--lume-deep); color: var(--text-mid); }
+.nudge.info { border-left-color: var(--ink); color: var(--text-mid); }
 .rested { margin: 0 0 0 38px; font: var(--text-num-sm); font-family: var(--font-mono); color: var(--text-mid); }
-.add-row { min-height: 48px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); color: var(--text-mid); }
+.add-row { min-height: 48px; border: 1px dashed var(--border-strong); border-radius: 0; color: var(--text-mid); }
 .effort-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .effort-chips .chip { min-height: 48px; min-width: 48px; justify-content: center; font-family: var(--font-mono); text-transform: none; letter-spacing: 0; font-size: 15px; }
 .plate-strip { display: flex; align-items: center; gap: 3px; min-height: 120px; padding: 8px 0; overflow-x: auto; }
 .plate-strip .bar { width: 40px; height: 6px; background: var(--border-strong); flex: none; }
-.plate-strip .plate { flex: none; background: var(--ink-600); color: var(--text); display: flex; align-items: flex-end; justify-content: center;
-  border-radius: 3px; font: var(--text-micro); padding-bottom: 2px; }
+.plate-strip .plate { flex: none; background: var(--rule); color: var(--text); display: flex; align-items: flex-end; justify-content: center;
+  border-radius: 0; font: var(--text-micro); padding-bottom: 2px; }
 .pain-box { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 12px; }
 .finish-bar { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
 
@@ -126,7 +126,7 @@
 .goal-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; }
 .goal-row p { margin: 0; }
 .feas { font: 600 12px/16px var(--font-mono); letter-spacing: var(--tracking-stamp); text-transform: uppercase; padding: 4px 8px;
-  border-radius: 8px; border: 1px solid currentColor; align-self: start; }
+  border-radius: 0; border: 1px solid currentColor; align-self: start; }
 .feas.comfortable { color: var(--verdict-hit); }
 .feas.ambitious { color: var(--text-mid); }
 .feas.unlikely { color: var(--verdict-missed); }

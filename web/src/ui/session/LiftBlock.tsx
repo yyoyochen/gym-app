@@ -1,4 +1,4 @@
-// One lift in the logger: warm-up ramp, set rows in the four LUME states
+// One lift in the logger: warm-up ramp, set rows in the four set-row states
 // (pending / ghost / logged / criterion-met), one nudge line under the active
 // set, and the silent rest label under the session's last logged set.
 import type { EffortScale, SetEntry, SetKind } from '../../domain/types';

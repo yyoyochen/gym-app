@@ -54,3 +54,27 @@ Build decisions not already settled in [PWA-SPEC.md](PWA-SPEC.md). Newest last.
 
 **Dumbbell standards are per dumbbell**, matching how DB lifts are logged. Generic catalog entries that merge lifts with different standards (Leg Curl, Calf Raise, Face Pull incl. band, Rear Delt Fly incl. reverse pec deck, Overhead Tricep Extension, Hanging Knee/Leg Raise) have no standard rather than a guess; Bulgarian Split Squat defaults to the dumbbell version, Preacher Curl to EZ-bar.
 
+
+## 2026-11-21 — design system: Ink & Dither replaces LUME
+
+**LUME is retired** (owner rejected mint on dark). The approved look is "Ink & Dither" ([DESIGN.md](DESIGN.md)): one ink per theme, big heavy grotesk numbers, Space Mono spec labels, 1-bit pixel icons and glyph dither as the only ornament. Dark (`#0e0e0e` paper, `#f2f2ee` ink, FT salmon `#fcd0af` accent) is the default; light is salmon paper with navy ink, ink as accent, plus paper grain. No other colours, including for errors: destructive actions are ink with a dashed outline and explicit wording.
+
+**Fonts:** Schibsted Grotesk (variable) and Space Mono 400/700, bundled via @fontsource. Instrument Sans and Spline Sans Mono are removed.
+
+**Tabular figures are not global.** Schibsted's `tnum` also widens `. , :`, which spaced out ordinary sentences. It applies only where columns align.
+
+**Motion is the Apple HIG feel, ported from the approved prototype** into `ui/kit/motion/spring.ts`: an analytic damped-spring solver (response + damping fraction) seeded with release velocity, rubber-banding, fling projection, a velocity tracker. A wall-clock watchdog ends any spring whose frames stop, so a page is never left half-pushed when the tab is backgrounded.
+
+**Android back, not an iOS edge swipe.** The owner uses Android, whose system back gesture owns the screen edges, so there is no custom swipe-back. Every push is a real history entry stamped with its stack index in `history.state`; on popstate a lower index means pop and the pop animation plays. `go()` / `back()` live in `ui/kit/navigation.ts` (`ui/router.ts` re-exports them); plain `#/…` links are stamped on arrival. Tab switches are instant, and popping back over one is too.
+
+**The document no longer scrolls.** The app is a fixed frame; each page is its own scroller. This lets push/pop slide whole pages and a sheet scale the app back at its large detent, and lets scroll be saved per history entry and restored on pop. Screens that called `window.scrollTo` now call `scrollPageTo`.
+
+**Sheets close with a ghost.** Callers either pass `open={false}` or unmount the sheet; in both cases the panel is cloned on unmount and springs out with the fling velocity, so every existing call site gets the exit animation.
+
+**ConfirmButton is an action sheet now**, not a two-tap button. Its old "Tap again to …" labels are turned into a question ("Wipe everything?") until screens pass proper ones.
+
+**Theme is stored in meta (`theme`: system/dark/light, default dark)** and mirrored to localStorage only so `index.html` can set `data-theme` before first paint. `<meta name="theme-color">` follows the paper colour.
+
+**Preview-only code is compiled out of production.** `vite build --mode preview` adds `window.__gymbro` (data-layer functions for local seeding scripts) and a `#/kit` component gallery. Both hang off `import.meta.env.MODE === 'preview'`, a build-time constant, so production builds drop them; `tools/check-bundle.mjs` (run by `npm run build`) fails if either string reaches `dist/`.
+
+**PR detection is a pure helper, not wired yet.** `app/bests.ts` `isNewBest()` (heavier than any earlier working set, else a better e1RM by more than 0.05 kg; never on a lift's first log). The logger and Review are marked `TODO(PrMoment)` for the screen rewrites.

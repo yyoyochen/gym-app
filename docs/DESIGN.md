@@ -1,171 +1,151 @@
-# GymBro Design System — "LUME"
+# GymBro design system: "Ink & Dither"
 
-*Direction, tokens, and component specs. Pairs with `design-tokens.css`. 2026-08-01.*
+*Approved 2026-11-21. Replaces LUME (mint on petrol dark), which is retired: no
+LUME colour, radius or shadow should appear in new work. Tokens:
+`web/src/styles/tokens.css`. Components: `web/src/ui/kit/` (import from
+`ui/kit`). A live gallery of every component is at `#/kit` in preview builds.*
 
----
+## 1. Principles
 
-## 1. Direction: LUME (instrument-dial dark)
+1. **One ink.** Each theme is one paper, one ink and one accent. No other
+   colours anywhere, including errors.
+2. **The number is the hero.** Every screen leads with one big heavy number
+   (Schibsted Grotesk 800, tight tracking). Everything else is quieter.
+3. **Weather-app hierarchy.** A small grey label sits over a bold value. No
+   cards, no boxes around content, no shadows, no rounded corners; sections are
+   separated by space and a dotted rule.
+4. **Spec labels are the voice.** Space Mono uppercase for labels, lockups and
+   notes: `[SESSION A]`, `//NOTE`, `©21.11.26`. That's the mood board, and it's
+   wanted.
+5. **Dither is the only ornament.** 1-bit 9×9 pixel icons, glyph dither bars
+   (`█▓▒░···`), a glyph heatmap (`· ░ ▒ ▓ █`), and the PR number resolving from
+   ordered dither.
+6. **Verdicts without colour.** BEAT = solid ink, HIT = ink outline, MISSED =
+   dashed and faded. Fill, line and dash carry the meaning.
 
-GymBro's interface is a **precision instrument dial**, not a gym poster: dive watches and cockpit gauges are the real-world objects engineered for exactly our conditions — numbers read at arm's length, in dim light, by someone mid-effort — so the app borrows their logic: a deep petrol green-black "dial" surface, luminous mint numerals, and everything non-numeric receding into quiet labels. The verdict moment is styled as a **stamped ledger entry** — promise stated, result recorded, verdict sealed — because the product's whole differentiator is that it closes the promise→grade loop, and a ledger reads as evidence while confetti reads as marketing. This deliberately occupies the open territory from research: serious and evidence-based like Strong, legible and warm like Hevy, with none of the arcade skin of GymLevels — and zero overlap with the old iron/chalk/plate-red system.
+## 2. Tokens
 
-**Personality in three words:** calibrated, luminous, matter-of-fact.
+| Token | Dark (default) | Light | Use |
+|---|---|---|---|
+| `--paper` | `#0e0e0e` | `#fcd0af` (FT salmon) | background |
+| `--ink` | `#f2f2ee` | `#1e2152` (navy) | text, rules, solid blocks |
+| `--accent` | `#fcd0af` | = ink | bars, heatmap, stat values, active tab, `//NOTE`, PR number |
+| `--mid` | ink at 52% | ink at 62% | quiet labels, secondary values |
+| `--rule` | ink at 18% | ink at 28% | dotted rules, empty tracks |
+| `--grain` | 0 | 0.55 | paper-grain overlay (light only) |
+| `--dim` / `--behind` | black | navy | sheet backdrop / behind a scaled-back app |
 
-**Signature element:** the **verdict ledger row** — every target is a two-line pair (the promise in quiet text, the result in mono numerals) joined by a 3px vertical **verdict tick** on the left edge whose color is the verdict. The tick motif repeats at small scale everywhere a promise exists (TargetCard, SetLogger criterion state, Review scorecard), so the core loop is visible in the pixels.
+Theme lives on `<html data-theme="dark|light|system">`; `system` follows
+`prefers-color-scheme`. The choice is stored in meta (`theme`), applied by
+`useTheme()` / `initTheme()`, mirrored to localStorage so `index.html` sets it
+before first paint, and `<meta name="theme-color">` tracks the paper colour.
 
----
+**Destructive actions** use ink with a dashed outline and explicit wording
+("Delete this set?"), never red.
 
-## 2. Color system
+LUME token names (`--bg`, `--text-mid`, `--verdict-*`, `--tier-1..5`…) still
+exist as aliases onto the new tokens so unconverted screens render in the new
+palette. Don't use them in new code; delete them once screens are rewritten.
 
-Dark-first. The base is petrol green-black (a tinted dark, never neutral gray — neutral-gray-plus-blue-accent is the sea of sameness). No pure black, no pure white.
+## 3. Type
 
-### 2.1 Raw palette
+Fonts are bundled (offline): `@fontsource-variable/schibsted-grotesk`,
+`@fontsource/space-mono` 400/700.
 
-| Token | Hex | Name |
+| Token | Spec | Use |
 |---|---|---|
-| `--ink-950` | `#0B100E` | Dial — app background |
-| `--ink-900` | `#111917` | Surface — cards |
-| `--ink-800` | `#18211E` | Raised — sheets, inputs, chips |
-| `--ink-700` | `#1F2A26` | Hairline — borders, dividers |
-| `--ink-600` | `#2B3833` | Hairline-strong — focused borders, table rules |
-| `--white-100` | `#F2F7F4` | Text high — headings, committed numbers |
-| `--white-60` | `#9FADA6` | Text mid — body, labels |
-| `--white-35` | `#66736D` | Text low — ghost values, disabled |
-| `--lume` | `#57E6AE` | Lume mint — the instrument glow |
-| `--lume-deep` | `#34B48A` | Deep mint — quieter positive |
-| `--gold` | `#E8B84B` | Gold — PR and Elite only |
-| `--rest-blue` | `#78AEE0` | Rest blue — rest timer only |
-| `--slate` | `#8B98A3` | Slate — the "missed" non-color |
-| `--ember` | `#E06C5F` | Ember — destructive actions only (Settings) |
+| `--text-hero` | 800, clamp(88–128px)/0.82, −0.055em | the screen's number |
+| `--text-display` | 800, clamp(64–104px) | logger "next set" |
+| `--text-num-lg` | 700 30px | unit beside a hero |
+| `--text-num-md` | 650 19px | label/value values |
+| `--text-title` | 650 19px | "Session A, squat + bench" |
+| `--text-large-title` | 800 40px | HIG large title |
+| `--text-body` | 400 15px/1.45 | sentences (15px floor) |
+| `--text-quiet` | 400 13px, `--mid` | the grey label over a value |
+| `--text-label` | Space Mono 11px uppercase +0.04em | spec labels |
+| `--text-mono` | Space Mono 12px | stats, notes, set sheets |
+| `--text-button` | Space Mono 700 13px +0.08em | primary button |
 
-### 2.2 Semantic aliases
+Tabular figures only where columns align (`.tnum`, inputs, stats): Schibsted's
+`tnum` also widens `. , :`, so it is never global. Block glyphs aren't in Space
+Mono; `--font-glyph` keeps them monospaced, and the heatmap puts every glyph in
+its own `1ch` grid cell so fallback widths can't drift.
 
-| Semantic | Maps to | Usage |
-|---|---|---|
-| `--bg` / `--surface` / `--raised` | ink-950 / 900 / 800 | Layering |
-| `--border` / `--border-strong` | ink-700 / ink-600 | Hairlines |
-| `--text` / `--text-mid` / `--text-ghost` | white-100 / 60 / 35 | Type |
-| `--accent` | lume | CTA, active tab, focus ring, live numerals |
-| `--verdict-beat` | lume `#57E6AE` | Exceeded the promise — **filled** treatment |
-| `--verdict-hit` | lume-deep `#34B48A` | Kept the promise — **outline** treatment |
-| `--verdict-missed` | slate `#8B98A3` | Promise not met — outline, zero saturation drama |
-| `--pr` | gold | PR markers on charts, PR chip. Nothing else is gold below Elite. |
-| `--timer` | rest-blue | RestTimerBar exclusively — rest is "cool", work is "lume" |
-| `--danger` | ember | Delete/reset in Settings. Never used for "missed". |
+## 4. Components (`ui/kit`)
 
-**Verdict color logic (load-bearing):** beat and hit are the *same hue* at two intensities because both fulfilled the promise — beat just exceeded it. Missed is a desaturated slate, not red: it's a data point, not a failure state. Red (`--ember`) is reserved for destructive UI actions so a missed lift can never visually rhyme with "delete". This is how "matter-of-fact, not shameful" is enforced by the palette itself.
+| Component | Notes |
+|---|---|
+| `PixelIcon name scale` | 18 icons on a 9×9 grid (`icons.ts`), crisp at integer scales |
+| `Lockup mid left? right?` | boxed header, middle cell inverted, `©dd.mm.yy` default |
+| `BigNumber value unit? caption? size` | hero / display / lg |
+| `LabelValue`, `LabelValueGrid items columns variant` | pairs grid, or `stats` (ink label, accent value) |
+| `DitherBar value cells label valueText` | `role="meter"` |
+| `GlyphHeatmap counts weeks end thresholds? weekTarget? onSelect?` | Sunday-first, Mon/Wed/Fri, months, optional Wk row |
+| `Verdict kind` | beat / hit / missed / new |
+| `Button` / `LinkButton variant icon iconEnd block` | primary ink block · outline · quiet · danger (dashed) |
+| `Stepper` | changes on touch-down, repeats while held (500 ms, then 160 → 60 ms), typeable |
+| `Segmented` | ink thumb on a spring; drag the thumb across; arrow keys |
+| `Toggle` | square knob, stretches while held |
+| `Sheet open title onClose detents?` | see §5 |
+| `ActionSheet`, `ConfirmButton` | confirm before irreversible actions |
+| `showHud(text)` | "Session saved" confirmation |
+| `showPrMoment({value, unit, caption, lift, pairs})`, `DitherNumber` | the PR moment |
+| `NavBar title backLabel right` | large title that collapses into the bar |
+| `PageStack`, `go`, `back`, `useNav` | navigation (§5) |
+| `useTheme`, `haptic` | theme preference; `navigator.vibrate(10)` where supported |
 
-**Tier ramp** (Beginner → Elite, a luminance ramp of one hue — evidence rising, not rainbow ranks):
+`ui/common` re-exports `Sheet`, `Stepper`, `Segmented`, `ConfirmButton` from
+the kit, so older screens get the new behaviour without import changes.
 
-| Tier | Token | Hex |
-|---|---|---|
-| Beginner | `--tier-1` | `#5C6B64` |
-| Novice | `--tier-2` | `#4E8A76` |
-| Intermediate | `--tier-3` | `#3FAE8C` |
-| Advanced | `--tier-4` | `#57E6AE` |
-| Elite | `--tier-5` | `#E8B84B` (the only place gold and lume meet) |
+## 5. Motion (Apple HIG feel, Android-safe)
 
-Contrast notes: `--lume` on `--ink-950` ≈ 11:1; `--text-mid` on `--ink-900` ≈ 6.5:1; `--slate` on `--ink-900` ≈ 5:1 (used at 15px+ only). Ghost text `--white-35` is intentionally sub-AA — it is placeholder, never information of record.
+- **Springs, not curves.** `motion/spring.ts` solves the damped oscillator
+  analytically (iOS `response` + `dampingFraction`), seeded with the finger's
+  release velocity, so a fling carries into the settle. Presets: push 0.35/1,
+  sheet 0.4/1, thumb 0.32/0.78. A wall-clock watchdog finishes any spring whose
+  frames stop (backgrounded page).
+- **Push / pop.** The new page slides in over the old one, which parallaxes 30%
+  and dims; pop is the reverse. Tab switches are instant.
+- **Android back.** No custom edge swipe: Android's system gesture owns the
+  edges. Every push is a real history entry stamped with its stack index
+  (`history.state.gbIdx`); a lower index on popstate means pop, so the system
+  back gesture/button plays the pop. `go(path, {replace, transition})`,
+  `back(fallback)`. Plain `<a href="#/…">` links work too. Scroll is saved per
+  entry and restored on pop. The document never scrolls; each page is its own
+  scroller inside a fixed frame.
+- **Sheets.** Medium and large detents (or one "fit" stop for short content),
+  grabber, drag anywhere except text fields and `[data-no-drag]` controls,
+  fling projected with UIScrollView deceleration, rubber-band past the top,
+  fling down to dismiss, the app scales back at the large detent. Focus trap,
+  Esc, backdrop tap, focus returns to the opener. Closing animates whether the
+  parent sets `open={false}` or unmounts the sheet.
+- **Press feedback on touch-down** for `.btn` and `[data-press]`, cancelled if
+  the finger drifts into a scroll, fading on release.
+- **Large titles** collapse into the navbar (with an ink rule) on scroll.
+- **Action sheet**: slide a finger across the buttons and release to pick.
+- **HUD**: pops in, draws its pixel icon row by row, fades after 1.5 s.
+- **PR moment**: the number resolves from coarse Bayer dither to solid type on a
+  canvas, with `haptic('pr')`.
+- **Haptics**: `haptic('commit')` on set commit, `haptic('pr')` on the PR
+  moment; `setHapticsEnabled()` is for a future Settings toggle.
 
----
+## 6. Accessibility
 
-## 3. Typography
+- Contrast: ink on paper is about 17:1 (dark) and 10.6:1 (light); accent salmon on
+  dark is about 13.5:1. `--mid` is for labels, never the only carrier of a value.
+- Touch targets are at least 48px; the primary block is 58px.
+- `prefers-reduced-motion`: springs jump to their end, the PR number shows
+  solid at once, CSS durations drop to ~0.
+- Meaning never rests on colour (there is only one): verdicts use fill, outline
+  and dash; bars are `role="meter"`; the heatmap has a text summary.
+- Modals trap focus and restore it; the app frame is `inert` behind them.
 
-Two families from Google Fonts, both variable, both self-hostable:
+## 7. Anti-patterns
 
-```css
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Spline+Sans+Mono:wght@400..700&display=swap');
-```
-
-- **Spline Sans Mono** — every number that matters: weights, reps, timers, e1RM, percentiles, verdict counts. A humanist mono (warm, not IDE — Liftosaur is the anti-pattern) that is inherently tabular: set-table columns align, timer digits never jitter, ghost and committed values occupy identical width. Also used for the stamped verdict words (`BEAT` / `HIT` / `MISSED`) in uppercase with wide tracking — the "engraved dial label" voice.
-- **Instrument Sans** — all UI text: titles, body, buttons, labels, the "why" copy. Geometric-grotesque with enough character to not read as Inter-default; the name is a happy accident.
-
-**Rule: if it's a value, it's mono; if it's a word, it's sans.** A set row like `100 kg × 5` is mono; "Complete all 5 sets" is sans. Never mix within one token of data.
-
-### Scale (mobile-first, px / line-height / family / weight)
-
-| Token | Spec | Used for |
-|---|---|---|
-| `display` | 44/48 mono 600 | Rest countdown, verdict "4 / 6", tier percentile |
-| `num-lg` | 28/32 mono 600 | Weight in active set row, e1RM headline |
-| `num-md` | 20/24 mono 500 | Set-table values, plate strip numbers |
-| `num-sm` | 15/20 mono 500 | Inline numerals in criterion strings, chart axes |
-| `title` | 22/28 sans 650 | Screen titles, exercise names on detail |
-| `heading` | 17/24 sans 600 | Card titles, exercise names in lists |
-| `body` | 15/22 sans 450 | "Why" text, coach panel, criteria. **15px floor — nothing readable is smaller** (Caliber's small-font complaint). |
-| `label` | 12/16 sans 550, uppercase, +0.08em tracking | Eyebrows: "TARGET", "PROMISE", "REST", tier names |
-| `micro` | 11/14 mono 500 | Chart tick labels, plate denominations only |
-
-`font-variant-numeric: tabular-nums` is set globally as a belt-and-braces (mono is already tabular; Instrument Sans numerals inside sentences also get it).
-
----
-
-## 4. Spacing, radius, elevation
-
-- **Spacing:** 4px base — `4, 8, 12, 16, 20, 24, 32, 40, 48, 64`. Screen gutter 16px; card padding 16px; section gap 24px; thumb-reach bottom zone (CTA + tab bar) gets 12px breathing above the tab bar.
-- **Touch targets:** 48px minimum height for anything tappable mid-workout; the set-commit button is 56px. Arm's-length rule: any mid-workout tap target ≥ 48×48.
-- **Radius:** `--radius-sm: 8px` (chips, inputs), `--radius-md: 12px` (buttons, set rows), `--radius-lg: 16px` (cards, sheets), `--radius-full: 999px` (timer pill, tab indicator). Verdict ticks and hairline rules are square — instrument engraving doesn't round.
-- **Elevation:** dark UIs layer by **luminosity + hairline, not shadow**. Level 0 = `--bg`; level 1 = `--surface` + `--border` hairline; level 2 = `--raised` + `--border`. One shadow token exists (`--shadow-sheet`) for modals/bottom-sheets only: `0 -8px 32px rgb(0 0 0 / 0.5)`. Nothing else casts a shadow.
-- **Focus:** 2px `--lume` outline with 2px offset, always visible on keyboard focus.
-
----
-
-## 5. Motion
-
-Motion is rationed to four moments. Everything else is instant.
-
-**What animates:**
-1. **Set commit** — the row settles: checkmark draws in, ghost values solidify from `--text-ghost` to `--text`, 180ms `ease-out`. The single most-repeated interaction gets the single most-polished micro-moment.
-2. **Rest timer bar** — continuous linear depletion. The only ambient motion in the app.
-3. **Verdict reveal (Review)** — ledger rows stagger in top-to-bottom, 60ms apart, each 320ms ease-out; verdict ticks draw last. Runs **once** per session review, never on re-visit. It's a stamp, not a slot machine.
-4. **Tier progress fill** — the progress-to-next bar fills to its value on first view, 480ms ease-out, once.
-
-**What never animates:** numbers never count up (evidence doesn't roll like a jackpot); no confetti, particles, or pulsing; no parallax; no looping attention-seekers; no skeleton shimmer mid-workout; tab switches are instant.
-
-**`prefers-reduced-motion: reduce`:** all four moments render in their end state instantly; the rest timer bar becomes a static bar with the mono countdown carrying all information. Durations are tokens (`--dur-*`) so this is one media query.
-
----
-
-## 6. Component specs
-
-### TargetCard (Dashboard)
-`--surface` card, `--radius-lg`, hairline border. Left edge carries a 3px vertical **verdict tick** in `--text-ghost` (unstamped — today's promise is not yet judged). Layout: `label` eyebrow "TARGET · BENCH PRESS" → criterion in `body` with numerals in `num-sm` mono ("Complete all **5×5 @ 100 kg**") → "why" line in `body` at `--text-mid`, prefixed with a small ⓘ-free plain word "Why:" — the why is always visible, never behind a tap (Juggernaut's black box is the cautionary tale). Ghost of last session bottom-right in `micro` mono.
-
-### SetLogger row (Workout — the flagship)
-56px row, `--radius-md`, columns: `set # | previous | weight | reps | commit`. Four states:
-- **pending** — `--raised` background, empty inputs, `--border`.
-- **ghost** — previous session's values pre-filled in `--text-ghost` mono; committing as-is is one tap (Hevy/Strong convention adopted wholesale).
-- **logged** — values solidify to `--text`, background drops to `--surface`, commit button becomes a quiet `--lume-deep` check.
-- **criterion-met** — when the logged set satisfies its slice of the promise, the row's left verdict tick lights `--lume` (3px, full row height). No toast, no banner — the tick is the feedback.
-Commit button: 56×56, `--lume` fill, `--ink-950` glyph — the brightest object on screen because it's the most-pressed. Weight value is tappable → opens PlateStrip sheet pre-loaded.
-
-### RestTimerBar
-Pinned pill above the tab bar, `--radius-full`, `--raised` background. Fill depletes in `--timer` (rest-blue) left-to-right; countdown in `display` mono sits center; ±15s ghost buttons flank it (48px targets). At 0:00 the pill border flashes once to `--lume` (180ms) and fires the local notification. Rest-blue exists *only* here: cool color = recovering, lume = working. Goal-conditioning is visible: strength targets default the bar to 3:00, hypertrophy to 1:30 — the label reads "REST · STRENGTH 3:00".
-
-### PlateStrip
-Bottom sheet (`--shadow-sheet`). A per-side loading diagram drawn with flat rectangles on the dial background: bar hairline in `--border-strong`, plates as vertical slabs sized proportionally to real plate diameter, each labeled beneath in `micro` mono (25 · 20 · 10 · 2.5). Plates are monochrome `--ink-600` fills with `--text` labels — **not** competition-color-coded by default (Settings toggle enables IPF colors for those who think in them). Header: total in `num-lg`, "per side" breakdown in `num-md`.
-
-### ScorecardList verdict row (Review — the signature)
-The report card. Each row is the **verdict ledger pair**: line 1 = the promise as stated on the TargetCard, `body` at `--text-mid`, in quotes; line 2 = the result in mono ("5 · 5 · 5 · 5 · **6** @ 100 kg") plus a detail string in `body` ("+1 rep on the final set"). Left edge: the 3px verdict tick, full row height, in the verdict color. Right edge: the verdict chip — `SPLINE MONO 12px uppercase +0.1em`: **BEAT** = `--lume` fill with `--ink-950` text; **HIT** = `--lume-deep` 1px outline, transparent fill; **MISSED** = `--slate` outline, `--slate` text, and its detail string states the delta plainly ("4 of 5 sets at 100 kg — 1 set short"). Above the list, the session header: "KEPT" eyebrow, then `display` mono "4 / 6", then one sans sentence of context. AI coach panel sits *below* the ledger as a `--raised` card with a "COACH" eyebrow — commentary never interleaves with evidence.
-
-### TierLadderRow (Tiers)
-One row per tier, Beginner→Elite ascending. Structure: tier swatch (12px square, `--tier-n` — square, engraved, not a badge), tier name in `heading`, the evidence in mono at `--text-mid` ("bench 72nd percentile @ 76 kg BW"). Current tier row gets `--surface` background + hairline; future tiers stay on `--bg` at `--text-mid`. Progress-to-next: a 4px bar under the current row in the *next* tier's color, with the delta in mono ("+7.5 kg to Intermediate"). No XP, no stars, no crest iconography — the percentile *is* the content (presented like Symmetric Strength, not GymLevels).
-
-### GoalToggle
-Segmented control, `--raised` track, `--radius-full`. Two segments: STRENGTH / HYPERTROPHY in `label` type. Selected segment: `--surface` thumb + `--text`; unselected: `--text-mid`. No color change per goal — the goal's identity shows in the *content* it reconditions (criteria strings, rest defaults, verdict logic), which crossfade in 150ms. A one-line footnote under the toggle states the consequence: "Targets and grading now judge for strength."
-
-### TabBar
-5 tabs: Dashboard · Workout · Lifts · Tiers · Settings. `--bg` with top hairline, 64px + safe-area. Active tab: `--lume` glyph + `label` caption; inactive: `--text-mid` glyph, caption always visible (no mystery-meat icons). During an active session, the Workout tab glyph carries a 6px `--lume` dot — the only persistent indicator in the app.
-
----
-
-## 7. Anti-patterns (explicit, from research)
-
-1. **No arcade grammar.** No XP bars, confetti, streak flames, pixel ranks, or count-up number animations (GymLevels/Menos territory). Tiers are a monochrome luminance ramp anchored to population percentiles; the verdict reveal is a stamp that plays once. If a treatment would look at home in a mobile game, it's out.
-2. **No generic-tracker skin.** No neutral-gray cards with a single blue accent, no spreadsheet-chrome set tables, no social-feed surface anywhere (the Hevy/Strong sea of sameness). The tinted petrol base, mono numerals, and verdict-tick motif must be present on every screen — remove them and the screen is off-system.
-3. **No ephemeral or hidden reasoning.** Verdicts and "why" text never live in toasts, tooltips, truncated coach notes, or glossary pages (Juggernaut's black box, Alpha's buried glossary, Boostcamp's truncation complaints). Every prescribed number carries its visible one-line why; every verdict carries its persistent detail string; body text never drops below 15px (Caliber's clutter complaint).
-
----
-
-## 8. Token source of truth
-
-All values above are encoded in [`design-tokens.css`](./design-tokens.css) as `:root` custom properties with a Tailwind v4 `@theme` block. Components consume semantic aliases (`--verdict-beat`, `--timer`), never raw palette values.
+- A second hue, red for errors, or green for "good".
+- Cards, borders around content, drop shadows, rounded corners.
+- Body text under 15px; long text in Space Mono (keep mono to labels, stats, notes).
+- A custom left-edge swipe-back (Android owns it), or navigation that bypasses
+  history (`location.hash =` from code: use `go`).
+- Count-up numbers, confetti, looping motion. The one celebration is the PR moment.
+- Tabular figures on running text.

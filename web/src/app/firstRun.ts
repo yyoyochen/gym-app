@@ -1,6 +1,7 @@
 // First-run gate: no profile and no sessions → onboarding.
 import { useEffect, useState } from 'react';
 import { getDb, getProfile, type GymDb } from '../db';
+import { go } from '../ui/kit/navigation';
 
 export async function needsOnboarding(db: GymDb): Promise<boolean> {
   if (await getProfile(db)) return false;
@@ -9,7 +10,7 @@ export async function needsOnboarding(db: GymDb): Promise<boolean> {
 
 /**
  * Call at the top of Today. Returns 'checking' until the db answers, then
- * 'ready'; on a first run it replaces the hash with #/onboarding and returns
+ * 'ready'; on a first run it replaces the current entry with #/onboarding and returns
  * 'redirecting'. Render nothing (or a blank screen) unless 'ready'.
  */
 export function useFirstRunRedirect(): 'checking' | 'ready' | 'redirecting' {
@@ -20,7 +21,7 @@ export function useFirstRunRedirect(): 'checking' | 'ready' | 'redirecting' {
       if (!alive) return;
       if (need) {
         setState('redirecting');
-        location.replace('#/onboarding');
+        go('onboarding', { replace: true, transition: 'none' });
       } else setState('ready');
     }, () => alive && setState('ready'));
     return () => { alive = false; };

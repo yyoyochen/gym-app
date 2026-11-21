@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { scrollPageTo } from '../kit/PageStack';
 
 /** Re-renders every `ms` with the current time. Display only: no alerts, no sounds. */
 export function useNow(ms = 1000): number {
@@ -10,7 +11,11 @@ export function useNow(ms = 1000): number {
   return now;
 }
 
-/** Hash routes keep the scroll position; screens start at the top. */
+/** A screen starts at the top when its key changes (pages are their own scrollers; PageStack restores scroll on pop). */
 export function useScrollTop(key: unknown): void {
-  useEffect(() => { window.scrollTo(0, 0); }, [key]);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) { first.current = false; return; } // a fresh page is already at 0; on pop PageStack restores it
+    scrollPageTo(0);
+  }, [key]);
 }

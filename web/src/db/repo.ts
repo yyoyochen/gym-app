@@ -36,6 +36,8 @@ export interface MetaValues {
   benchmarkVersion: string;
   activeProgramId: string;
   lastRestoreAt: Millis;
+  /** Appearance: 'system' | 'dark' | 'light' (default dark). See ui/kit/useTheme.ts. */
+  theme: 'system' | 'dark' | 'light';
 }
 export type MetaKey = keyof MetaValues;
 /** Meta keys that describe this device/browser, never exported or restored. */

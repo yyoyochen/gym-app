@@ -1,6 +1,6 @@
 # GymBro PWA — Spec v0.3
 
-*2026-11-21. Supersedes the FastAPI/SQLite deployment; reuses the engine, design system (LUME) and the promise → grade loop.*
+*2026-11-21. Supersedes the FastAPI/SQLite deployment; reuses the engine and the promise → grade loop (the design system is now Ink & Dither, DESIGN.md).*
 
 **Changes in v0.3 (Yoyo's decisions, 2026-11-21):**
 - New: GitHub-style consistency heatmap (§3.2).
@@ -67,7 +67,7 @@ First-time gym goers, people who need exercise demos, form cues or a program pic
 ### 3.1 Log
 
 - **Committed session view.** Today's session opens with every lift's target already in place: weight, reps, sets, effort cap.
-- **Set rows have four states:** pending, ghost (prefilled), logged, criterion-met. These are the LUME states, unchanged.
+- **Set rows have four states:** pending, ghost (prefilled), logged, criterion-met. These states carry over from LUME into Ink & Dither.
 - **One tap logs "did as planned".** Editing weight or reps is a stepper or keypad, never a modal.
 - **Each set records:**
   - weight, reps
@@ -308,9 +308,7 @@ Four tabs. The active session is a full-screen view above the tabs, not a tab.
 
 **Review** (after finish): verdict ledger (stamp animation once), volume delta, safety events if any, next-session preview, pace update for any target touched.
 
-Design system: LUME as written in `DESIGN.md`. Changes:
-- The Tiers tab and its luminance ramp are replaced by benchmark percentiles in Progress; the tier colours can be reused for percentile bands.
-- `--timer` (rest blue) is retired with the rest countdown.
+Design system: "Ink & Dither" as written in `DESIGN.md` (replaced LUME on 2026-11-21; see DECISIONS.md). Benchmark levels use the accent at rising strength; there is no tier colour ramp and no rest-timer colour.
 
 ---
 

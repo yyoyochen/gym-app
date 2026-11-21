@@ -1,4 +1,4 @@
-// Hand-drawn SVG: e1RM trend (lume) and top set (dashed), PR dots in gold.
+// Hand-drawn SVG: e1RM trend (accent) and top set (dashed), PR dots in accent.
 import type { ISODate } from '../../domain/types';
 import { daysBetween } from '../../engine';
 import { kg } from '../../app/coach';

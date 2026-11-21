@@ -61,6 +61,8 @@ export function Review({ params }: { params: string[] }) {
   useEffect(() => {
     if (!data?.session || !data.grade) return;
     const fresh = data.session.endedAt !== undefined && Date.now() - data.session.endedAt < REVEAL_WINDOW_MS;
+    // TODO(PrMoment, screen worker): on a fresh reveal, check each graded slot's best set with
+    // isNewBest (app/bests.ts) against earlier sessions and showPrMoment() for the best one.
     if (fresh && !alreadySeen(id)) setReveal(true);
     markSeen(id);
   }, [id, !!data?.grade]); // eslint-disable-line react-hooks/exhaustive-deps

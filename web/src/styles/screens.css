@@ -1,5 +1,5 @@
-/* Imported near the top of base.css, so base rules come later: use 2-class
-   selectors when overriding .btn/.chip/.card. Screen + shared-component rules (Profile, Program, Settings, Onboarding,
+/* Loaded after base.css and kit.css (styles/index.css): one class here
+   overrides a primitive. Restyled to Ink & Dither tokens; screen rewrites own the rest. Screen + shared-component rules (Profile, Program, Settings, Onboarding,
    History, SessionDetail, ui/common). Tokens only; see docs/DESIGN.md. */
 
 /* ---------- layout helpers ---------- */
@@ -20,7 +20,7 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn.icon { min-width: 48px; padding: 0; font: var(--text-num-md); font-family: var(--font-mono); }
 .btn.armed { border-color: currentColor; }
-.btn.danger.armed { background: var(--danger); color: var(--accent-contrast); border-color: transparent; }
+.btn.danger.armed { background: var(--ink); color: var(--paper); }
 .btn.block + .btn.block { margin-top: 0; }
 .back { color: var(--text-mid); text-decoration: none; min-height: 48px; display: inline-flex; align-items: center; align-self: flex-start; }
 .link { color: var(--accent); text-decoration: underline; min-height: 24px; }
@@ -30,13 +30,12 @@ a.btn { display: inline-flex; align-items: center; justify-content: center; text
 .kv dt { color: var(--text-mid); }
 .kv dd { margin: 0; text-align: right; }
 .field-error { color: var(--text); border-left: var(--tick-width) solid var(--danger); padding-left: 8px; }
-.errors { margin: 0; padding: 8px 12px 8px 24px; border-left: var(--tick-width) solid var(--danger); background: var(--raised); border-radius: 0 8px 8px 0; }
+.errors { margin: 0; padding: 8px 12px 8px 24px; border-left: var(--tick-width) solid var(--danger); background: var(--raised); border-radius: 0; }
 .file-name { word-break: break-all; }
 .check { min-height: 48px; }
 .check input { width: 22px; height: 22px; accent-color: var(--accent); }
 select.field { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--text-mid) 50%), linear-gradient(135deg, var(--text-mid) 50%, transparent 50%);
   background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 32px; }
-input[type="date"].field { color-scheme: dark; }
 .tick-hit { --tick: var(--verdict-hit); }
 .banner.todo-slot { border-style: dashed; }
 
@@ -47,27 +46,6 @@ input[type="date"].field { color-scheme: dark; }
 /* ---------- demo banner ---------- */
 .banner.demo-banner { border-left: var(--tick-width) solid var(--accent); flex-wrap: wrap; }
 .demo-banner .btn { min-height: 48px; }
-
-/* ---------- Segmented ---------- */
-.seg { display: flex; background: var(--raised); border: 1px solid var(--border); border-radius: 999px; padding: 3px; gap: 2px; }
-.seg-opt { flex: 1; min-height: 42px; border-radius: 999px; color: var(--text-mid); padding: 0 8px; font: var(--text-label);
-  text-transform: uppercase; letter-spacing: var(--tracking-label); }
-.seg-opt.on { background: var(--surface); color: var(--text); box-shadow: inset 0 0 0 1px var(--border-strong); }
-
-/* ---------- Stepper ---------- */
-.stepper { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.stepper-row { display: flex; align-items: center; gap: 6px; }
-.btn.stepper-btn { min-width: 48px; padding: 0; font: var(--text-num-md); font-family: var(--font-mono); }
-.stepper-input.field { text-align: center; padding: 0 4px; min-width: 0; flex: 1; }
-.stepper-unit { flex: none; }
-
-/* ---------- Sheet ---------- */
-.sheet-backdrop { position: fixed; inset: 0; background: rgb(0 0 0 / 0.55); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
-.sheet { width: 100%; max-width: 560px; max-height: 88dvh; overflow-y: auto; background: var(--raised); border: 1px solid var(--border);
-  border-bottom: 0; border-radius: 16px 16px 0 0; box-shadow: var(--shadow-sheet); padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
-  display: flex; flex-direction: column; gap: 16px; }
-.sheet .field { background: var(--surface); }
-.btn.sheet-close { min-height: 48px; padding: 0 16px; }
 
 /* ---------- Program editor ---------- */
 .session-head { min-height: 48px; width: 100%; text-align: left; }
@@ -82,7 +60,7 @@ input[type="date"].field { color-scheme: dark; }
 /* ---------- History ---------- */
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
 .cal-head { padding: 4px 0; }
-.cal-day { min-height: 44px; border-radius: 8px; color: var(--text-ghost); font: var(--text-num-sm); font-family: var(--font-mono); position: relative; }
+.cal-day { min-height: 44px; border-radius: 0; color: var(--text-ghost); font: var(--text-num-sm); font-family: var(--font-mono); position: relative; }
 .cal-day:disabled { cursor: default; opacity: 1; }
 .cal-day.trained { color: var(--text); background: var(--raised); }
 .cal-day.trained::after { content: ''; position: absolute; left: 50%; bottom: 6px; width: 6px; height: 6px; margin-left: -3px; background: var(--accent); }
@@ -111,7 +89,7 @@ input[type="date"].field { color-scheme: dark; }
 /* Steppers need ~170px each; stack them on phones. */
 @media (max-width: 440px) { .grid2.steppers { grid-template-columns: 1fr; } }
 
-/* Links read as text in LUME; the affordance is the row, not blue underline. */
+/* Links read as text; the affordance is the row, not a blue underline. */
 a { color: inherit; text-decoration: none; }
 a.heading { font: var(--text-heading); }
 a.heading::after { content: ' ›'; color: var(--text-ghost); }

@@ -1,5 +1,5 @@
-// Level ladder strip + confidence badge for the gym-goer standards (LUME:
-// tier ramp --tier-1..5, values mono, words sans).
+// Level ladder strip + confidence badge for the gym-goer standards
+// (tier ramp --tier-1..5 = accent at rising strength; see tokens.css).
 import { CONFIDENCE_LABEL, levelRank, type Confidence } from '../../benchmarks/gymStandards';
 import type { LiftRating } from '../../benchmarks/liftRating';
 import { confidenceWord, levelWord, nextText, ordinal, ratedValueText } from './standards';
