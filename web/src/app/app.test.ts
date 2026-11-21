@@ -185,4 +185,11 @@ describe('history summaries', () => {
     expect(r.top.map(t => `${t.exerciseId} ${t.weight}x${t.reps}`)).toEqual(['sq 100x6', 'bp 80x5', 'row 60x10']);
     expect(groupBlocks(sets).map(b => b.sets.length)).toEqual([3, 1, 1, 1]);
   });
+  it('groups every set of an exercise into one block, even when slots differ or lifts alternate', () => {
+    const sets = [mk('1', 1, 'fs', 60, 8), mk('2', 2, 'fs', 70, 8), mk('3', 3, 'ohp', 40, 8), mk('4', 4, 'fs', 80, 8), mk('5', 5, 'ohp', 40, 8)];
+    const g = groupBlocks(sets);
+    expect(g.map(b => b.exerciseId)).toEqual(['fs', 'ohp']);
+    expect(g[0].sets.map(s => s.weight)).toEqual([60, 70, 80]);
+    expect(g[1].sets.map(s => s.id)).toEqual(['3', '5']);
+  });
 });

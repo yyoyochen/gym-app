@@ -31,13 +31,18 @@ export function groupBySession<T extends { sessionId: string }>(sets: T[]): Map<
   return m;
 }
 
-/** Consecutive runs of sets for the same slot+exercise, in order (for the detail view). */
+/**
+ * One block per exercise for the detail view, in the order each exercise first
+ * appears; sets keep their logged order inside the block. Imported sessions
+ * give every set its own slot, and supersets alternate, so neither the slot nor
+ * adjacency can be trusted to keep an exercise together.
+ */
 export function groupBlocks(sets: SetEntry[]): { key: string; exerciseId: string; name: string; sets: SetEntry[] }[] {
-  const out: { key: string; exerciseId: string; name: string; sets: SetEntry[] }[] = [];
+  const byId = new Map<string, { key: string; exerciseId: string; name: string; sets: SetEntry[] }>();
   for (const s of sets) {
-    const last = out[out.length - 1];
-    if (last && last.exerciseId === s.exerciseId && last.sets[0].slotOrder === s.slotOrder) last.sets.push(s);
-    else out.push({ key: `${s.slotOrder}:${s.exerciseId}:${s.id}`, exerciseId: s.exerciseId, name: s.exerciseNameSnapshot, sets: [s] });
+    const b = byId.get(s.exerciseId);
+    if (b) b.sets.push(s);
+    else byId.set(s.exerciseId, { key: s.exerciseId, exerciseId: s.exerciseId, name: s.exerciseNameSnapshot, sets: [s] });
   }
-  return out;
+  return [...byId.values()];
 }
