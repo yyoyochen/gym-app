@@ -1,4 +1,4 @@
-// Profile, the "You" tab (spec §3.7): where I am, goals, targets & timeline,
+// Profile tab (spec §3.7): where I am, goals, targets & timeline,
 // injuries, maxes, checkpoints. A read-out of label/value pairs and spec
 // rows; every edit happens in a kit Sheet whose Save writes one dated
 // profile version (earlier versions are kept).
@@ -51,7 +51,7 @@ export function Profile(_props: { params: string[] }) {
   const [open, setOpen] = useState<SheetKey | null>(null);
 
   const base: ProfileT | undefined = stored === undefined ? undefined : stored ? strip(stored) : defaultProfile();
-  if (!base) return <section className="screen setup"><NavBar title="You" /></section>;
+  if (!base) return <section className="screen setup"><NavBar title="Profile" /></section>;
   const p = base;
   const latest = bodyweight[bodyweight.length - 1];
   const names = new Map(exercises.map(e => [e.id, e.name]));
@@ -74,8 +74,8 @@ export function Profile(_props: { params: string[] }) {
   return (
     <section className="screen setup">
       <DemoBanner />
-      <NavBar title="You">
-        <Lockup mid={`You //${GOAL_SHORT[p.primaryGoal]}`} />
+      <NavBar title="Profile">
+        <Lockup mid={`Profile //${GOAL_SHORT[p.primaryGoal]}`} />
       </NavBar>
 
       <section className="you-hero" aria-label="Bodyweight">

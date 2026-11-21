@@ -34,7 +34,7 @@ export function Settings(_props: { params: string[] }) {
   return (
     <section className="screen setup">
       <DemoBanner />
-      <NavBar title="Settings" backLabel="You" fallback="profile" />
+      <NavBar title="Settings" backLabel="Profile" fallback="profile" />
 
       <Appearance />
 

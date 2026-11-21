@@ -7,7 +7,7 @@ const TABS: { key: string; label: string; icon: IconName }[] = [
   { key: 'today', label: 'Today', icon: 'today' },
   { key: 'progress', label: 'Progress', icon: 'progress' },
   { key: 'history', label: 'History', icon: 'history' },
-  { key: 'profile', label: 'You', icon: 'profile' },
+  { key: 'profile', label: 'Profile', icon: 'profile' },
 ];
 
 /**

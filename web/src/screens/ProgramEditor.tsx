@@ -55,7 +55,7 @@ export function ProgramEditor(_props: { params: string[] }) {
     saveProgram(getDb(), next).catch(e => console.error(e)).finally(() => { pending.current--; });
   };
 
-  if (live === undefined) return <section className="screen setup"><NavBar title="Program" backLabel="You" fallback="profile" /></section>;
+  if (live === undefined) return <section className="screen setup"><NavBar title="Program" backLabel="Profile" fallback="profile" /></section>;
 
   const templates = (
     <TemplateList exercises={exercises} renderAction={id => (
@@ -76,7 +76,7 @@ export function ProgramEditor(_props: { params: string[] }) {
   return (
     <section className="screen setup">
       <DemoBanner />
-      <NavBar title="Program" backLabel="You" fallback="profile" />
+      <NavBar title="Program" backLabel="Profile" fallback="profile" />
       <p className="note">//Note — edits apply from the next commit. Sessions already committed don’t change.</p>
 
       {!prog && <><p className="quiet">No program yet. Start from a template.</p>{templates}</>}
