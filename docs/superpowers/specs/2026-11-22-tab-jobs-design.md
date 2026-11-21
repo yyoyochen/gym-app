@@ -1,6 +1,6 @@
 # One job per tab: Today, History, Progress
 
-Status: proposed, 2026-11-22
+Status: approved, 2026-11-22
 
 ## Why
 
