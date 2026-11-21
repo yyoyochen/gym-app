@@ -17,7 +17,7 @@ describe('theme resolution', () => {
     expect(resolveTheme('system', false)).toBe('dark');
   });
   it('theme-color is the paper colour', () => {
-    expect(THEME_PAPER).toEqual({ dark: '#180f21', light: '#fcd0af' });
+    expect(THEME_PAPER).toEqual({ dark: '#1c1724', light: '#fcd0af' });
     expect(isThemePref('system')).toBe(true);
     expect(isThemePref('auto')).toBe(false);
   });

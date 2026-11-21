@@ -4,7 +4,7 @@ export type ThemePref = 'system' | 'dark' | 'light';
 export type ResolvedTheme = 'dark' | 'light';
 
 /** Paper colour per theme: used for <meta name="theme-color"> (status/nav bar). */
-export const THEME_PAPER: Record<ResolvedTheme, string> = { dark: '#180f21', light: '#fcd0af' };
+export const THEME_PAPER: Record<ResolvedTheme, string> = { dark: '#1c1724', light: '#fcd0af' };
 
 export const DEFAULT_THEME: ThemePref = 'dark';
 
