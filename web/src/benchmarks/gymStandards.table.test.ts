@@ -54,10 +54,10 @@ describe('lift ratings name their source', () => {
     kind: 'working' as const, weight, reps, loggedAt: 0,
   });
   const ctx = { sex: 'male' as const, bodyweightKg: 70 };
-  it('a table-rated lift says strength-level; a model one says model', () => {
+  it('a table-rated lift says table; a model one says model', () => {
     const bp = cat.get('barbell-bench-press')!;
     const h = [{ date: '2026-11-20', sets: [set(bp.id, 85, 1)] }];
-    expect((rateExercise(data, bp, h, '2026-11-21', ctx) as LiftRating).source).toBe('strength-level');
+    expect((rateExercise(data, bp, h, '2026-11-21', ctx) as LiftRating).source).toBe('table');
     expect((rateExercise(base, bp, h, '2026-11-21', ctx) as LiftRating).source).toBe('model');
   });
   it('rates DB bench on per-dumbbell weight, not doubled', () => {

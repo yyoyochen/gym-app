@@ -10,12 +10,33 @@ const kg = (n: number) => String(Math.round(n * 100) / 100);
 
 let cache: Promise<GymStandardsData | null> | null = null;
 
+type Tables = NonNullable<GymStandardsData['tables']>;
+const isTables = (x: unknown): x is Tables =>
+  !!x && typeof x === 'object' && Object.values(x).every(v =>
+    !!v && Array.isArray((v as Tables[string]).bw) && Array.isArray((v as Tables[string]).male)
+    && (v as Tables[string]).bw.length === (v as Tables[string]).male.length);
+
+/** Adds a private threshold-table file's tables to the standards, or returns them unchanged. */
+export function attachTables(data: GymStandardsData, file: unknown): GymStandardsData {
+  const tables = (file as { tables?: unknown } | null | undefined)?.tables;
+  return isTables(tables) && Object.keys(tables).length ? { ...data, tables } : data;
+}
+
 export function loadGymStandards(): Promise<GymStandardsData | null> {
   cache ??= (async () => {
     try {
       const r = await fetch('./standards/gym-standards.json');
       if (!r.ok) throw new Error(String(r.status));
-      return (await r.json()) as GymStandardsData;
+      let data = (await r.json()) as GymStandardsData;
+      // Preview builds only: a local, never-committed table (Strength Level)
+      // rates first. Production builds drop this branch entirely.
+      if (import.meta.env.MODE === 'preview') {
+        try {
+          const p = await fetch('./__private__/strength-level.json');
+          if (p.ok) data = attachTables(data, await p.json());
+        } catch { /* no private table: the model alone */ }
+      }
+      return data;
     } catch {
       cache = null;
       return null;

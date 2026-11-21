@@ -47,8 +47,8 @@ export interface LiftRating {
   level: Level;
   percentile: number;
   confidence: Confidence;
-  /** Where the levels came from: the gym-goer model, or the local Strength Level table. */
-  source: 'model' | 'strength-level';
+  /** Where the levels came from: the gym-goer model, or a loaded threshold table (local Strength Level). */
+  source: 'model' | 'table';
   loadType?: string;
   note?: string;
   levels: LevelTable;
@@ -84,7 +84,7 @@ export function rateValue(
   return {
     kind: 'rated', standardId, standardName: std.name, basis: b, value, ...(addedKg !== undefined ? { addedKg } : {}),
     level: r.level, percentile: r.percentile, confidence: std.confidence,
-    source: std.kind === 'loaded' && tableThresholds(data, standardId, ctx.sex, ctx.bodyweightKg) ? 'strength-level' : 'model',
+    source: std.kind === 'loaded' && tableThresholds(data, standardId, ctx.sex, ctx.bodyweightKg) ? 'table' : 'model',
     ...(std.kind === 'loaded' ? { loadType: std.loadType } : {}), ...(std.note ? { note: std.note } : {}),
     levels, next: nextStep(levels, r.level, ctx.bodyweightKg),
   };
