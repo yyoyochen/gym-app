@@ -6,19 +6,33 @@ import { heatmapGrid } from './dither';
 const CELL = 9;
 const GAP = 2;
 const STEP = CELL + GAP;
-const SUB = CELL / 3;          // a cell is a 3 × 3 dither of sub-pixels
+const DIV = 4;                 // a cell is a 4 × 4 ordered dither of sub-pixels
+const SUB = CELL / DIV;
 const MARK_H = 2;              // week-target mark under each column
 const MARK_GAP = 3;
 
-// Fill order for the 3 × 3 sub-pixels, spread out like an ordered dither.
-const ORDER: readonly [number, number][] = [[1, 1], [0, 0], [2, 2], [2, 0], [0, 2], [1, 0], [1, 2], [0, 1], [2, 1]];
-/** Sub-pixels lit per level: ░ ▒ ▓ █ → 2, 4, 6, 9 of 9. */
-export const SUBPIXELS = [2, 4, 6, 9] as const;
+// Even ordered-dither steps on a 4 × 4 grid, chosen so every step looks
+// uniform (no stripes or shapes):
+//   25%  one dot every other row and column
+//   50%  checkerboard
+//   75%  the 25% grid inverted: holes every other row and column
+//   100% solid
+const STEPS: readonly ((x: number, y: number) => boolean)[] = [
+  (x, y) => x % 2 === 0 && y % 2 === 0,
+  (x, y) => (x + y) % 2 === 0,
+  (x, y) => !(x % 2 === 1 && y % 2 === 1),
+  () => true,
+];
+/** Sub-pixels lit per level: 25 / 50 / 75 / 100% of 16. */
+export const SUBPIXELS = [4, 8, 12, 16] as const;
 
 /** Sub-pixel rects (x, y in units) for a cell at a level; exported for tests. */
 export function cellPixels(level: number): [number, number][] {
   if (level < 0) return [];
-  return ORDER.slice(0, SUBPIXELS[Math.min(level, 3)]).map(([c, r]) => [c * SUB, r * SUB]);
+  const on = STEPS[Math.min(level, 3)];
+  const out: [number, number][] = [];
+  for (let y = 0; y < DIV; y++) for (let x = 0; x < DIV; x++) if (on(x, y)) out.push([x * SUB, y * SUB]);
+  return out;
 }
 
 /**
