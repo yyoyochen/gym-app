@@ -7,15 +7,15 @@
 
 :root {
   /* ---------- colour (dark, default) ---------- */
-  --paper:  #1e2152;                 /* the light mode's navy ink, as the dark paper */
+  --paper:  #180f21;                 /* near-black aubergine */
   --ink:    #fef8ec;                 /* warm cream */
   --accent: #fcd0af;                 /* FT salmon: bars, heatmap, stat values, active tab, //NOTE, PR number */
   --mid:    rgb(254 248 236 / 0.58); /* quiet labels, secondary values */
   --rule:   rgb(254 248 236 / 0.22); /* dotted rules, empty tracks */
   --grain:  0;                       /* paper-grain opacity (light only) */
-  --dim:    rgb(8 9 30 / 0.5);       /* backdrop behind sheets; page dim during push */
+  --dim:    rgb(6 3 9 / 0.55);       /* backdrop behind sheets; page dim during push */
   --on-ink: var(--paper);            /* text on a solid ink block */
-  --behind: #0f1130;                 /* shows around the app frame when a sheet scales it back */
+  --behind: #0b0710;                 /* shows around the app frame when a sheet scales it back */
   color-scheme: dark;
 
   /* ---------- type ---------- */
