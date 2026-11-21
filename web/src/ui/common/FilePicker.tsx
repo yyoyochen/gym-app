@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { PixelIcon } from '../kit/PixelIcon';
 
 /** A button that opens the file chooser and hands back the file's text. */
 export function FilePicker({ label, accept, onText, className = '' }: {
@@ -7,9 +8,11 @@ export function FilePicker({ label, accept, onText, className = '' }: {
   const ref = useRef<HTMLInputElement>(null);
   const [name, setName] = useState('');
   return (
-    <div className="stack">
-      <button type="button" className={`btn ${className}`} onClick={() => ref.current?.click()}>{label}</button>
-      {name && <span className="mid file-name">{name}</span>}
+    <div className="file-picker">
+      <button type="button" className={`btn block split ${className}`} onClick={() => ref.current?.click()}>
+        <span>{label}</span><PixelIcon name="import" />
+      </button>
+      {name && <span className="file-name">{name}</span>}
       <input ref={ref} type="file" accept={accept} hidden onChange={async e => {
         const f = e.target.files?.[0];
         e.target.value = '';

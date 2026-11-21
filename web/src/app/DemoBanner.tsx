@@ -1,4 +1,4 @@
-// Shown on every tab while meta.demoMode is true (mount once in App, above the routes).
+// Shown on every tab while meta.demoMode is true: a slim inverted bar.
 import { getDb, getMeta } from '../db';
 import { useLive } from '../ui/useLive';
 import { ConfirmButton } from '../ui/common';
@@ -13,11 +13,13 @@ export function DemoBanner() {
   const demo = useDemoMode();
   if (!demo) return null;
   return (
-    <div className="banner demo-banner spread" role="status">
-      <span>Demo data — Start my log wipes it</span>
-      <ConfirmButton className="primary" confirmLabel="Wipe demo" onConfirm={async () => { await exitDemo(getDb()); go('onboarding'); }}>
-        Start my log
-      </ConfirmButton>
+    <div className="demo-bar" role="status">
+      <span>Demo data — start my log wipes it</span>
+      <ConfirmButton danger className="demo-bar-btn" confirmLabel="Wipe the demo data and start your own log?"
+        message="Every demo session, set and setting is deleted." confirmText="Wipe demo and start" onConfirm={async () => {
+          await exitDemo(getDb());
+          go('onboarding', { replace: true });
+        }}>Start my log</ConfirmButton>
     </div>
   );
 }

@@ -1,10 +1,12 @@
 // Action sheet (HIG confirm): slides up on a spring; press anywhere on it and
 // slide across the buttons, release picks the highlighted one. Destructive
 // actions are ink with a dashed outline and explicit wording, never red.
+// Android back closes it (sheetHistory.ts), not the page under it.
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { SPRINGS, animateSpring, type SpringHandle } from './motion/spring';
 import { isTopModal, popModal, pushModal, trapTab } from './modal';
+import { pushSheetEntry } from './sheetHistory';
 
 export interface ActionSheetAction {
   label: string;
@@ -35,6 +37,9 @@ function ActionPanel({ open, title, message, actions, cancelLabel = 'Cancel', on
   const [hl, setHl] = useState<number | null>(null);
   const opener = useRef<Element | null>(null);
   const picked = useRef<(() => void) | null>(null);
+  const release = useRef<() => void>(() => {});
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
 
   const paint = (v: number) => {
     y.current = v;
@@ -48,6 +53,7 @@ function ActionPanel({ open, title, message, actions, cancelLabel = 'Cancel', on
     if (open) {
       opener.current = document.activeElement;
       pushModal(el);
+      release.current = pushSheetEntry(() => closeRef.current());
       paint(panel.current!.offsetHeight + 16);
       anim.current?.stop();
       anim.current = animateSpring({ from: y.current, to: 0, ...SPRINGS.sheet, onUpdate: paint });
@@ -55,6 +61,7 @@ function ActionPanel({ open, title, message, actions, cancelLabel = 'Cancel', on
       return;
     }
     popModal(el);
+    release.current();
     anim.current?.stop();
     anim.current = animateSpring({
       from: y.current, to: (panel.current?.offsetHeight ?? 300) + 16, ...SPRINGS.sheetDismiss, onUpdate: paint,
@@ -65,7 +72,7 @@ function ActionPanel({ open, title, message, actions, cancelLabel = 'Cancel', on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  useEffect(() => () => { if (root.current) popModal(root.current); anim.current?.stop(); }, []);
+  useEffect(() => () => { if (root.current) popModal(root.current); release.current(); anim.current?.stop(); }, []);
 
   useEffect(() => {
     if (!open) return;

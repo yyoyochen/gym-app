@@ -1,5 +1,7 @@
-// Session detail (spec §4 History): the ledger — promise + sets — with edit,
-// delete set, change date and delete session.
+// Session detail (spec §4 History) in Ink & Dither: the ledger — the committed
+// promise with a verdict per lift (graded by the engine via app/coach), then
+// the sets as spec-sheet rows — with edit set (sheet), delete set, change date
+// and delete session.
 import { useState } from 'react';
 import { readable } from '../ui/readable';
 import type { EffortScale, PainArea, SetEntry, SetKind, Side } from '../domain/types';
@@ -7,103 +9,130 @@ import {
   changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, listExercises, updateSet,
 } from '../db';
 import { useLive } from '../ui/useLive';
-import { go } from '../ui/router';
-import { ConfirmButton, DateField, Errors, Segmented, Sheet, Stepper } from '../ui/common';
+import { DateField, Errors } from '../ui/common';
+import { BigNumber, Button, ConfirmButton, NavBar, PixelIcon, Segmented, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
+import { gradeCommit } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
 import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
 import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, formatLoad } from '../app/labels';
+import { SecHead } from '../ui/progress/parts';
+import { loadLine } from '../ui/progress/stats';
 
 export function SessionDetail({ params }: { params: string[] }) {
   const id = params[0];
   const data = useLive(async db => {
     const [session, sets, commit, profile, exercises] = await Promise.all([getSession(db, id), getSessionSets(db, id), getCommit(db, id), getProfile(db), listExercises(db, { includeArchived: true })]);
     const bwFactor = new Map(exercises.map(e => [e.id, e.bodyweightFactor]));
-    return { session: session ?? null, sets, commit: commit ?? null, scale: (profile?.effortScale ?? 'rir') as EffortScale, bwFactor };
+    const scale = (profile?.effortScale ?? 'rir') as EffortScale;
+    return { session: session ?? null, sets, commit: commit ?? null, scale, bwFactor, grade: commit ? gradeCommit(commit, sets, scale) : null };
   }, [id]);
   const [editing, setEditing] = useState<SetEntry | null>(null);
   const [moving, setMoving] = useState(false);
 
-  if (!data) return <section className="screen"><a className="back" href="#/history">‹ History</a></section>;
-  const { session, sets, commit, scale } = data;
+  if (!data) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel="History" fallback="history" large={false} /></section>;
+  const { session, sets, commit, scale, bwFactor, grade } = data;
   if (!session) return (
-    <section className="screen">
-      <a className="back" href="#/history">‹ History</a>
-      <p className="mid">This session doesn’t exist any more.</p>
+    <section className="screen tk-screen tk-nav">
+      <NavBar title="Session" backLabel="History" fallback="history" />
+      <p className="tk-quiet">This session doesn’t exist any more.</p>
     </section>
   );
+  const load = (exerciseId: string) => (w: number) => formatLoad(w, bwFactor.get(exerciseId));
 
   return (
-    <section className="screen">
+    <section className="screen tk-screen tk-nav">
+      <NavBar title={session.nameSnapshot} backLabel="History" fallback="history">
+        <div className="tk-sub">
+          <span className="tk-mono">{formatDate(session.date)}</span>
+          {!session.sealed && <span className="chip tk-chip">in progress</span>}
+          {session.edited && <span className="chip tk-chip">edited</span>}
+          {session.readiness && <span className="chip tk-chip">readiness {session.readiness}</span>}
+        </div>
+      </NavBar>
       <DemoBanner />
-      <a className="back" href="#/history">‹ History</a>
-      <div className="stack tight">
-        <h1 className="title">{session.nameSnapshot}</h1>
-        <div className="row wrap">
-          <span className="mono num-sm mid">{formatDate(session.date)}</span>
-          {!session.sealed && <span className="chip">in progress</span>}
-          {session.edited && <span className="chip">edited</span>}
-          {session.readiness && <span className="chip">readiness {session.readiness}</span>}
-        </div>
-        {session.note && <p className="mid">{session.note}</p>}
-      </div>
+      {session.note && <p className="tk-quiet">{session.note}</p>}
 
-      {commit && (
-        <div className="stack">
-          <span className="label">Promise · committed {formatDate(todayISO(commit.committedAt), { weekday: false })}</span>
-          {commit.targets.map(t => (
-            <div key={t.slotId} className="card tick ledger">
-              <div className="spread">
-                <span className="heading">{t.exerciseName}</span>
-                {/* TODO(engine): verdict chip (BEAT / HIT / MISSED / NEW) + detail string from the coach engine's grading. */}
-                <span className="verdict new">—</span>
+      {commit && grade && (
+        <section className="tk-sec" aria-label="Promise">
+          <SecHead title="Promise" meta={`committed ${formatDate(todayISO(commit.committedAt), { weekday: false })}`} />
+          {grade.total > 0 && <BigNumber size="lg" value={grade.kept} unit={`of ${grade.total}`} caption={`promise${grade.total === 1 ? '' : 's'} kept`}
+            label={`${grade.kept} of ${grade.total} promises kept`} />}
+          <div className="tk-ledger">
+            {grade.slots.map(g => (
+              <div key={g.target.slotId} className="tk-led">
+                <span className="tk-led-name">{g.target.exerciseName}</span>
+                <span className="tk-led-p">“{readable(g.target.criterion)}”</span>
+                <DoneLine text={loadLine(g.sets, load(g.target.exerciseId))} />
+                <span className="tk-led-d">{readable(g.result.detail)}</span>
+                {g.target.why && <span className="tk-led-d">Why: {readable(g.target.why)}</span>}
+                <Verdict kind={g.ungraded ? 'new' : g.result.verdict}>{g.ungraded ? 'Swapped' : undefined}</Verdict>
               </div>
-              <p className="mid">“{readable(t.criterion)}”</p>
-              {t.why && <p className="mid">Why: {readable(t.why)}</p>}
-            </div>
-          ))}
-        </div>
+            ))}
+            {grade.added.map(a => (
+              <div key={`add${a.slotOrder}`} className="tk-led">
+                <span className="tk-led-name">{a.name}</span>
+                <DoneLine text={loadLine(a.sets, load(a.exerciseId))} />
+                <span className="tk-led-d">Added during the session: logged, not graded</span>
+                <Verdict kind="new">Added</Verdict>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      {sets.length === 0 && <p className="mid">No sets logged.</p>}
-      {groupBlocks(sets).map(b => (
-        <div key={b.key} className="card stack">
-          <a className="heading" href={`#/lift/${encodeURIComponent(b.exerciseId)}`}>{b.name}</a>
-          <ul className="plain set-list">
-            {b.sets.map((s, i) => (
-              <li key={s.id}>
-                <button className="set-line" onClick={() => setEditing(s)} aria-label={`Edit set ${i + 1}`}>
-                  <span className="mono mid set-no">{i + 1}</span>
-                  <span className="mono num-md">{formatLoad(s.weight, data.bwFactor.get(s.exerciseId))} <span className="mid">×</span> {s.reps}</span>
-                  <span className="mono num-sm mid">{formatRir(s.rir, scale)}</span>
-                  <span className="set-tags">
-                    {s.kind !== 'working' && <span className="chip inline">{SET_KIND_LABELS[s.kind]}</span>}
-                    {s.failed && <span className="chip inline">failed</span>}
-                    {s.importFlags?.includes('blank_weight') && <span className="chip inline">blank weight</span>}
-                    {s.importFlags?.includes('blank_reps') && <span className="chip inline">blank reps</span>}
-                  </span>
-                </button>
-                {s.pain && <p className="pain-line">Pain: {PAIN_AREA_LABELS[s.pain.area]}{s.pain.side !== 'na' ? ` (${SIDE_LABELS[s.pain.side].toLowerCase()})` : ''} · severity <span className="mono">{s.pain.severity}</span>{s.pain.note ? ` · ${s.pain.note}` : ''}</p>}
-                {s.note && <p className="mid set-note">{s.note}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      <section className="tk-sec" aria-label="Sets">
+        <SecHead title="Sets" meta={`${sets.length} logged · tap to edit`} />
+        {sets.length === 0 && <p className="tk-quiet">No sets logged.</p>}
+        {groupBlocks(sets).map(b => {
+          let w = 0, n = 0;
+          return (
+            <div key={b.key} className="tk-sheet">
+              <div className="tk-sheet-hd">
+                <a href={`#/lift/${encodeURIComponent(b.exerciseId)}`} data-press="dim">{b.name}<PixelIcon name="chevron" scale={1} /></a>
+                <span>{b.sets.filter(s => s.kind !== 'warmup').length} working</span>
+              </div>
+              {b.sets.map(s => {
+                const k = s.kind === 'warmup' ? `W${++w}` : s.kind === 'top' ? 'Top' : `${KIND_PREFIX[s.kind] ?? ''}${++n}`;
+                const tags = [s.failed ? 'failed' : '',
+                  s.importFlags?.includes('blank_weight') ? 'blank weight' : '', s.importFlags?.includes('blank_reps') ? 'blank reps' : ''].filter(Boolean);
+                return (
+                  <div key={s.id} className="tk-setwrap">
+                    <button type="button" className={`tk-srow tk-set${s.kind === 'warmup' ? ' warm' : ''}`} data-press="row" onClick={() => setEditing(s)}
+                      aria-label={`Edit set ${k}: ${formatLoad(s.weight, bwFactor.get(s.exerciseId))} × ${s.reps}`}>
+                      <span className="k">{k}</span>
+                      <span className="v">{formatLoad(s.weight, bwFactor.get(s.exerciseId))} × {s.reps}</span>
+                      <span className="k r">{formatRir(s.rir, scale)}</span>
+                      <PixelIcon name="edit" scale={1} />
+                    </button>
+                    {tags.length > 0 && <p className="tk-tags">{tags.map(t => <span key={t} className="chip tk-chip">{t}</span>)}</p>}
+                    {s.pain && <p className="tk-mono tk-indent">Pain: {PAIN_AREA_LABELS[s.pain.area]}{s.pain.side !== 'na' ? ` (${SIDE_LABELS[s.pain.side].toLowerCase()})` : ''} · severity {s.pain.severity}{s.pain.note ? ` · ${s.pain.note}` : ''}</p>}
+                    {s.note && <p className="tk-quiet tk-indent">{s.note}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </section>
 
-      <div className="card stack">
-        <span className="label">Session</span>
+      <section className="tk-sec" aria-label="Session">
+        <SecHead title="Session" />
         {moving
-          ? <MoveDate current={session.date} onCancel={() => setMoving(false)} onMove={async d => { await changeSessionDate(getDb(), session.id, d); setMoving(false); }} />
-          : <button className="btn" onClick={() => setMoving(true)}>Change date</button>}
-        <ConfirmButton danger confirmLabel="Tap again to delete this session and its sets" onConfirm={async () => {
-          await deleteSession(getDb(), session.id);
-          go('history');
-        }}>Delete session</ConfirmButton>
-      </div>
+          ? <MoveDate current={session.date} onCancel={() => setMoving(false)} onMove={async d => {
+              await changeSessionDate(getDb(), session.id, d); setMoving(false); showHud({ text: 'Date changed' });
+            }} />
+          : <Button block onClick={() => setMoving(true)}>Change date</Button>}
+        <ConfirmButton danger className="block" confirmLabel="Delete this session and its sets?" confirmText="Delete session"
+          message="This can’t be undone." onConfirm={async () => {
+            await deleteSession(getDb(), session.id);
+            showHud({ text: 'Session deleted', icon: 'trash' });
+            back('history');
+          }}>Delete session</ConfirmButton>
+      </section>
 
-      {editing && <EditSetSheet set={editing} scale={scale} onClose={() => setEditing(null)} />}
+      {editing && <EditSetSheet set={editing} scale={scale} bwFactor={bwFactor.get(editing.exerciseId) ?? 0} onClose={() => setEditing(null)} />}
     </section>
   );
 }
@@ -111,19 +140,21 @@ export function SessionDetail({ params }: { params: string[] }) {
 function MoveDate({ current, onMove, onCancel }: { current: string; onMove: (d: string) => void; onCancel: () => void }) {
   const [d, setD] = useState(current);
   return (
-    <div className="stack">
+    <div className="tk-move">
       <DateField label="New date" value={d} max={todayISO()} onChange={setD} />
-      <div className="row">
-        <button className="btn" onClick={onCancel}>Cancel</button>
-        <button className="btn primary grow" disabled={!d || d === current} onClick={() => onMove(d)}>Move session</button>
+      <div className="tk-btnrow">
+        <Button onClick={onCancel}>Cancel</Button>
+        <Button variant="primary" className="grow" disabled={!d || d === current} onClick={() => onMove(d)}>Move session</Button>
       </div>
     </div>
   );
 }
 
 const KINDS: SetKind[] = ['warmup', 'working', 'top', 'backoff', 'drop'];
+/** Spec-sheet row keys: 1, 2 for working sets; B1 back-off; D1 drop. */
+const KIND_PREFIX: Partial<Record<SetKind, string>> = { backoff: 'B', drop: 'D' };
 
-function EditSetSheet({ set, scale, onClose }: { set: SetEntry; scale: EffortScale; onClose: () => void }) {
+function EditSetSheet({ set, scale, bwFactor, onClose }: { set: SetEntry; scale: EffortScale; bwFactor: number; onClose: () => void }) {
   const [weight, setWeight] = useState(set.weight);
   const [reps, setReps] = useState(set.reps);
   const [hasEffort, setHasEffort] = useState(set.rir !== undefined);
@@ -152,26 +183,23 @@ function EditSetSheet({ set, scale, onClose }: { set: SetEntry; scale: EffortSca
       // An edited value is no longer a blank import value.
       importFlags: flags?.length ? flags : undefined,
     });
+    showHud('Set saved');
     onClose();
   };
 
   return (
     <Sheet open title={`Edit set · ${set.exerciseNameSnapshot}`} onClose={onClose}>
+      <p className="tk-mono mid">{formatLoad(weight, bwFactor)} × {reps}{hasEffort ? ` · ${formatRir(scaleToRir(effort, scale), scale)}` : ''}</p>
       <div className="grid2 steppers">
-        <Stepper label="Weight" unit="kg" value={weight} step={2.5} min={-200} max={500} onChange={setWeight} />
+        <Stepper label={bwFactor > 0 ? 'Added weight' : 'Weight'} unit="kg" value={weight} step={2.5} min={-200} max={500} onChange={setWeight} />
         <Stepper label="Reps" value={reps} min={0} max={100} onChange={setReps} />
       </div>
-      <div className="stack">
-        <label className="row check"><input type="checkbox" checked={hasEffort} onChange={e => setHasEffort(e.target.checked)} /> Effort recorded</label>
-        {hasEffort && (scale === 'rpe'
-          ? <Stepper label="RPE" value={effort} step={0.5} min={5} max={10} onChange={setEffort} />
-          : <Stepper label="RIR" value={effort} step={0.5} min={0} max={5} onChange={setEffort} />)}
-      </div>
-      <label className="stack"><span className="label">Kind</span>
-        <select className="field" value={kind} onChange={e => setKind(e.target.value as SetKind)}>
-          {KINDS.map(k => <option key={k} value={k}>{SET_KIND_LABELS[k]}</option>)}
-        </select></label>
-      <label className="row check"><input type="checkbox" checked={failed} onChange={e => setFailed(e.target.checked)} /> Failed rep</label>
+      <Toggle label="Effort recorded" checked={hasEffort} onChange={setHasEffort} />
+      {hasEffort && (scale === 'rpe'
+        ? <Stepper label="RPE" value={effort} step={0.5} min={5} max={10} onChange={setEffort} />
+        : <Stepper label="RIR" value={effort} step={0.5} min={0} max={5} onChange={setEffort} />)}
+      <Segmented<SetKind> label="Kind" value={kind} onChange={setKind} options={KINDS.map(k => ({ value: k, label: SET_KIND_LABELS[k] }))} />
+      <Toggle label="Failed rep" checked={failed} onChange={setFailed} />
       <label className="stack"><span className="label">Pain</span>
         <select className="field" value={painArea} onChange={e => setPainArea(e.target.value as PainArea | '')}>
           <option value="">None</option>
@@ -181,13 +209,24 @@ function EditSetSheet({ set, scale, onClose }: { set: SetEntry; scale: EffortSca
         <Segmented<Side> label="Side" value={painSide} onChange={setPainSide}
           options={(['left', 'right', 'both', 'na'] as Side[]).map(s => ({ value: s, label: s === 'na' ? 'N/A' : SIDE_LABELS[s] }))} />
         <Segmented<'1' | '2' | '3'> label="Severity" value={String(painSev) as '1' | '2' | '3'} onChange={v => setPainSev(Number(v) as 1 | 2 | 3)}
-          options={[{ value: '1', label: '1 niggle' }, { value: '2', label: '2 changed lift' }, { value: '3', label: '3 stopped' }]} />
+          options={[{ value: '1', label: '1 niggle' }, { value: '2', label: '2 changed' }, { value: '3', label: '3 stopped' }]} />
       </>}
       <label className="stack"><span className="label">Note</span>
         <textarea className="field" value={note} onChange={e => setNote(e.target.value)} /></label>
       <Errors errors={errors} />
-      <button className="btn primary block" onClick={save}>Save set</button>
-      <ConfirmButton danger className="block" confirmLabel="Tap again to delete this set" onConfirm={async () => { await deleteSet(getDb(), set.id); onClose(); }}>Delete set</ConfirmButton>
+      <Button variant="primary" block icon="check" onClick={save}>Save set</Button>
+      <ConfirmButton danger className="block" confirmLabel="Delete this set?" confirmText="Delete set" onConfirm={async () => {
+        await deleteSet(getDb(), set.id);
+        showHud({ text: 'Set deleted', icon: 'trash' });
+        onClose();
+      }}>Delete set</ConfirmButton>
     </Sheet>
   );
+}
+
+/** What was done for a promise; "—" (nothing) reads as words, not a dash. */
+function DoneLine({ text }: { text: string }) {
+  if (text === '—') return <span className="tk-led-r none">Nothing logged</span>;
+  const parts = text.split(' · ');
+  return <span className="tk-led-r">{parts.map((p, i) => <span key={i} className="tk-part">{p}{i < parts.length - 1 ? ' · ' : ''}</span>)}</span>;
 }

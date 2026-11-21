@@ -5,6 +5,7 @@
 //    fling down past the lowest stop dismisses; overshoot rubber-bands
 //  · at the large detent the app frame scales back behind it
 //  · focus trap, Esc, backdrop tap; focus returns to the opener
+//  · Android back closes the sheet, not the page (sheetHistory.ts)
 // Closing works for both patterns callers use: open={false} and unmounting
 // the whole <Sheet>. Either way the panel is cloned and springs out (a ghost),
 // carrying the fling velocity.
@@ -15,6 +16,7 @@ import { SPRINGS, VelocityTracker, animateSpring, nearestStop, projectFling, rub
 import { prefersReducedMotion } from './motion/reduced';
 import { cancelPress } from './motion/press';
 import { isTopModal, popModal, pushModal, setPresentingProgress, trapTab } from './modal';
+import { pushSheetEntry } from './sheetHistory';
 
 export type Detent = 'medium' | 'large';
 
@@ -93,6 +95,15 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
       // A parent that keeps it open gets the sheet back at its stop.
       requestAnimationFrame(() => { if (s.alive) goStop(s.stop); });
     };
+
+    // System back pops this entry → close. A parent that keeps the sheet open
+    // gets a fresh entry, so the next back still lands on the sheet.
+    let release = () => {};
+    const onSystemBack = () => {
+      requestClose();
+      requestAnimationFrame(() => { if (s.alive) release = pushSheetEntry(onSystemBack); });
+    };
+    release = pushSheetEntry(onSystemBack);
 
     s.geo = measure();
     s.stop = initialDetent === 'large' || s.geo.medium === null ? 'large' : 'medium';
@@ -183,6 +194,7 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
 
     return () => {
       s.alive = false;
+      release();
       s.anim?.stop();
       ro.disconnect();
       removeEventListener('resize', onResize);

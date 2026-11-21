@@ -1,22 +1,54 @@
-// Today (spec §3.4, §3.5, §4): remind → consistency → readiness → the plan,
-// one card per lift → Start (commit) → the logger.
+// Today (spec §3.4, §3.5, §4), weather-app hierarchy: the session, one huge
+// number (the selected lift's top set), a strip of the session's lifts, the
+// promise word for word, label/value pairs, this week + goal pace bars,
+// readiness, the glyph heatmap, and START pinned above the tab bar.
 import { useState } from 'react';
 import { getDb, getMeta, getProfile } from '../db';
 import type { ReadinessAnswers } from '../engine';
-import { formatElapsed, readinessFromAnswers } from '../engine';
-import { backupDue, commitSession, planToday, skipSession, todayState } from '../app/coach';
+import { formatElapsed, readinessFromAnswers, formatEffort } from '../engine';
+import { backupDue, commitSession, kg, planToday, skipSession, todayState, type SlotPlan } from '../app/coach';
 import { useFirstRunRedirect } from '../app/firstRun';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
+import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
-import { go } from '../ui/router';
-import { ConfirmButton } from '../ui/common';
-import { Heatmap } from '../ui/progress/Heatmap';
-import { loadConsistency } from '../ui/progress/data';
+import { readable } from '../ui/readable';
+import {
+  BigNumber, Button, ConfirmButton, DitherBar, GlyphHeatmap, LabelValueGrid, LinkButton, Lockup, PixelIcon, Toggle, go, type LabelValueItem,
+} from '../ui/kit';
+import { goalRows, loadConsistency } from '../ui/progress/data';
 import { ReadinessCheck } from '../ui/session/Readiness';
-import { TargetCard } from '../ui/session/TargetCard';
+import { MonoNums, sessionNames, topWord } from '../ui/session/text';
 import { useNow, useScrollTop } from '../ui/session/useNow';
-import { formatEffort } from '../engine';
+
+/** The number a lift is about: its top set, else its working weight (reps for bodyweight). */
+function heroOf(sp: SlotPlan): { value: string; unit: string; caption: string } {
+  const t = sp.target;
+  if (t.model === 'topset' && t.topWeight !== undefined) {
+    const reps = t.topReps ?? sp.ghost[0]?.reps ?? t.targetReps;
+    return { value: kg(t.topWeight), unit: `kg × ${reps}`, caption: topWord(reps) };
+  }
+  const reps = sp.ghost[0]?.reps ?? t.targetReps;
+  if (t.weight === 0 && sp.exercise.bodyweightFactor > 0) return { value: String(reps), unit: 'reps', caption: `${sp.plannedSets} sets, bodyweight` };
+  if (t.weight === 0) return { value: '—', unit: `× ${reps}`, caption: 'first time: pick a weight' };
+  return { value: kg(t.weight), unit: `kg × ${reps}`, caption: `${sp.plannedSets} working sets` };
+}
+
+/** "last time: 40 × 6 · 90 × 3 · 70 × 6, 6" → its heaviest part, "90 × 3". */
+function lastTop(line: string): string {
+  const parts = line.replace(/^last time:\s*/i, '').split(' · ').filter(Boolean);
+  const w = (p: string) => parseFloat(p) || 0;
+  return parts.reduce<string>((a, p) => (!a || w(p) > w(a) ? p : a), '');
+}
+
+/** Strip label: "Barbell Bench Press" → "Bench Press", "Cable Tricep Pushdown" → "Tricep Pushdown". */
+const stripName = (name: string) => name.replace(/^(barbell|dumbbell|db|conventional|cable|machine|smith)\s+/i, '');
+
+function setsPair(sp: SlotPlan): LabelValueItem {
+  const off = sp.ghost.filter(g => g.kind === 'backoff');
+  if (off.length) return { label: 'Back-offs', value: `${off.length} × ${off[0].reps} at ${kg(off[0].weight)}` };
+  return { label: 'Sets', value: `${sp.ghost.length} × ${sp.ghost[0]?.reps ?? sp.target.targetReps}` };
+}
 
 export function Today(_props: { params: string[] }) {
   const gate = useFirstRunRedirect();
@@ -24,6 +56,7 @@ export function Today(_props: { params: string[] }) {
   const [minimum, setMinimum] = useState(false);
   const [showNext, setShowNext] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sel, setSel] = useState<number | null>(null);
   const readiness = readinessFromAnswers({ sleep: answers.sleep ?? 'good', soreness: answers.soreness ?? 'good', stress: answers.stress ?? 'good' });
   const clock = useNow(1000);
   useScrollTop('today');
@@ -32,21 +65,30 @@ export function Today(_props: { params: string[] }) {
     const now = Date.now();
     const today = todayISO(now);
     const profile = await getProfile(db);
-    const [state, plan, heat, backup, demo] = await Promise.all([
+    const [state, plan, heat, backup, demo, goals] = await Promise.all([
       todayState(db, today, now),
       planToday(db, today, now, { readiness, minimum }),
       loadConsistency(db, today, 12, profile),
       backupDue(db, now),
       getMeta(db, 'demoMode'),
+      profile ? goalRows(db, profile, today) : Promise.resolve([]),
     ]);
-    return { now, today, profile, state, plan, heat, backup, demo: demo === true };
+    const counts: Record<string, number> = {};
+    for (const col of heat.grid.columns) for (const c of col) if (c.inWindow && c.count > 0) counts[c.date] = c.count;
+    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals };
   }, [readiness, minimum]);
 
-  if (gate !== 'ready' || !data) return <section className="screen" aria-busy="true" />;
-  const { today, profile, state, plan, heat, backup, demo } = data;
+  if (gate !== 'ready' || !data) return <section className="screen today" aria-busy="true" />;
+  const { today, profile, state, plan, heat, counts, backup, demo, goals } = data;
   const scale = profile?.effortScale ?? 'rir';
   const open = state.open;
   const target = profile?.sessionsPerWeekTarget ?? 3;
+  const names = sessionNames(plan.sessionName || 'Today');
+  const showPlan = plan.status === 'committed' || (plan.status === 'planned' && (!state.doneToday || showNext));
+  const canStart = plan.status === 'planned' && !open && (!state.doneToday || showNext);
+  const sp = plan.slots.find(s => s.slotOrder === sel) ?? plan.slots[0];
+  const hero = sp ? heroOf(sp) : null;
+  const done = state.doneToday;
 
   const start = async () => {
     setBusy(true);
@@ -56,108 +98,129 @@ export function Today(_props: { params: string[] }) {
     } finally { setBusy(false); }
   };
 
+  const pairs: LabelValueItem[] = sp ? [
+    { label: 'Effort floor', value: sp.floorLabel },
+    setsPair(sp),
+    { label: 'Last time', value: lastTop(sp.lastTime) || 'First time' },
+    { label: 'This week', value: `${heat.thisWeek} of ${target}`, accent: true },
+  ] : [];
+  if (open?.card) {
+    pairs.splice(0, 0,
+      { label: 'Last set', value: `${kg(open.card.lastSet.weight)} × ${open.card.lastSet.reps}${open.card.lastSet.rir !== undefined ? ` @ ${formatEffort(open.card.lastSet.rir, scale)}` : ''}` },
+      { label: 'Rested', value: formatElapsed(open.card.restedMs + Math.max(0, clock - data.now)) });
+  }
+  const paceBars = goals.filter(g => g.current !== null && g.target.value > 0 && g.target.subject !== 'sessions_per_week');
+
   return (
-    <section className="screen">
+    <section className="screen today">
       <DemoBanner />
-      <div className="flow-head">
-        <h1 className="title">Today</h1>
-        <span className="mono num-sm mid">{formatDate(today)}</span>
+      <Lockup mid={`Training log //${open ? 'Live' : done && !showNext ? 'Done today' : names.short}`} />
+
+      <div className="place">
+        <div>
+          <h1 className="title">{done && !showNext ? sessionNames(done.session.nameSnapshot).title : showPlan ? names.title : 'Today'}</h1>
+          <p className="quiet">{formatDate(today)}{open ? ' · in progress' : ''}</p>
+        </div>
+        <PixelIcon name="today" scale={3} />
       </div>
 
-      {open ? (
-        <article className="card tick resume-card stack">
-          <span className="label">In progress · {open.session.nameSnapshot}</span>
-          {open.card ? (
-            <>
-              <p className="heading line">{open.card.exerciseName} · set <span className="mono">{open.card.setNumber}</span></p>
-              <p className="line mid">Last set <span className="num-inline">{open.card.lastSet.weight} × {open.card.lastSet.reps}{open.card.lastSet.rir !== undefined ? ` @ ${formatEffort(open.card.lastSet.rir, scale)}` : ''}</span></p>
-              <p className="line mono num-sm mid">rested {formatElapsed(open.card.restedMs + Math.max(0, clock - data.now))}</p>
-            </>
-          ) : <p className="line mid">Committed, no sets logged yet.</p>}
-          <a className="btn primary commit-cta" href={`#/session/${open.session.id}`}>Resume</a>
-        </article>
-      ) : (
+      {done && !showNext ? (
+        <div className="stack">
+          {done.total > 0
+            ? <BigNumber value={done.kept} unit={`of ${done.total}`} caption={`promise${done.total === 1 ? '' : 's'} kept`} label={`${done.kept} of ${done.total} promises kept`} />
+            : <BigNumber value="0" unit="graded" caption="logged, nothing to grade" />}
+          <LinkButton block className="split" iconEnd="chevron" href={`#/review/${done.session.id}`}>See the review</LinkButton>
+        </div>
+      ) : showPlan && sp && hero && (
         <>
-          {plan.reentryNote && (
-            <article className="card tick tick-ghost stack">
-              <span className="label">Re-entry</span>
-              <p className="body line">{plan.reentryNote}</p>
-            </article>
+          <BigNumber value={hero.value} unit={hero.unit} caption={hero.caption} />
+          {plan.slots.length > 1 && (
+            <div className="lift-strip" role="tablist" aria-label="Lifts in this session">
+              {plan.slots.map(s => (
+                <button key={s.target.slotId + s.slotOrder} type="button" role="tab" aria-selected={s === sp} data-press="dim"
+                  className={`lift-cell${s === sp ? ' on' : ''}`} onClick={() => setSel(s.slotOrder)}>
+                  <span className="label">{stripName(s.exercise.name)}</span><b>{heroOf(s).value}</b>
+                </button>
+              ))}
+            </div>
           )}
-          {state.doneToday ? (
-            <a className="card tick stack done-today" href={`#/review/${state.doneToday.session.id}`} style={{ ['--tick' as string]: 'var(--verdict-hit)' }}>
-              <span className="label">Done today</span>
-              <span className="heading">{state.doneToday.session.nameSnapshot}</span>
-              {state.doneToday.total > 0
-                ? <span className="mid"><span className="num-inline">{state.doneToday.kept} / {state.doneToday.total}</span> promises kept · see the review ›</span>
-                : <span className="mid">Logged · see the session ›</span>}
-            </a>
-          ) : state.lastLine && <p className="mid line">{state.lastLine}</p>}
+          <div className="promise">
+            <span className="label">{plan.status === 'committed' ? 'Committed' : 'The promise'} · {sp.exercise.name}{sp.inMinimum && minimum ? ' · minimum' : ''}</span>
+            <p className="promise-text"><MonoNums text={sp.target.criterion} /></p>
+            <p className="quiet">Why: {readable(sp.target.why)}</p>
+            {sp.lastNote && <p className="quiet">Last note: {sp.lastNote}</p>}
+          </div>
+          {sp.pain?.painCheck && <p className="note">//Pain check — how does it feel warming up? {sp.pain.reasons[0]}</p>}
+          <LabelValueGrid items={pairs} />
         </>
       )}
 
-      <section className="stack" aria-label="Consistency">
-        <div className="spread">
-          <span className="label">Last 12 weeks</span>
-          <span className="mid"><span className="num-inline">{heat.thisWeek}</span> of <span className="num-inline">{target}</span> this week</span>
-        </div>
-        <Heatmap data={heat} today={today} cell={17} label={`Training days, last 12 weeks. ${heat.thisWeek} of ${target} sessions this week.`}
-          onSelect={d => heat.sessionByDate[d] && go(`history/${heat.sessionByDate[d]}`)} />
-      </section>
+      {!open && !done && state.lastLine && !showPlan && <p className="quiet">{state.lastLine}</p>}
+      {!open && plan.reentryNote && showPlan && <p className="note">//Re-entry — {plan.reentryNote}</p>}
 
       {plan.status === 'no_program' && (
         <div className="banner stack">
           <span>No program yet.</span>
-          <a className="btn" href="#/profile/program">Pick a program</a>
+          <LinkButton href="#/profile/program" block>Pick a program</LinkButton>
         </div>
       )}
-
       {plan.status === 'empty_session' && (
         <div className="banner stack">
           <span>{plan.sessionName} has no lifts.</span>
-          <a className="btn" href="#/profile/program">Edit the program</a>
+          <LinkButton href="#/profile/program" block>Edit the program</LinkButton>
         </div>
       )}
 
-      {state.doneToday && plan.status === 'planned' && !showNext && (
-        <button type="button" className="btn block" onClick={() => setShowNext(true)}>Show the next session ({plan.sessionName})</button>
+      <div className="bars">
+        <DitherBar label="This week" valueText={`${heat.thisWeek} of ${target}`} value={heat.thisWeek / Math.max(1, target)} />
+        {paceBars.map(g => (
+          <DitherBar key={g.target.id} label={`${g.name} · ${TARGET_TYPE_LABELS[g.target.type].toLowerCase()} ${kg(g.target.value)} by ${formatDate(g.target.deadline, { weekday: false, year: false })}`}
+            valueText={`${kg(Math.round(g.current! * 10) / 10)} · ${Math.round((g.current! / g.target.value) * 100)}%`} value={g.current! / g.target.value} />
+        ))}
+      </div>
+
+      {done && !showNext && plan.status === 'planned' && (
+        <Button block iconEnd="chevron" className="split" onClick={() => setShowNext(true)}>Show the next session ({names.short})</Button>
       )}
 
-      {plan.status === 'planned' && !open && (!state.doneToday || showNext) && (
-        <ReadinessCheck answers={answers} onChange={setAnswers} readiness={readiness} />
-      )}
-
-      {(plan.status === 'committed' || (plan.status === 'planned' && (!state.doneToday || showNext))) && (
-        <section className="stack" aria-label="Today's session">
-          <div className="spread">
-            <h2 className="heading">{plan.status === 'committed' ? 'Committed' : 'Next'}: {plan.sessionName}</h2>
-            {plan.status === 'planned' && plan.slots.some(s => s.inMinimum) && (
-              <button type="button" className={`chip${minimum ? ' on' : ''}`} aria-pressed={minimum} onClick={() => setMinimum(m => !m)}>
-                Minimum
-              </button>
-            )}
-          </div>
-          {minimum && <p className="mid line">Minimum version: only the lifts that keep the week on track.</p>}
-          {plan.slots.map(sp => <TargetCard key={sp.target.slotId + sp.slotOrder} sp={sp} />)}
-          {plan.status === 'planned' && (
-            <div className="start-bar">
-              <button type="button" className="btn primary commit-cta" disabled={busy} onClick={start}>
-                Start {plan.sessionName.split(' ·')[0]}
-              </button>
-              <ConfirmButton className="block" confirmLabel={`Skip ${plan.sessionName.split(' ·')[0]} — tap to record`}
-                onConfirm={() => skipSession(getDb(), plan, Date.now())}>
-                Skip this session
-              </ConfirmButton>
-            </div>
+      {canStart && (
+        <>
+          <ReadinessCheck answers={answers} onChange={setAnswers} readiness={readiness} />
+          {plan.slots.some(s => s.inMinimum) && (
+            <Toggle label="Minimum version" hint="Only the lifts that keep the week on track" checked={minimum} onChange={setMinimum} />
           )}
-        </section>
+        </>
+      )}
+
+      <div className="stack">
+        <span className="label">Last 12 weeks</span>
+        <GlyphHeatmap counts={counts} weeks={12} end={today} weekTarget={target} legend
+          label={`Training days, last 12 weeks. ${heat.thisWeek} of ${target} sessions this week`}
+          onSelect={d => heat.sessionByDate[d] && go(`history/${heat.sessionByDate[d]}`)} />
+      </div>
+
+      {canStart && (
+        <ConfirmButton className="quiet block" confirmLabel={`Skip ${names.short}?`} confirmText={`Skip ${names.short}`}
+          message="It counts as a choice, not a gap: the rotation moves on." onConfirm={() => skipSession(getDb(), plan, Date.now())}>
+          Skip this session
+        </ConfirmButton>
       )}
 
       {backup.due && !demo && (
-        <p className="mid line">
+        <p className="quiet">
           {backup.days === null ? 'No backup yet.' : `Last backup ${backup.days} days ago.`}{' '}
           <a className="link" href="#/profile/settings">Export</a>
         </p>
+      )}
+
+      {(canStart || open) && (
+        <div className="pin">
+          {open ? (
+            <LinkButton variant="primary" block iconEnd="chevron" href={`#/session/${open.session.id}`}>Resume {names.short}</LinkButton>
+          ) : (
+            <Button variant="primary" block iconEnd="plus" disabled={busy} onClick={start}>Start {names.short}</Button>
+          )}
+        </div>
       )}
     </section>
   );

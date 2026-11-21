@@ -1,6 +1,6 @@
 // Haptics via navigator.vibrate (Android Chrome). Silently skipped where the
-// API is missing (iOS Safari, desktop). A Settings toggle can call
-// setHapticsEnabled(false); nothing persists it yet.
+// API is missing (iOS Safari, desktop). The Settings toggle persists the
+// choice in meta ('haptics') and applies it here (useHaptics.ts).
 export type HapticKind = 'commit' | 'pr' | 'tick';
 
 const PATTERN: Record<HapticKind, number | number[]> = {

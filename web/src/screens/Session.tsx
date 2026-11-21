@@ -1,21 +1,24 @@
 // Session logger (#/session/<id>, full screen; spec §3.1, §3.3). Reads the
-// committed promise only. No rest countdown, alerts, sounds, vibration,
-// notifications or wake lock: rest is a silent elapsed label.
-import { useCallback, useMemo, useState } from 'react';
+// committed promise only. The next set is the hero; one tap logs it as
+// planned, "Adjust" opens the set sheet. No rest countdown, alerts, sounds,
+// notifications or wake lock: rest is a silent elapsed label. One haptic tick
+// on commit, and the PR moment when a set is a new best.
+import { useCallback, useMemo, useRef, useState } from 'react';
 import type { SetEntry } from '../domain/types';
 import type { PlannedSet } from '../engine';
 import { formatElapsed } from '../engine';
-import { addSet, deleteSet, getDb, listExercises, updateSet } from '../db';
-import { finishSession, nextSlotOrder, sessionView, type LiveSlot, type SlotOverrides } from '../app/coach';
-import { formatDate } from '../app/dates';
+import { addSet, deleteSet, getDb, getExerciseHistory, listExercises, updateSet } from '../db';
+import { finishSession, isBarbell, kg, nextSlotOrder, platesPerSide, sessionView, type LiveSlot, type SlotOverrides } from '../app/coach';
 import { useLive } from '../ui/useLive';
-import { go } from '../ui/router';
-import { ConfirmButton } from '../ui/common';
+import { Button, ConfirmButton, DitherBar, LinkButton, PixelIcon, back, go, haptic, showPrMoment } from '../ui/kit';
 import { LiftBlock, kindsFor, type BlockHandlers } from '../ui/session/LiftBlock';
 import { SetSheet, type SetDraft } from '../ui/session/SetSheet';
 import { PlateSheet } from '../ui/session/PlateSheet';
 import { ExercisePicker } from '../ui/session/ExercisePicker';
 import { useNow, useScrollTop } from '../ui/session/useNow';
+import { focusSlot, liftRows, nextLabel, rowLabelOf, sessionCount, type SheetRow } from '../ui/session/logger';
+import { priorFromHistory, prMomentFor } from '../ui/session/prs';
+import { effortWords, loadText, sessionNames } from '../ui/session/text';
 
 const key = (id: string) => `gymbro.session.${id}.overrides`;
 function readOverrides(id: string): SlotOverrides {
@@ -30,8 +33,25 @@ type PickerState = { mode: 'swap'; slotOrder: number } | { mode: 'add' } | null;
 
 const draftFrom = (p: { weight: number; reps: number; rir?: number; kind: SetEntry['kind'] }, s?: SetEntry): SetDraft => ({
   weight: p.weight, reps: p.reps, kind: p.kind, failed: !!s?.failed, note: s?.note ?? '',
-  ...(p.rir !== undefined ? { rir: p.rir } : {}), ...(s?.pain ? { pain: s.pain } : {}),
+  ...(p.rir !== undefined && p.kind !== 'warmup' ? { rir: p.rir } : {}), ...(s?.pain ? { pain: s.pain } : {}),
 });
+
+/** What "+ Add set" pre-fills: the last working set, else the last planned row. */
+function lastPlanned(slot: LiveSlot): PlannedSet {
+  const w = slot.work[slot.work.length - 1];
+  if (w) return { kind: w.kind, weight: w.weight, reps: w.reps, ...(w.rir !== undefined ? { rir: w.rir } : {}) };
+  const ghost = slot.plan && !slot.swapped ? slot.plan.ghost : [];
+  return ghost[ghost.length - 1] ?? { kind: 'working', weight: slot.sets[slot.sets.length - 1]?.weight ?? 0, reps: 8 };
+}
+
+/** Haptic tick on commit; the PR moment when the set beats every earlier set of the lift. */
+async function celebrate(saved: SetEntry, lift: string): Promise<void> {
+  haptic('commit');
+  if (saved.kind === 'warmup' || saved.failed) return;
+  const days = await getExerciseHistory(getDb(), saved.exerciseId);
+  const moment = prMomentFor(saved, priorFromHistory(days, saved.id), lift);
+  if (moment) showPrMoment(moment);
+}
 
 export function Session({ params }: { params: string[] }) {
   const id = params[0];
@@ -44,34 +64,56 @@ export function Session({ params }: { params: string[] }) {
   const [sheet, setSheet] = useState<SheetState>(null);
   const [plates, setPlates] = useState<number | null>(null);
   const [picker, setPicker] = useState<PickerState>(null);
+  const [chosen, setChosen] = useState<number | null>(null);
+  const busy = useRef(false);
 
   const updateOverrides = useCallback((o: SlotOverrides) => { setOverrides(o); writeOverrides(id, o); }, [id]);
 
   const log = useCallback(async (slot: LiveSlot, p: { weight: number; reps: number; kind: SetEntry['kind']; rir?: number }, extra: Partial<SetEntry> = {}) => {
-    await addSet(getDb(), {
+    const saved = await addSet(getDb(), {
       sessionId: id, exerciseId: slot.exercise.id, exerciseNameSnapshot: slot.exercise.name, slotOrder: slot.slotOrder,
       kind: p.kind, weight: p.weight, reps: p.reps, ...(p.rir !== undefined && p.kind !== 'warmup' ? { rir: p.rir } : {}), ...extra,
     });
-    // TODO(PrMoment, screen worker): haptic('commit') here (ui/kit), then
-    // isNewBest(set, earlier sets of slot.exercise) from app/bests.ts → showPrMoment({ value, unit, caption, lift, pairs }).
+    await celebrate(saved, slot.exercise.name);
   }, [id]);
 
-  const handlers: BlockHandlers = useMemo(() => ({
-    logPlanned: (slot, p: PlannedSet) => { void log(slot, p); },
-    openNew: (slot, p) => setSheet({ slot, draft: draftFrom(p) }),
-    edit: (slot, s) => setSheet({ slot, set: s, draft: draftFrom(s, s) }),
-    plates: w => setPlates(w),
-    swap: slot => setPicker({ mode: 'swap', slotOrder: slot.slotOrder }),
-  }), [log]);
+  const logPlanned = useCallback(async (slot: LiveSlot, p: PlannedSet) => {
+    if (busy.current) return; // one tap, one set
+    busy.current = true;
+    try { await log(slot, p); } finally { busy.current = false; }
+  }, [log]);
 
-  if (view === undefined) return <section className="screen session-screen" aria-busy="true" />;
+  const handlers: BlockHandlers = useMemo(() => ({
+    adjust: (slot, r) => { if (slot.plan && !slot.swapped) setChosen(slot.slotOrder); setSheet({ slot, draft: draftFrom(r.planned ?? r) }); },
+    edit: (slot, s) => setSheet({ slot, set: s, draft: draftFrom(s, s) }),
+    addSet: slot => setSheet({ slot, draft: draftFrom(lastPlanned(slot)) }),
+    swap: slot => setPicker({ mode: 'swap', slotOrder: slot.slotOrder }),
+    focus: slot => { if (liftRows(slot).next) setChosen(slot.slotOrder); },
+  }), []);
+
+  if (view === undefined) return <section className="screen logger" aria-busy="true" />;
   if (view === null) return (
-    <section className="screen"><a className="back" href="#/today">‹ Today</a><p className="mid">This session doesn’t exist.</p></section>
+    <section className="screen logger"><LinkButton variant="quiet" href="#/today" icon="back">Today</LinkButton><p className="quiet">This session doesn’t exist.</p></section>
   );
 
   const { session, slots, scale } = view;
-  const rested = view.lastSet ? { setId: view.lastSet.id, label: `rested ${formatElapsed(now - view.lastSet.loggedAt)}` } : null;
+  const names = sessionNames(session.nameSnapshot);
+  const focus = focusSlot(slots, chosen);
+  const next: SheetRow | null = focus ? liftRows(focus).next : null;
+  const count = sessionCount(slots);
+  const graded = slots.filter(s => s.plan);
   const unlogged = slots.reduce((n, s) => n + (s.plan && !s.stopped && !s.swapped ? Math.max(0, s.plan.ghost.length - s.work.length) : 0), 0);
+  const last = view.lastSet;
+  const lastAt = last ? rowLabelOf(slots, last.id) : null;
+  const rest = last && lastAt
+    ? `Rested ${formatElapsed(now - last.loggedAt)} since ${lastAt.lift !== focus?.exercise.name ? `${lastAt.lift}, ` : ''}${lastAt.label}`
+    : null;
+  const load = focus && next && isBarbell(focus.exercise) ? platesPerSide(next.weight, view.plates.barKg, view.plates.platesKg) : null;
+  const note = focus?.nudge
+    ? { kind: focus.nudge.kind, text: focus.nudge.text }
+    : focus?.plan?.pain?.painCheck && !focus.work.length
+      ? { kind: 'stop' as const, text: `Pain check first: how does it feel warming up? ${focus.plan.pain.reasons[0] ?? ''}`.trim() }
+      : null;
 
   const save = async (d: SetDraft) => {
     if (!sheet) return;
@@ -88,36 +130,76 @@ export function Session({ params }: { params: string[] }) {
   };
 
   const finish = async () => { await finishSession(getDb(), id, Date.now()); go(`review/${id}`); };
+  const finishButton = session.sealed ? (
+    <LinkButton variant="primary" block href={`#/review/${id}`} iconEnd="chevron">Back to review</LinkButton>
+  ) : unlogged > 0 ? (
+    <ConfirmButton className="primary block split" confirmLabel={`Finish with ${unlogged} planned set${unlogged === 1 ? '' : 's'} unlogged?`}
+      confirmText="Finish session" onConfirm={finish}>Finish session</ConfirmButton>
+  ) : (
+    <Button variant="primary" block iconEnd="chevron" onClick={finish}>Finish session</Button>
+  );
 
   return (
-    <section className="screen session-screen">
-      <div className="session-top">
-        <a className="back" href="#/today">‹ Today</a>
-        <div className="stack tight" style={{ alignItems: 'flex-end' }}>
-          <span className="heading">{session.nameSnapshot}</span>
-          <span className="mono micro mid">{formatDate(session.date, { year: false })} · {formatElapsed(now - session.startedAt)}</span>
-        </div>
-      </div>
+    <section className="screen logger">
+      <header className="lhead">
+        <button type="button" className="lhead-close" data-press="dim" onClick={() => back('today')}><PixelIcon name="back" />Close</button>
+        <span className="lhead-mid">[{names.short}]{focus ? ` //${focus.exercise.name}` : ''}</span>
+        <span className="lhead-t tnum" aria-label={`Session time ${formatElapsed(now - session.startedAt)}`}>{formatElapsed(now - session.startedAt)}</span>
+      </header>
+
       {session.sealed && (
-        <div className="banner spread"><span>Finished. Changes are marked “edited”.</span><a className="btn" href={`#/review/${id}`}>Review</a></div>
+        <div className="banner spread"><span>Finished. Changes are marked “edited”.</span><LinkButton href={`#/review/${id}`}>Review</LinkButton></div>
       )}
-      {!view.commit && <p className="mid">This session has no committed promise; sets are logged ungraded.</p>}
+      {!view.commit && <p className="note">//Note — this session has no committed promise; sets are logged ungraded.</p>}
 
-      {slots.map(s => <LiftBlock key={s.slotOrder} slot={s} scale={scale} h={handlers} rested={rested} />)}
+      {count.planned > 0 && (
+        <DitherBar label={names.short} valueText={`${count.done} of ${count.planned} sets`} value={count.done / count.planned} />
+      )}
 
-      <button type="button" className="btn" onClick={() => setPicker({ mode: 'add' })}>+ Add a lift (ungraded)</button>
+      {focus && next && !session.sealed ? (
+        <div className="next">
+          <span className="label">{nextLabel(next)}</span>
+          <div className="next-hero" aria-label={`${kg(next.weight)} kilograms × ${next.reps}`}>
+            <span className="next-w">{loadText(next.weight, focus.exercise.bodyweightFactor)}</span><span className="next-r"> × {next.reps}</span>
+          </div>
+          <div className="next-meta">
+            <span>{next.warm ? 'Warm-up' : 'Effort'}{next.rir !== undefined && !next.warm && <b> {effortWords(next.rir, scale)}</b>}</span>
+            {load && !load.belowBar && (
+              <button type="button" className="next-plates" data-press="dim" onClick={() => setPlates(next.weight)}>
+                Plates <b>{load.perSide.length ? load.perSide.map(kg).join(' + ') : 'empty bar'}</b>
+              </button>
+            )}
+          </div>
+          <div className="next-actions">
+            <Button variant="primary" block icon="check" className="log-btn" onClick={() => { void logPlanned(focus, next.planned!); }}>Log as planned</Button>
+            <Button block className="adjust-btn" onClick={() => handlers.adjust(focus, next)}>Adjust weight · reps · effort</Button>
+          </div>
+        </div>
+      ) : graded.length > 0 && (
+        <div className="next">
+          <span className="label">{session.sealed ? 'Finished' : 'Every planned set is logged'}</span>
+          <div className="next-hero"><span className="next-w">{count.done}</span><span className="next-r"> of {count.planned}</span></div>
+          <div className="next-meta"><span>Sets logged. Add a set below, or finish.</span></div>
+          <div className="next-actions">{finishButton}</div>
+        </div>
+      )}
 
-      <div className="finish-bar">
-        {session.sealed ? (
-          <a className="btn primary commit-cta" href={`#/review/${id}`}>Back to review</a>
-        ) : unlogged > 0 ? (
-          <ConfirmButton className="primary commit-cta" confirmLabel={`Finish with ${unlogged} planned set${unlogged === 1 ? '' : 's'} unlogged?`} onConfirm={finish}>
-            Finish
-          </ConfirmButton>
-        ) : (
-          <button type="button" className="btn primary commit-cta" onClick={finish}>Finish</button>
-        )}
+      {(rest || note) && (
+        <div className="stack">
+          {rest && <p className="rested tnum" aria-live="off">{rest}</p>}
+          {note && <p className={`note nudge ${note.kind}`} role="status">//{note.kind === 'stop' ? 'Stop' : 'Note'} — {note.text}</p>}
+        </div>
+      )}
+
+      <div className="lg-spec-list">
+        {slots.map(s => (
+          <LiftBlock key={s.slotOrder} slot={s} scale={scale} h={handlers} focused={!!focus && s.slotOrder === focus.slotOrder}
+            index={graded.indexOf(s) + 1} count={graded.length} />
+        ))}
       </div>
+
+      <Button block icon="plus" onClick={() => setPicker({ mode: 'add' })}>Add a lift (ungraded)</Button>
+      {((next && !session.sealed) || !graded.length) && <div className="finish">{finishButton}</div>}
 
       {sheet && (
         <SetSheet open title={sheet.set ? `Edit set · ${sheet.slot.exercise.name}` : `Log set · ${sheet.slot.exercise.name}`}

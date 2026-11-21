@@ -1,13 +1,13 @@
-// Settings (spec §4 Profile → Settings): effort scale, plates, benchmarks,
-// export / import / restore, storage, wipe, about.
+// Settings (spec §4 Profile → Settings): appearance, effort scale,
+// benchmarks, plates, backup / restore / import, storage, wipe, about.
 import { useEffect, useState } from 'react';
 import type { BenchmarkPopulation, EffortScale, Profile } from '../domain/types';
 import {
   defaultProfile, exportBackupJson, exportSetsCsv, getDb, getMeta, getProfile, requestPersist, saveProfile, wipeAll,
 } from '../db';
 import { useLive } from '../ui/useLive';
-import { go } from '../ui/router';
-import { ConfirmButton, Segmented, Stepper, downloadText } from '../ui/common';
+import { ConfirmButton, Group, GroupAction, Segmented, Stepper, downloadText } from '../ui/common';
+import { Button, LabelValueGrid, NavBar, Toggle, go, showHud, useHaptics, useTheme, type ThemePref } from '../ui/kit';
 import { DemoBanner, useDemoMode } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { DEFAULT_PLATES, STANDARD_PLATES, getPlateSettings, savePlateSettings, type PlateSettings } from '../app/prefs';
@@ -32,77 +32,96 @@ export function Settings(_props: { params: string[] }) {
   };
 
   return (
-    <section className="screen">
+    <section className="screen setup">
       <DemoBanner />
-      <a className="back" href="#/profile">‹ Profile</a>
-      <h1 className="title">Settings</h1>
+      <NavBar title="Settings" backLabel="You" fallback="profile" />
+
+      <Appearance />
 
       {profile && (
-        <div className="card stack">
+        <Group label="Training">
           <Segmented<EffortScale> label="Effort scale" value={profile.effortScale} onChange={v => setProfile({ effortScale: v })}
             options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
-          <p className="mid">Reps in reserve, or RPE (10 − RIR). Stored as RIR either way.</p>
+          <p className="quiet">Reps in reserve, or RPE (10 − RIR). Stored as RIR either way.</p>
           <Segmented<BenchmarkPopulation> label="Benchmark population" value={profile.benchmarkPopulation ?? 'gym'} onChange={v => setProfile({ benchmarkPopulation: v })}
             options={[{ value: 'gym', label: 'Gym' }, { value: 'tested', label: 'Tested' }, { value: 'all', label: 'All' }]} />
-          <p className="mid">Levels always compare you with modeled gym-goers (Gym). Tested or All also opens the powerlifter comparison for squat, bench and deadlift, against drug-tested or all raw competitors.</p>
-        </div>
+          <p className="quiet">Levels always compare you with modeled gym-goers (Gym). Tested or All also opens the powerlifter comparison for squat, bench and deadlift, against drug-tested or all raw competitors.</p>
+        </Group>
       )}
 
-      {plates && <PlatesCard value={plates} />}
+      {plates && <Plates value={plates} />}
 
-      <div className="card stack">
-        <span className="label">Backup</span>
-        <p className="mid">{lastExport ? <>Last export <span className="mono">{formatDate(todayISO(lastExport))}</span>.</> : 'Not exported yet.'} Your data lives only on this device.</p>
-        <button className="btn primary" onClick={async () => {
+      <Group label="Backup">
+        <LabelValueGrid items={[
+          { label: 'Last export', value: lastExport ? formatDate(todayISO(lastExport)) : 'Never' },
+          { label: 'Lives on', value: 'This device only' },
+        ]} />
+        <Button variant="primary" block iconEnd="export" onClick={async () => {
           const text = await exportBackupJson(getDb());
           downloadText(`gymbro-backup-${todayISO()}.json`, text, 'application/json');
-        }}>Export backup (JSON)</button>
-        <button className="btn" onClick={async () => downloadText(`gymbro-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>Export sets (CSV)</button>
-      </div>
+          showHud({ text: 'Backup saved', icon: 'export' });
+        }}>Export backup · JSON</Button>
+        <Button block iconEnd="export" onClick={async () => downloadText(`gymbro-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>Export sets · CSV</Button>
+      </Group>
 
-      <div className="card stack">
-        <span className="label">Restore from backup</span>
+      <Group label="Restore from backup">
         <RestorePanel />
-      </div>
+      </Group>
 
-      <div className="card stack">
-        <span className="label">Import Notion CSV</span>
-        {demo ? <p className="mid">You’re looking at demo data. Tap “Start my log” first so the import doesn’t mix with it.</p> : <ImportNotionPanel />}
-      </div>
+      <Group label="Import Notion CSV">
+        {demo ? <p className="quiet">You’re looking at demo data. Tap “Start my log” first so the import doesn’t mix with it.</p> : <ImportNotionPanel />}
+      </Group>
 
-      <StorageCard />
+      <Storage />
 
-      <div className="card stack">
-        <span className="label">Wipe all data</span>
-        <WipeAll />
-      </div>
+      <Group label="Wipe all data">
+        <p className="quiet">Deletes every session, set, program and setting on this device. It can’t be undone. Export a backup first if you want a copy.</p>
+        <ConfirmButton danger className="block" confirmLabel="Wipe all data on this device?"
+          message="Every session, set, program and setting is deleted. This can’t be undone." confirmText="Wipe everything" onConfirm={async () => {
+            await wipeAll(getDb());
+            go('onboarding', { replace: true });
+          }}>Wipe all data…</ConfirmButton>
+      </Group>
 
       <About />
     </section>
   );
 }
 
-function PlatesCard({ value }: { value: PlateSettings }) {
-  const save = (s: PlateSettings) => savePlateSettings(getDb(), s);
+function Appearance() {
+  const { theme, setTheme } = useTheme();
+  const { enabled, setEnabled } = useHaptics();
   return (
-    <div className="card stack">
-      <span className="label">Bar and plates</span>
-      <Stepper label="Bar weight" unit="kg" value={value.barKg} step={2.5} min={0} max={40} onChange={v => save({ ...value, barKg: v })} />
-      <span className="label">Plates available</span>
-      <div className="chips">
-        {STANDARD_PLATES.map(p => {
-          const on = value.platesKg.includes(p);
-          return <button key={p} type="button" aria-pressed={on} className={`chip big mono${on ? ' on' : ''}`}
-            onClick={() => save({ ...value, platesKg: on ? value.platesKg.filter(x => x !== p) : [...value.platesKg, p] })}>{p}</button>;
-        })}
-      </div>
-      <p className="mid">Used by the plate calculator. Exercise increments are set per exercise in the Program editor.</p>
-      <button className="btn" onClick={() => save({ ...DEFAULT_PLATES })}>Reset to default</button>
-    </div>
+    <Group label="Appearance">
+      <Segmented<ThemePref> label="Theme" value={theme} onChange={v => { void setTheme(v); }}
+        options={[{ value: 'system', label: 'System' }, { value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
+      <Toggle label="Haptics" hint="A short buzz on set commit and on a new best. Android only." checked={enabled} onChange={v => { void setEnabled(v); }} />
+    </Group>
   );
 }
 
-function StorageCard() {
+function Plates({ value }: { value: PlateSettings }) {
+  const save = (s: PlateSettings) => savePlateSettings(getDb(), s);
+  const isDefault = value.barKg === DEFAULT_PLATES.barKg && [...value.platesKg].sort().join() === [...DEFAULT_PLATES.platesKg].sort().join();
+  return (
+    <Group label="Bar and plates" right={!isDefault && <GroupAction onClick={() => save({ ...DEFAULT_PLATES })}>Reset</GroupAction>}>
+      <Stepper label="Bar weight" unit="kg" value={value.barKg} step={2.5} min={0} max={40} onChange={v => save({ ...value, barKg: v })} />
+      <div className="field-wrap">
+        <span className="label">Plates available · kg</span>
+        <div className="plate-grid" role="group" aria-label="Plates available">
+          {STANDARD_PLATES.map(p => {
+            const on = value.platesKg.includes(p);
+            return <button key={p} type="button" aria-pressed={on} className={`plate-opt tnum${on ? ' on' : ''}`} data-press="dim"
+              onClick={() => save({ ...value, platesKg: on ? value.platesKg.filter(x => x !== p) : [...value.platesKg, p] })}>{p}</button>;
+          })}
+        </div>
+      </div>
+      <p className="quiet">Used by the plate calculator. Exercise increments are set per exercise in the Program editor.</p>
+    </Group>
+  );
+}
+
+function Storage() {
   const [persisted, setPersisted] = useState<boolean | null>(null);
   useEffect(() => {
     const s = navigator.storage;
@@ -110,29 +129,12 @@ function StorageCard() {
     else setPersisted(false);
   }, []);
   return (
-    <div className="card stack">
-      <span className="label">Storage</span>
-      <p>{persisted === null ? '…' : persisted ? 'The browser keeps this app’s data (persistent storage granted).' : 'The browser may clear this app’s data under storage pressure.'}</p>
-      {persisted === false && <button className="btn" onClick={async () => setPersisted(await requestPersist(getDb()))}>Ask the browser to keep my data</button>}
-      <p className="mid">On iPhone, add the app to the Home Screen to keep your data.</p>
-    </div>
-  );
-}
-
-function WipeAll() {
-  const [step, setStep] = useState(0);
-  if (step === 0) return <button className="btn danger" onClick={() => setStep(1)}>Wipe all data…</button>;
-  return (
-    <div className="stack">
-      <p>This deletes every session, set, program and setting on this device. It can’t be undone. Export a backup first if you want a copy.</p>
-      <div className="row">
-        <button className="btn" onClick={() => setStep(0)}>Cancel</button>
-        <ConfirmButton danger className="grow" confirmLabel="Tap again to wipe everything" onConfirm={async () => {
-          await wipeAll(getDb());
-          go('onboarding');
-        }}>Wipe everything</ConfirmButton>
-      </div>
-    </div>
+    <Group label="Storage">
+      <LabelValueGrid columns={1} items={[{ label: 'Persistent storage', value: persisted === null ? '…' : persisted ? 'Granted' : 'Not granted' }]} />
+      {persisted !== null && <p className="quiet">{persisted ? 'The browser keeps this app’s data.' : 'The browser may clear this app’s data under storage pressure.'}</p>}
+      {persisted === false && <Button block onClick={async () => setPersisted(await requestPersist(getDb()))}>Ask the browser to keep my data</Button>}
+      <p className="quiet">On iPhone, add the app to the Home Screen to keep your data.</p>
+    </Group>
   );
 }
 
@@ -146,13 +148,16 @@ function About() {
     }).catch(() => undefined);
   }, []);
   return (
-    <div className="card stack">
-      <span className="label">About</span>
-      <p>GymBro <span className="mono">{pkg.version}</span>. Local-first: no account, no server, no network calls with your data.</p>
+    <Group label="About">
+      <LabelValueGrid variant="stats" items={[
+        { label: 'Version:', value: pkg.version },
+        { label: 'Account:', value: 'None, local-first' },
+        { label: 'Network:', value: 'Never sees your data' },
+        { label: 'Code:', value: 'MIT licence' },
+      ]} />
       <span className="label">Data credits</span>
-      <p className="mid">Strength levels: modeled gym-goer standards. Squat, bench and deadlift anchors from Symmetric Strength self-reported gym logs, via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source’s licence has not been verified. Method: docs/STANDARDS-METHODOLOGY.md.</p>
-      <p className="mid">Powerlifter comparison: {attribution}{dataDate && <> Data from <span className="mono">{dataDate}</span>.</>}</p>
-      <p className="mid">Code under the MIT licence.</p>
-    </div>
+      <p className="quiet">Strength levels: modeled gym-goer standards. Squat, bench and deadlift anchors from Symmetric Strength self-reported gym logs, via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source’s licence has not been verified. Method: docs/STANDARDS-METHODOLOGY.md.</p>
+      <p className="quiet">Powerlifter comparison: {attribution}{dataDate && <> Data from <span className="tnum">{dataDate}</span>.</>}</p>
+    </Group>
   );
 }

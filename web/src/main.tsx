@@ -3,9 +3,11 @@ import './styles/index.css';
 import { App } from './App';
 import { registerSW } from './sw/register';
 import { initTheme } from './ui/kit/useTheme';
+import { initHaptics } from './ui/kit/useHaptics';
 import { installPressFeedback } from './ui/kit/motion/press';
 
 initTheme();
+initHaptics();
 installPressFeedback();
 createRoot(document.getElementById('root')!).render(<App />);
 registerSW();

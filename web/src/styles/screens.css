@@ -39,23 +39,7 @@ select.field { appearance: none; background-image: linear-gradient(45deg, transp
 .tick-hit { --tick: var(--verdict-hit); }
 .banner.todo-slot { border-style: dashed; }
 
-/* ---------- save bar (Profile draft) ---------- */
-.save-bar { position: sticky; bottom: calc(72px + env(safe-area-inset-bottom)); display: flex; gap: 12px; align-items: center;
-  background: var(--bg); padding: 12px 0; border-top: 1px solid var(--border); z-index: 5; }
-
-/* ---------- demo banner ---------- */
-.banner.demo-banner { border-left: var(--tick-width) solid var(--accent); flex-wrap: wrap; }
-.demo-banner .btn { min-height: 48px; }
-
-/* ---------- Program editor ---------- */
-.session-head { min-height: 48px; width: 100%; text-align: left; }
-.slot { border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-.slot-main { text-align: left; min-height: 48px; flex: 1; }
-.picker-list { max-height: 50dvh; overflow-y: auto; }
-.picker-item { width: 100%; min-height: 48px; text-align: left; border-bottom: 1px solid var(--border); padding: 0 4px; }
-.tpl summary { min-height: 48px; display: flex; align-items: center; cursor: pointer; color: var(--accent); }
-.tpl-session { padding: 8px 0; border-top: 1px solid var(--border); }
-.tpl-session li { min-height: 28px; }
+/* Profile, Program, Settings, Onboarding and the demo bar live in setup.css. */
 
 /* ---------- History ---------- */
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
@@ -79,12 +63,6 @@ select.field { appearance: none; background-image: linear-gradient(45deg, transp
 .set-no { text-align: right; }
 .set-note, .pain-line { margin: 0 0 8px 36px; }
 .pain-line { color: var(--text); }
-
-/* ---------- Onboarding ---------- */
-.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
-.steps span { height: 3px; background: var(--border-strong); }
-.steps span.on { background: var(--accent); }
-.onboarding .title { margin: 0; }
 
 /* Steppers need ~170px each; stack them on phones. */
 @media (max-width: 440px) { .grid2.steppers { grid-template-columns: 1fr; } }

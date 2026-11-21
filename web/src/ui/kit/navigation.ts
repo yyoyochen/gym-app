@@ -7,6 +7,7 @@
 // sync() stamps it with the next stack index.
 import { useSyncExternalStore } from 'react';
 import { classifyNavigation, normalizePath, readNavState, transitionFor, type NavDirection, type Transition } from './nav';
+import { deferNav, dropStaleSheetEntries } from './sheetHistory';
 
 export interface NavSnapshot {
   /** Normalised path, e.g. 'history/abc123'. */
@@ -54,6 +55,7 @@ function init(): NavSnapshot {
   snap = { path, segments: toSegments(path), idx: s?.gbIdx ?? 0, direction: 'none', transition: 'none', seq: 0 };
   addEventListener('popstate', sync);
   addEventListener('hashchange', sync);
+  dropStaleSheetEntries();
   return snap;
 }
 
@@ -72,6 +74,8 @@ function sync() {
 
 /** Navigate within the app. Paths are like 'session/abc' (leading '#/' optional). */
 export function go(path: string, opts: GoOptions = {}): void {
+  // A sheet that just closed is still walking back over its history entry.
+  if (deferNav(() => go(path, opts))) return;
   const cur = init();
   const target = normalizePath(path);
   const url = '#/' + target;
@@ -91,6 +95,7 @@ export function go(path: string, opts: GoOptions = {}): void {
 
 /** Pop one entry. With nothing in-app below (deep link), replace with `fallback` and still animate as a pop. */
 export function back(fallback = 'today'): void {
+  if (deferNav(() => back(fallback))) return;
   const cur = init();
   if (cur.idx > 0) { history.back(); return; }
   history.replaceState({ ...stateObj(), gbIdx: 0 }, '', '#/' + normalizePath(fallback));

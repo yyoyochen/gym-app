@@ -1,21 +1,21 @@
-// Level ladder strip + confidence badge for the gym-goer standards
-// (tier ramp --tier-1..5 = accent at rising strength; see tokens.css).
-import { CONFIDENCE_LABEL, levelRank, type Confidence } from '../../benchmarks/gymStandards';
+// Gym-goer standards in the Ink & Dither idiom: the level is a glyph dither bar
+// (percentile of gym-goers), the level word is mono caps, the confidence is a
+// small outlined letter. No tier colours: one accent only.
+import { CONFIDENCE_LABEL, type Confidence } from '../../benchmarks/gymStandards';
 import type { LiftRating } from '../../benchmarks/liftRating';
+import { DitherBar } from '../kit';
 import { confidenceWord, levelWord, nextText, ordinal, ratedValueText } from './standards';
 
-// Percentile width of each band: below beginner, beginner … elite.
-const BANDS = [5, 15, 30, 30, 15, 5];
+/** "Intermediate · 55th" — the bar's value text. */
+export function levelValueText(r: Pick<LiftRating, 'level' | 'percentile'>): string {
+  return `${levelWord(r)} · ${ordinal(r.percentile)}`;
+}
 
-export function LevelLadder({ rating, label }: { rating: Pick<LiftRating, 'level' | 'percentile'>; label: string }) {
-  const rank = levelRank(rating.level);
+/** One lift's level as a dither bar: label left, "Intermediate · 55th" right, percentile as the fill. */
+export function LevelBar({ rating, label, cells }: { rating: Pick<LiftRating, 'level' | 'percentile'>; label: string; cells?: number }) {
   return (
-    <div className="std-ladder" role="img" aria-label={label}>
-      {BANDS.map((w, i) => (
-        <i key={i} style={{ flex: `${w} 1 0`, background: i === 0 ? 'var(--border-strong)' : i <= rank ? `var(--tier-${i})` : undefined }} />
-      ))}
-      <span className="std-mark" style={{ left: `calc(${Math.min(99.5, Math.max(0.5, rating.percentile))}% - 1px)` }} />
-    </div>
+    <DitherBar value={rating.percentile / 100} cells={cells} label={label} valueText={levelValueText(rating)}
+      ariaLabel={`${label}: ${levelWord(rating)}, ${ordinal(rating.percentile)} percentile of gym-goers`} />
   );
 }
 
@@ -24,30 +24,30 @@ export function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
 }
 
 export function LevelWord({ rating }: { rating: Pick<LiftRating, 'level'> }) {
-  const rank = levelRank(rating.level);
-  return <span className="std-level" style={{ color: rank ? `var(--tier-${rank})` : 'var(--text-mid)' }}>{levelWord(rating)}</span>;
+  return <span className="std-level">{levelWord(rating)}</span>;
 }
 
-/** One lift on the standards: level, ladder, percentile and the evidence, then the next step. */
-export function StandardSummary({ rating, showNext = true }: { rating: LiftRating; showNext?: boolean }) {
-  const pct = ordinal(rating.percentile);
+/** One lift on the standards: the bar, the evidence, confidence and the next step. */
+export function StandardSummary({ rating, label, showNext = true }: { rating: LiftRating; label: string; showNext?: boolean }) {
   return (
-    <>
-      <LevelLadder rating={rating} label={`${levelWord(rating)}, ${pct} percentile of gym-goers`} />
-      <p className="line">
-        <span className="num-inline">{pct}</span> percentile · <ValueText text={ratedValueText(rating)} />
-      </p>
-      <p className="mid line">
+    <div className="std-sum">
+      <LevelBar rating={rating} label={label} />
+      <p className="std-ev"><ValueText text={ratedValueText(rating)} /></p>
+      <p className="std-ev mid">
         <ConfidenceBadge confidence={rating.confidence} /> {confidenceWord(rating)}
-        {showNext && rating.next && <> · next: <ValueText text={nextText(rating.next, rating.loadType === 'dumbbell_each')} /></>}
-        {showNext && !rating.next && ' · top level'}
       </p>
-    </>
+      {showNext && (
+        <p className="std-next">
+          {rating.next ? <>Next: <ValueText text={nextText(rating.next, rating.loadType === 'dumbbell_each')} /></> : 'Top level'}
+        </p>
+      )}
+    </div>
   );
 }
 
 /** Numbers in mono, words in sans. */
 export function ValueText({ text }: { text: string }) {
-  const parts = text.split(/([+−-]?\d+(?:\.\d+)?)/g);
-  return <>{parts.map((p, i) => (i % 2 ? <span key={i} className="num-inline">{p}</span> : p))}</>;
+  // Numbers stand alone ("118.5 kg"), never inside a word ("e1RM").
+  const parts = text.split(/((?<![\p{L}\d.])[+−-]?\d+(?:\.\d+)?(?![\p{L}\d]))/gu);
+  return <>{parts.map((p, i) => (i % 2 ? <b key={i} className="tk-num">{p}</b> : p))}</>;
 }

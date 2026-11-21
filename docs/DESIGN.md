@@ -127,7 +127,8 @@ the kit, so older screens get the new behaviour without import changes.
 - **PR moment**: the number resolves from coarse Bayer dither to solid type on a
   canvas, with `haptic('pr')`.
 - **Haptics**: `haptic('commit')` on set commit, `haptic('pr')` on the PR
-  moment; `setHapticsEnabled()` is for a future Settings toggle.
+  moment; the Settings "Haptics" toggle persists the choice in meta (`haptics`,
+  default on) via `useHaptics()` / `initHaptics()`, and `haptic()` respects it.
 
 ## 6. Accessibility
 
