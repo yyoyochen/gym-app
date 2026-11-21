@@ -27,8 +27,8 @@ LUME colour, radius or shadow should appear in new work. Tokens:
 
 | Token | Dark (default) | Light | Use |
 |---|---|---|---|
-| `--paper` | `#0e0e0e` | `#fcd0af` (FT salmon) | background |
-| `--ink` | `#f2f2ee` | `#1e2152` (navy) | text, rules, solid blocks |
+| `--paper` | `#1e2152` (navy) | `#fcd0af` (FT salmon) | background |
+| `--ink` | `#fef8ec` (cream) | `#1e2152` (navy) | text, rules, solid blocks |
 | `--accent` | `#fcd0af` | = ink | bars, heatmap, stat values, active tab, `//NOTE`, PR number |
 | `--mid` | ink at 52% | ink at 62% | quiet labels, secondary values |
 | `--rule` | ink at 18% | ink at 28% | dotted rules, empty tracks |
