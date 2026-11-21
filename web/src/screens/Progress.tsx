@@ -9,7 +9,7 @@ import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { SUBJECT_BODYWEIGHT } from '../app/labels';
 import { useLive } from '../ui/useLive';
-import { DitherBar, GlyphHeatmap, LabelValueGrid, Lockup, Verdict, go, type VerdictKind } from '../ui/kit';
+import { DitherBar, LabelValueGrid, SquareHeatmap, Lockup, Verdict, go, type VerdictKind } from '../ui/kit';
 import { useScrollTop } from '../ui/session/useNow';
 import { goalRows, latestBodyweight, liftStats, trendOf, type LiftStats } from '../ui/progress/data';
 import { BENCH_CAVEAT, LIFT_WORD, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
@@ -95,7 +95,7 @@ export function Progress(_props: { params: string[] }) {
         <p className="tk-quiet">Nothing logged yet. Sessions you log or import show up here.</p>
       ) : (
         <section className="tk-block" aria-label="Training summary">
-          <GlyphHeatmap counts={counts} weeks={weeksSince(first!, today)} end={today} legend label="Working sets per day"
+          <SquareHeatmap counts={counts} weeks={weeksSince(first!, today)} end={today} legend label="Working sets per day"
             onSelect={d => { const id = sessionByDate[d]; if (id) go(`history/${encodeURIComponent(id)}`); }} />
           <LabelValueGrid variant="stats" className="tk-stats" items={[
             { label: 'Favourite lift:', value: favName ?? '—' },

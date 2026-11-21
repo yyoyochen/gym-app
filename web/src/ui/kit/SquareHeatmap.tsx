@@ -14,6 +14,9 @@ const STEP_X = CELL_W + GAP;
 const STEP_Y = CELL_H + GAP;
 const MARK_H = 2;              // week-target mark under each column
 const MARK_GAP = 3;
+// Largest on-screen px per SVG unit: a short history (12 weeks) or a wide
+// screen keeps phone-sized cells instead of stretching them to fill the row.
+const MAX_SCALE = 0.8;
 
 // The classic shade glyphs as ordered dither:
 //   ░ 25%  a dot on every other row, staggered row to row
@@ -65,7 +68,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
   const trained = g.rows.reduce((n, r) => n + r.cells.filter(c => c.level >= 0).length, 0);
 
   return (
-    <div className={`sqheat ${className}`}>
+    <div className={`sqheat ${className}`} style={{ maxWidth: `calc(var(--sqheat-days) + ${W * MAX_SCALE}px)` }}>
       <div className="sqheat-months" aria-hidden="true">
         {g.months.map(m => (
           <span key={m.week} style={{ left: `${(m.week * STEP_X / W) * 100}%` }}>{m.text}</span>
