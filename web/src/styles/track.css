@@ -20,7 +20,6 @@
 .tk-since { margin: 4px 0 0; font: 11px/1.4 var(--font-mono); color: var(--mid); }
 .tk-date { display: block; margin-top: 2px; font: var(--text-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--mid); }
 .tk-chip { min-height: 22px; padding: 0 6px; font-size: 10px; }
-.tk-glyphs { font-family: var(--font-glyph); letter-spacing: 0; }
 
 /* ---------- Progress summary block (the mockup's model) ---------- */
 .tk-block { display: flex; flex-direction: column; }
@@ -109,23 +108,7 @@
 .tk-hrow-v { font: 500 15px/1.35 var(--font-sans); }
 .tk-hrow .px, .tk-srow-link .px { color: var(--mid); }
 
-/* ---------- History: month calendar in 1-bit ---------- */
-.tk-month { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; margin: -12px -12px 6px; }
-.tk-month h2 { text-align: center; }
-.tk-icon { width: 48px; height: 48px; display: grid; place-items: center; color: var(--ink); }
-.tk-defs { position: absolute; width: 0; height: 0; overflow: hidden; color: var(--accent); }
-.tk-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.tk-cal-h { padding: 2px 0 4px; text-align: center; font: var(--text-label); color: var(--mid); }
-.tk-cal-d { position: relative; aspect-ratio: 1; min-height: 40px; display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden;
-  font: 11px/1 var(--font-mono); color: var(--mid); }
-.tk-cal-d:disabled { cursor: default; opacity: 1; }
-.tk-cal-d.on { color: var(--accent); }
-.tk-cal-fill { position: absolute; inset: 0; width: 100%; height: 100%; shape-rendering: crispEdges; }
-.tk-cal-n { position: relative; padding: 3px 4px 2px; font-variant-numeric: tabular-nums; }
-.tk-cal-d.on .tk-cal-n { background: var(--paper); color: var(--ink); }
-.tk-cal-d.today { outline: var(--rule-w) solid var(--ink); outline-offset: -1.5px; }
-.tk-cal-d.sel { outline: 2.5px solid var(--ink); outline-offset: -2.5px; }
-.tk-cal-d.sel .tk-cal-n { background: var(--ink); color: var(--paper); }
+/* ---------- History ---------- */
 .tk-block > .tk-legend { margin-top: 10px; }
 
 /* ---------- History: session rows ---------- */
@@ -140,7 +123,6 @@
 .tk-stop { font: var(--text-quiet); color: var(--mid); }
 .tk-scount { display: flex; flex-direction: column; align-items: flex-end; font: var(--text-num-md); font-variant-numeric: tabular-nums; }
 .tk-scount small { font: 10px/1 var(--font-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--mid); margin-top: 2px; }
-.tk-clear { align-self: flex-start; min-height: 40px; }
 .tk-past { align-self: flex-start; margin-top: 4px; }
 
 /* ---------- SessionDetail: the ledger ---------- */

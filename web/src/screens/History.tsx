@@ -1,105 +1,69 @@
-// History (spec §4) in Ink & Dither: a 1-bit month calendar (trained days are
-// filled cells, dithered by working-set count) and the month's sessions as
-// spec-sheet rows, newest first.
-import { useId, useMemo, useState } from 'react';
-import { listSessions, sortSets } from '../db';
+// History: the year at a glance (the 52-week heatmap of working sets, tap a
+// day for its session) and every session as spec-sheet rows, newest first,
+// under month headings (docs/superpowers/specs/2026-11-22-tab-jobs-design.md).
+import { useMemo } from 'react';
+import { getProfile, listSessions, sortSets } from '../db';
 import { useLive } from '../ui/useLive';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatLoad } from '../app/labels';
-import { formatDate, monthGrid, monthLabel, shiftMonth, todayISO } from '../app/dates';
+import { formatDate, monthLabel, todayISO } from '../app/dates';
 import { groupBySession, summarizeSession, type SessionSummary } from '../app/history';
-import { LinkButton, Lockup, PixelIcon, heatLevel } from '../ui/kit';
-import type { HeatLevel } from '../ui/kit/dither';
+import { LinkButton, Lockup, PixelIcon, SquareHeatmap, go } from '../ui/kit';
 import { SecHead } from '../ui/progress/parts';
-
-/** 4×4 ordered (Bayer) dither: a cell's pixels switch on in this order as the level rises. */
-const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
-const DENSITY = [0.25, 0.5, 0.75, 1];
+import { loadConsistency } from '../ui/progress/data';
 
 export function History(_props: { params: string[] }) {
   const data = useLive(async db => {
-    const [sessions, sets, exercises] = await Promise.all([listSessions(db), db.sets.toArray(), db.exercises.toArray()]);
+    const today = todayISO();
+    const profile = await getProfile(db);
+    const [sessions, sets, exercises, heat] = await Promise.all([
+      listSessions(db), db.sets.toArray(), db.exercises.toArray(), loadConsistency(db, today, 52, profile),
+    ]);
     const bySession = groupBySession(sets);
     const rows = sessions.map(s => summarizeSession(s, sortSets(bySession.get(s.id) ?? [])));
-    const work = new Map<string, number>();
-    for (const s of sets) if (s.kind !== 'warmup') work.set(s.date, (work.get(s.date) ?? 0) + 1);
-    return { rows, work, bwFactor: new Map(exercises.map(e => [e.id, e.bodyweightFactor])) };
+    const counts: Record<string, number> = {};
+    for (const col of heat.grid.columns) for (const c of col) if (c.inWindow && c.count > 0) counts[c.date] = c.count;
+    return {
+      today, rows, heat, counts, target: profile?.sessionsPerWeekTarget ?? 3,
+      bwFactor: new Map(exercises.map(e => [e.id, e.bodyweightFactor])),
+    };
   }, []);
-  const today = todayISO();
-  const rows = data?.rows;
-  const latest = rows?.length ? rows[rows.length - 1].session.date : today;
-  const [ym, setYm] = useState<{ year: number; month: number } | null>(null);
-  const [day, setDay] = useState<string | null>(null);
-  const cur = ym ?? { year: Number(latest.slice(0, 4)), month: Number(latest.slice(5, 7)) };
-  const prefix = `${cur.year}-${String(cur.month).padStart(2, '0')}`;
-  const uid = useId().replace(/:/g, '');
 
-  const trained = useMemo(() => new Set((rows ?? []).map(d => d.session.date)), [rows]);
-  const max = useMemo(() => Math.max(0, ...(data ? [...data.work.values()] : [0])), [data]);
-  const inMonth = (rows ?? []).filter(d => d.session.date.startsWith(prefix)).reverse();
-  const shown = day ? inMonth.filter(d => d.session.date === day) : inMonth;
-  const monthSets = inMonth.reduce((n, d) => n + d.setCount, 0);
-  const move = (n: number) => { setYm(shiftMonth(cur.year, cur.month, n)); setDay(null); };
-  const levelOf = (d: string): HeatLevel => (trained.has(d) ? Math.max(0, heatLevel(data?.work.get(d) ?? 0, max)) as HeatLevel : -1);
+  const months = useMemo(() => {
+    const out: { key: string; label: string; rows: SessionSummary[] }[] = [];
+    for (const d of [...(data?.rows ?? [])].reverse()) {
+      const key = d.session.date.slice(0, 7);
+      if (out[out.length - 1]?.key !== key) out.push({ key, label: monthLabel(Number(key.slice(0, 4)), Number(key.slice(5, 7))), rows: [] });
+      out[out.length - 1].rows.push(d);
+    }
+    return out;
+  }, [data]);
 
+  const total = data?.rows.length ?? 0;
   return (
     <section className="screen tk-screen">
       <DemoBanner />
-      <Lockup mid={`History //${monthLabel(cur.year, cur.month)}`} />
+      <Lockup mid={`History //${total} session${total === 1 ? '' : 's'}`} />
 
-      <section className="tk-block" aria-label="Calendar">
-        <div className="tk-month">
-          <button type="button" className="tk-icon" data-press="dim" aria-label="Previous month" onClick={() => move(-1)}><PixelIcon name="back" /></button>
-          <h2 className="heading">{monthLabel(cur.year, cur.month)}</h2>
-          <button type="button" className="tk-icon" data-press="dim" aria-label="Next month" onClick={() => move(1)}><PixelIcon name="chevron" /></button>
-        </div>
-        <svg width="0" height="0" className="tk-defs" aria-hidden="true">
-          <defs>
-            {DENSITY.map((dn, i) => (
-              <pattern key={i} id={`${uid}-d${i}`} width="8" height="8" patternUnits="userSpaceOnUse">
-                {BAYER.flatMap((row, y) => row.map((b, x) => (b / 16 < dn ? <rect key={`${x}${y}`} x={x * 2} y={y * 2} width="2" height="2" fill="currentColor" /> : null)))}
-              </pattern>
-            ))}
-          </defs>
-        </svg>
-        <div className="tk-cal" role="grid" aria-label={monthLabel(cur.year, cur.month)}>
-          {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => <span key={i} className="tk-cal-h" aria-hidden="true">{d}</span>)}
-          {monthGrid(cur.year, cur.month).flat().map((d, i) => {
-            if (!d) return <span key={`x${i}`} />;
-            const lvl = levelOf(d);
-            const on = lvl >= 0;
-            const n = data?.work.get(d) ?? 0;
-            return (
-              <button key={d} type="button" disabled={!on}
-                className={`tk-cal-d${on ? ` on l${lvl}` : ''}${d === today ? ' today' : ''}${d === day ? ' sel' : ''}`}
-                aria-pressed={on ? d === day : undefined}
-                aria-label={`${formatDate(d)}${on ? `, trained, ${n} working sets` : ''}`}
-                onClick={() => setDay(day === d ? null : d)}>
-                {on && (
-                  <svg className="tk-cal-fill" aria-hidden="true">
-                    <rect width="100%" height="100%" fill={lvl === 3 ? 'currentColor' : `url(#${uid}-d${lvl})`} />
-                  </svg>
-                )}
-                <span className="tk-cal-n">{Number(d.slice(8))}</span>
-              </button>
-            );
-          })}
-        </div>
-        <p className="tk-legend" aria-hidden="true">Fewer sets <span className="accent tk-glyphs">░ ▒ ▓ █</span> More</p>
-      </section>
+      {data && (
+        <section className="tk-block" aria-label="Last 52 weeks">
+          <SquareHeatmap counts={data.counts} weeks={52} end={data.today} weekTarget={data.target} legend
+            label={`Training days, last 52 weeks. ${data.heat.thisWeek} of ${data.target} sessions this week`}
+            onSelect={d => data.heat.sessionByDate[d] && go(`history/${encodeURIComponent(data.heat.sessionByDate[d])}`)} />
+        </section>
+      )}
 
-      <section className="tk-sec" aria-label="Sessions">
-        <SecHead title={day ? formatDate(day) : 'Sessions'}
-          meta={`${inMonth.length} session${inMonth.length === 1 ? '' : 's'} · ${monthSets} sets`} />
-        {day && <button type="button" className="tk-link tk-clear" onClick={() => setDay(null)}>Show the whole month</button>}
-        {data === undefined && <p className="tk-quiet">Loading…</p>}
-        {rows?.length === 0 && <p className="tk-quiet">No sessions yet. Logged and imported sessions show up here.</p>}
-        {rows && rows.length > 0 && shown.length === 0 && <p className="tk-quiet">No sessions in {monthLabel(cur.year, cur.month)}.</p>}
-        <ul className="tk-rows">
-          {shown.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data?.bwFactor} /></li>)}
-        </ul>
-        <LinkButton href="#/session/past" icon="plus" className="tk-past">Log past session</LinkButton>
-      </section>
+      {data === undefined && <p className="tk-quiet">Loading…</p>}
+      {data && total === 0 && <p className="tk-quiet">No sessions yet. Logged and imported sessions show up here.</p>}
+      {months.map(m => (
+        <section key={m.key} className="tk-sec" aria-label={m.label}>
+          <SecHead title={m.label} meta={`${m.rows.length} session${m.rows.length === 1 ? '' : 's'} · ${m.rows.reduce((n, d) => n + d.setCount, 0)} sets`} />
+          <ul className="tk-rows">
+            {m.rows.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data?.bwFactor} /></li>)}
+          </ul>
+        </section>
+      ))}
+      {data && <LinkButton href="#/session/past" icon="plus" className="tk-past">Log past session</LinkButton>}
     </section>
   );
 }
