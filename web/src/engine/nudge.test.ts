@@ -17,7 +17,7 @@ const run = (over: Partial<NudgeInput>) => nudge({ target: topT, exercise: bench
 describe('nudge: stop rules win', () => {
   it('top set below the floor: no more top sets, back-offs drop (acceptance 2)', () => {
     const n = run({ sets: [top(100, 1, 1)] });
-    expect(n).toEqual({ kind: 'stop', rule: 'top_below_floor', text: 'Top set at 1 RIR is past the floor (≥ 2 RIR) — no more top sets; back-offs drop to 75kg.' });
+    expect(n).toEqual({ kind: 'stop', rule: 'top_below_floor', suggestWeight: 75, text: 'Top set at 1 RIR is past the floor (≥ 2 RIR) — no more top sets; back-offs drop to 75kg.' });
     expect(run({ sets: [top(100, 1, 1)], effortScale: 'rpe' })!.text)
       .toBe('Top set at RPE 9 is past the floor (≤ RPE 8) — no more top sets; back-offs drop to 75kg.');
   });

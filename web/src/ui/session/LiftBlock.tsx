@@ -89,7 +89,12 @@ export function LiftBlock({ slot, scale, h, rested }: {
         ))}
         {Array.from({ length: rows }, (_, i) => {
           if (i < slot.work.length) return loggedRow(slot.work[i], String(i + 1), false, !slot.swapped && !(slot.work[i].pain && slot.work[i].pain!.severity >= 2) && setMeetsPlan(slot.work[i], ghost[i], t?.rirFloor ?? 0));
-          const g = ghost[i];
+          // After a stop rule that lowers the load, the remaining planned rows
+          // carry the safer weight, so the one-tap choice is the safe one. The
+          // committed promise is unchanged (it is already missed at this point).
+          const base = ghost[i];
+          const safer = slot.nudge?.kind === 'stop' && slot.nudge.suggestWeight !== undefined && base.kind !== 'top';
+          const g = safer ? { ...base, weight: slot.nudge!.suggestWeight! } : base;
           return (
             <div key={`g${i}`}>
               <div className={`set-row ${i === firstGhost ? 'ghost' : 'pending'}`}>

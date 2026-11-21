@@ -22,6 +22,7 @@ export function Today(_props: { params: string[] }) {
   const gate = useFirstRunRedirect();
   const [answers, setAnswers] = useState<Partial<ReadinessAnswers>>({});
   const [minimum, setMinimum] = useState(false);
+  const [showNext, setShowNext] = useState(false);
   const [busy, setBusy] = useState(false);
   const readiness = readinessFromAnswers({ sleep: answers.sleep ?? 'good', soreness: answers.soreness ?? 'good', stress: answers.stress ?? 'good' });
   const clock = useNow(1000);
@@ -83,7 +84,15 @@ export function Today(_props: { params: string[] }) {
               <p className="body line">{plan.reentryNote}</p>
             </article>
           )}
-          {state.lastLine && <p className="mid line">{state.lastLine}</p>}
+          {state.doneToday ? (
+            <a className="card tick stack done-today" href={`#/review/${state.doneToday.session.id}`} style={{ ['--tick' as string]: 'var(--verdict-hit)' }}>
+              <span className="label">Done today</span>
+              <span className="heading">{state.doneToday.session.nameSnapshot}</span>
+              {state.doneToday.total > 0
+                ? <span className="mid"><span className="num-inline">{state.doneToday.kept} / {state.doneToday.total}</span> promises kept · see the review ›</span>
+                : <span className="mid">Logged · see the session ›</span>}
+            </a>
+          ) : state.lastLine && <p className="mid line">{state.lastLine}</p>}
         </>
       )}
 
@@ -110,11 +119,15 @@ export function Today(_props: { params: string[] }) {
         </div>
       )}
 
-      {plan.status === 'planned' && !open && (
+      {state.doneToday && plan.status === 'planned' && !showNext && (
+        <button type="button" className="btn block" onClick={() => setShowNext(true)}>Show the next session ({plan.sessionName})</button>
+      )}
+
+      {plan.status === 'planned' && !open && (!state.doneToday || showNext) && (
         <ReadinessCheck answers={answers} onChange={setAnswers} readiness={readiness} />
       )}
 
-      {(plan.status === 'planned' || plan.status === 'committed') && (
+      {(plan.status === 'committed' || (plan.status === 'planned' && (!state.doneToday || showNext))) && (
         <section className="stack" aria-label="Today's session">
           <div className="spread">
             <h2 className="heading">{plan.status === 'committed' ? 'Committed' : 'Next'}: {plan.sessionName}</h2>

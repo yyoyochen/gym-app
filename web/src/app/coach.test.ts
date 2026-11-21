@@ -382,3 +382,15 @@ describe('warm-ups and plates', () => {
     ]);
   });
 });
+
+describe('done today', () => {
+  it('a session finished today leads Today; none before it', async () => {
+    const db = await setup();
+    await logSession(db, 'B', addDays(TODAY, -2), sessionB());
+    expect((await todayState(db, TODAY, at(TODAY, 18))).doneToday).toBeUndefined();
+    await logSession(db, 'A', TODAY, sessionA(), 9);
+    const st = await todayState(db, TODAY, at(TODAY, 18));
+    expect(st.doneToday?.session.date).toBe(TODAY);
+    expect(st.doneToday?.session.programSessionKey).toBe('A');
+  });
+});

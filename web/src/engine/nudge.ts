@@ -14,6 +14,8 @@ export interface Nudge {
   text: string;
   /** Rule id, for tests and the session record. */
   rule: string;
+  /** Stop rules that lower the load: the weight the remaining sets should use. */
+  suggestWeight?: number;
 }
 
 export interface NudgeInput {
@@ -57,7 +59,7 @@ export function nudge(inp: NudgeInput): Nudge | null {
   const failedSet = exercise.slotType === 'compound' ? work.find((s) => s.failed) : undefined;
   if (failedSet) {
     const drop = isTopset ? t.weight : floorTo(failedSet.weight * 0.9 + 1e-9, inc);
-    return { kind: 'stop', rule: 'failure_drop',
+    return { kind: 'stop', rule: 'failure_drop', suggestWeight: drop,
       text: `Rep failure at ${pyG(failedSet.weight)}kg — drop the remaining sets to ${pyG(drop)}kg. Don't repeat ${pyG(failedSet.weight)}kg until next session.` };
   }
   const deep = tops.find((s) => s.rir !== undefined && s.rir < t.rirFloor);
@@ -65,7 +67,7 @@ export function nudge(inp: NudgeInput): Nudge | null {
     // One RIR past the floor costs 5% on the back-offs, two or more 10%.
     const pct = t.rirFloor - (deep.rir as number) >= 2 ? 0.1 : 0.05;
     const drop = floorTo(t.weight * (1 - pct) + 1e-9, inc);
-    return { kind: 'stop', rule: 'top_below_floor',
+    return { kind: 'stop', rule: 'top_below_floor', suggestWeight: drop,
       text: `Top set at ${formatEffort(deep.rir as number, scale)} is past the floor (${formatFloor(t.rirFloor, scale)}) — no more top sets; back-offs drop to ${pyG(drop)}kg.` };
   }
   if (work.some((s) => s.pain && s.pain.severity === 1)) {

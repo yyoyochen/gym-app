@@ -432,6 +432,8 @@ export interface TodayState {
   /** "Last session: B, 3 days ago, 4/5 kept" (or without the count for an ungraded import). */
   lastLine?: string;
   last?: Session;
+  /** A session finished today: Today leads with it instead of pushing the next one. */
+  doneToday?: { session: Session; kept: number; total: number };
 }
 
 /** Last activity → gap → what the top of Today shows (§3.5). */
@@ -447,7 +449,8 @@ export async function todayState(db: GymDb, today: ISODate, now: Millis): Promis
   const d = daysBetween(last.date, today);
   const ago = d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`;
   const lastLine = g && g.total ? lastSessionLine(last.nameSnapshot, last.date, today, g.kept, g.total) : `Last session: ${last.nameSnapshot}, ${ago}`;
-  return { gap, lastLine, last };
+  const doneToday = last.sealed && last.date === today ? { session: last, kept: g?.kept ?? 0, total: g?.total ?? 0 } : undefined;
+  return { gap, lastLine, last, ...(doneToday ? { doneToday } : {}) };
 }
 
 export async function backupDue(db: GymDb, now: Millis): Promise<{ due: boolean; days: number | null }> {
