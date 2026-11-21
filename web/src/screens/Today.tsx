@@ -14,9 +14,9 @@ import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { readable } from '../ui/readable';
 import {
-  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, PixelIcon, SquareHeatmap, Toggle, go, type LabelValueItem,
+  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, PixelIcon, RecentWeeks, Toggle, go, type LabelValueItem,
 } from '../ui/kit';
-import { goalRows, loadConsistency } from '../ui/progress/data';
+import { goalRows, loadConsistency, loadWeekBodyParts } from '../ui/progress/data';
 import { ReadinessCheck } from '../ui/session/Readiness';
 import { MonoNums, sessionNames, topWord } from '../ui/session/text';
 import { useNow, useScrollTop } from '../ui/session/useNow';
@@ -65,21 +65,22 @@ export function Today(_props: { params: string[] }) {
     const now = Date.now();
     const today = todayISO(now);
     const profile = await getProfile(db);
-    const [state, plan, heat, backup, demo, goals] = await Promise.all([
+    const [state, plan, heat, backup, demo, goals, parts] = await Promise.all([
       todayState(db, today, now),
       planToday(db, today, now, { readiness, minimum }),
       loadConsistency(db, today, 52, profile),
       backupDue(db, now),
       getMeta(db, 'demoMode'),
       profile ? goalRows(db, profile, today) : Promise.resolve([]),
+      loadWeekBodyParts(db, today, profile?.sessionsPerWeekTarget ?? 3),
     ]);
     const counts: Record<string, number> = {};
     for (const col of heat.grid.columns) for (const c of col) if (c.inWindow && c.count > 0) counts[c.date] = c.count;
-    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals };
+    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals, parts };
   }, [readiness, minimum]);
 
   if (gate !== 'ready' || !data) return <section className="screen today" aria-busy="true" />;
-  const { today, profile, state, plan, heat, counts, backup, demo, goals } = data;
+  const { today, profile, state, plan, heat, counts, backup, demo, goals, parts } = data;
   const scale = profile?.effortScale ?? 'rir';
   const open = state.open;
   const target = profile?.sessionsPerWeekTarget ?? 3;
@@ -193,11 +194,21 @@ export function Today(_props: { params: string[] }) {
       )}
 
       <div className="stack">
-        <span className="label">Last 52 weeks</span>
-        <SquareHeatmap counts={counts} weeks={52} end={today} weekTarget={target} legend
-          label={`Training days, last 52 weeks. ${heat.thisWeek} of ${target} sessions this week`}
+        <span className="label">Last 4 weeks</span>
+        <RecentWeeks counts={counts} end={today} weekTarget={target}
           onSelect={d => heat.sessionByDate[d] && go(`history/${heat.sessionByDate[d]}`)} />
       </div>
+
+      {parts.length > 0 && (
+        <div className="stack today-parts" aria-label="This week's sets by body part">
+          <span className="label">This week · sets</span>
+          {parts.map(r => (
+            <DitherBar key={r.part} label={r.part}
+              value={r.planned > 0 ? Math.min(r.done, r.planned) / r.planned : 1}
+              valueText={r.planned > 0 ? `${r.done}/${r.planned}` : `${r.done} · unplanned`} />
+          ))}
+        </div>
+      )}
 
       {canStart && (
         <ConfirmButton className="quiet block" confirmLabel={`Skip ${names.short}?`} confirmText={`Skip ${names.short}`}

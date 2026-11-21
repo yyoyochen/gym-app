@@ -1,7 +1,9 @@
 // Db → Track data for Today's strip, Progress, Review and LiftDetail.
 import type { Exercise, GoalTarget, ISODate, Profile, SetEntry, Verdict } from '../../domain/types';
 import type { GymDb } from '../../db';
-import { getCommit, getExerciseHistory, listBodyweight, listEvents, listExercises, listSessions, listSetsByDate } from '../../db';
+import { getActiveProgram, getCommit, getExerciseHistory, listBodyweight, listEvents, listExercises, listSessions, listSetsByDate } from '../../db';
+import { nextRotationKey } from '../../app/coach';
+import { weekBodyPartSets, type BodyPartRow } from '../../app/weekSets';
 import {
   addDays, bestRecentE1rm, grade, heaviestSingle, liftSeries, pace, prs, recentRate, repPRs, type DatedSets, type Pace,
 } from '../../engine';
@@ -16,6 +18,19 @@ export async function loadConsistency(db: GymDb, today: ISODate, weeks: number, 
   return consistency({
     sets, sessions, skipDates: skips.map(e => e.date), today, weeks,
     target: profile?.sessionsPerWeekTarget ?? 3, min: profile?.sessionsPerWeekMin ?? 2,
+  });
+}
+
+/** This week's working sets by body part, done vs planned (Today's panel). */
+export async function loadWeekBodyParts(db: GymDb, today: ISODate, target: number): Promise<BodyPartRow[]> {
+  const from = addDays(today, -7);
+  const [sets, sessions, all, skips, exercises, program] = await Promise.all([
+    listSetsByDate(db, { from, to: today }), listSessions(db, { from, to: today }), listSessions(db),
+    listEvents(db, { type: 'skip' }), listExercises(db, { includeArchived: true }), getActiveProgram(db),
+  ]);
+  return weekBodyPartSets({
+    sets, sessions, exercises: Object.fromEntries(exercises.map(e => [e.id, e])), program: program ?? null,
+    nextKey: program ? nextRotationKey(program, all, skips) : null, target, today,
   });
 }
 
