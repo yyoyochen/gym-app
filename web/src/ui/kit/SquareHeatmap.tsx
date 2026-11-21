@@ -30,6 +30,10 @@ const STEPS: readonly ((x: number, y: number) => boolean)[] = [
   (x, y) => !light(x, y),
   () => true,
 ];
+/** Whether sub-pixel (x, y) is lit at a shade level (0–3); the pattern repeats every 2 × 4. */
+export function shadeOn(level: number, x: number, y: number): boolean {
+  return level >= 0 && STEPS[Math.min(level, 3)](x, y);
+}
 /** Sub-pixels lit per level: 25 / 50 / 75 / 100% of 32. */
 export const SUBPIXELS = [8, 16, 24, 32] as const;
 export const CELL_DIV = { x: DIV_X, y: DIV_Y, sub: SUB } as const;

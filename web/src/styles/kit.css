@@ -175,3 +175,19 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .sqheat-key { width: 6px; height: 12px; }
 .sqheat-legend-wk { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
 .sqheat-legend-wk i { display: inline-block; width: 9px; height: 2px; background: var(--accent); }
+
+/* ---------- RecentWeeks: Today's rolling 4-week calendar ---------- */
+.rweeks { display: grid; grid-template-columns: repeat(7, 1fr) 4px; gap: 4px; }
+.rweeks-defs { position: absolute; }
+.rweeks-h { padding: 2px 0 2px; text-align: center; font: var(--text-micro); letter-spacing: 0.04em; color: var(--mid); }
+.rweeks-d { position: relative; height: 40px; padding: 0; border: 0; background: none; color: var(--mid); font: 11px/1 var(--font-mono);
+  display: flex; align-items: flex-start; justify-content: flex-start; overflow: hidden; cursor: pointer; }
+.rweeks-d:disabled { cursor: default; }
+.rweeks-d.on { color: var(--accent); }
+.rweeks-fill { position: absolute; inset: 0; width: 100%; height: 100%; }
+.rweeks-n { position: relative; padding: 2px 4px 1px; font-variant-numeric: tabular-nums; }
+.rweeks-d.on .rweeks-n { background: var(--paper); color: var(--ink); }
+.rweeks-d.today { outline: var(--rule-w) solid var(--ink); outline-offset: -1.5px; }
+.rweeks-wk { align-self: stretch; }
+.rweeks-wk.met { background: var(--accent); }
+.rweeks-wk.part { background: linear-gradient(to bottom, transparent 50%, var(--rule) 50%); }
