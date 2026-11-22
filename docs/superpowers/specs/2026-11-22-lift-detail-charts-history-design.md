@@ -1,6 +1,6 @@
 # Lift detail: step-line charts, ceiling lane, and cell History
 
-Status: draft for approval. Date: 2026-11-22. Branch: `tab-jobs` (local only).
+Status: approved by the user 2026-11-22 (replacements as proposed in the Dot sweep table). Date: 2026-11-22. Branch: `tab-jobs` (local only).
 Mockup (kept outside the repo, uses real numbers): `gymbro/mockups/lift-detail-ideas.html`.
 
 ## Intent
