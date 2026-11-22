@@ -36,7 +36,7 @@ export interface MetaValues {
   benchmarkVersion: string;
   activeProgramId: string;
   lastRestoreAt: Millis;
-  /** Appearance: 'system' | 'dark' | 'light' (default dark). See ui/kit/useTheme.ts. */
+  /** Appearance: 'dark' | 'light' (default dark; an old 'system' reads as dark). See ui/kit/useTheme.ts. */
   theme: 'system' | 'dark' | 'light';
   /** Haptics on/off (default on). See ui/kit/useHaptics.ts. */
   haptics: boolean;

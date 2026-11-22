@@ -49,11 +49,6 @@ ${DARK}
 :root[data-theme='light'] {
 ${LIGHT}
 }
-@media (prefers-color-scheme: light) {
-  :root[data-theme='system'] {
-${LIGHT.replace(/^ {2}/gm, '    ')}
-  }
-}
 
 /* ---------- 1. dither drop shadow: an L-shaped strip outside the box ---------- */
 :where(.btn:not(.quiet), .lockup, .seg, .verdict.beat, .verdict.hit, .asheet-group) { position: relative; }

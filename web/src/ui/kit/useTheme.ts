@@ -1,6 +1,5 @@
-// Theme: 'system' | 'dark' | 'light', stored in meta ('theme'). Applies
-// data-theme on <html> (CSS does the rest, including prefers-color-scheme for
-// 'system') and keeps <meta name="theme-color"> on the paper colour so the
+// Theme: 'dark' | 'light', stored in meta ('theme'); an old saved 'system' opens
+// as dark. Applies data-theme on <html> (CSS does the rest) and keeps <meta name="theme-color"> on the paper colour so the
 // Android status/nav bars match. A localStorage mirror lets index.html set the
 // attribute before first paint; IndexedDB stays the source of truth.
 import { useSyncExternalStore } from 'react';
@@ -11,13 +10,10 @@ export const THEME_CACHE_KEY = 'gymbro.theme';
 
 let pref: ThemePref = DEFAULT_THEME;
 const subs = new Set<() => void>();
-let mq: MediaQueryList | null = null;
-
-const systemLight = () => { try { return !!mq?.matches; } catch { return false; } };
 
 export function applyTheme(p: ThemePref): ResolvedTheme {
   pref = p;
-  const resolved = resolveTheme(p, systemLight());
+  const resolved = resolveTheme(p);
   const html = document.documentElement;
   html.dataset.theme = p;
   let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -30,7 +26,6 @@ export function applyTheme(p: ThemePref): ResolvedTheme {
 
 /** Call once at startup: cached value first (no flash), then the stored one. */
 export function initTheme(): void {
-  try { mq = matchMedia('(prefers-color-scheme: light)'); mq.addEventListener('change', () => applyTheme(pref)); } catch { mq = null; }
   let cached: unknown = null;
   try { cached = localStorage.getItem(THEME_CACHE_KEY); } catch { /* none */ }
   applyTheme(isThemePref(cached) ? cached : DEFAULT_THEME);
@@ -42,7 +37,7 @@ export async function setThemePref(p: ThemePref): Promise<void> {
   await setMeta(getDb(), 'theme', p);
 }
 
-const snapshot = () => `${pref}|${resolveTheme(pref, systemLight())}`;
+const snapshot = () => `${pref}|${resolveTheme(pref)}`;
 
 export function useTheme(): { theme: ThemePref; resolved: ResolvedTheme; setTheme: (p: ThemePref) => Promise<void> } {
   const s = useSyncExternalStore(fn => { subs.add(fn); return () => { subs.delete(fn); }; }, snapshot, () => `${DEFAULT_THEME}|dark`);

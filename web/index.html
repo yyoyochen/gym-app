@@ -13,7 +13,7 @@
     <title>GymBro</title>
     <script>
       // Apply the cached theme before first paint (IndexedDB is the source of truth; ui/kit/useTheme.ts).
-      try { var t = localStorage.getItem('gymbro.theme'); if (t === 'light' || t === 'dark' || t === 'system') document.documentElement.dataset.theme = t; } catch (e) {}
+      try { var t = localStorage.getItem('gymbro.theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
     </script>
   </head>
   <body>

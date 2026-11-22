@@ -63,7 +63,7 @@ export default function KitGallery({ params }: { params: string[] }) {
         {(Object.keys(ICONS) as IconName[]).map(n => <span key={n} title={n}><PixelIcon name={n} scale={3} /></span>)}
       </div>
       <Segmented<ThemePref> label="Theme" value={theme} onChange={setTheme}
-        options={[{ value: 'system', label: 'System' }, { value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
+        options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
       <div className="grid2">
         <Stepper label="Weight" unit="kg" value={w} step={2.5} min={0} onChange={setW} />
         <Stepper label="Reps" value={reps} min={0} onChange={setReps} />

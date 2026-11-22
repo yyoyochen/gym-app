@@ -15,7 +15,6 @@ import { ImportNotionPanel } from '../app/parts/ImportNotionPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import pkg from '../../../package.json';
 
-const FALLBACK_ATTRIBUTION = 'OpenPowerlifting (openpowerlifting.org), public domain.';
 
 export function Settings(_props: { params: string[] }) {
   const stored = useLive(db => getProfile(db).then(r => r ?? null), []);
@@ -91,7 +90,7 @@ function Appearance() {
   return (
     <Group label="Appearance">
       <Segmented<ThemePref> label="Theme" value={theme} onChange={v => { void setTheme(v); }}
-        options={[{ value: 'system', label: 'System' }, { value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
+        options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
       <Toggle label="Haptics" hint="A short buzz on set commit and on a new best. Android only." checked={enabled} onChange={v => { void setEnabled(v); }} />
     </Group>
   );
@@ -136,14 +135,6 @@ function Storage() {
 }
 
 function About() {
-  const [attribution, setAttribution] = useState(FALLBACK_ATTRIBUTION);
-  const [dataDate, setDataDate] = useState('');
-  useEffect(() => {
-    fetch('./benchmarks/index.json').then(r => (r.ok ? r.json() : null)).then((j: { attribution?: string; dataDate?: string } | null) => {
-      if (j?.attribution) setAttribution(j.attribution);
-      if (j?.dataDate) setDataDate(j.dataDate);
-    }).catch(() => undefined);
-  }, []);
   return (
     <Group label="About">
       <LabelValueGrid variant="stats" items={[
@@ -154,7 +145,6 @@ function About() {
       ]} />
       <span className="label">Data credits</span>
       <p className="quiet">Strength levels: modeled gym-goer standards. Squat, bench and deadlift anchors from Symmetric Strength self-reported gym logs, via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source’s licence has not been verified. Method: docs/STANDARDS-METHODOLOGY.md.</p>
-      <p className="quiet">Powerlifter comparison: {attribution}{dataDate && <> Data from <span className="tnum">{dataDate}</span>.</>}</p>
     </Group>
   );
 }

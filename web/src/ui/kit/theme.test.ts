@@ -7,18 +7,19 @@ import { ditherOn, DITHER_STEPS } from './PrMoment';
 describe('theme resolution', () => {
   it('dark is the default', () => {
     expect(DEFAULT_THEME).toBe('dark');
-    expect(resolveTheme(undefined, true)).toBe('dark');
-    expect(resolveTheme('nonsense', true)).toBe('dark');
+    expect(resolveTheme(undefined)).toBe('dark');
+    expect(resolveTheme('nonsense')).toBe('dark');
   });
-  it('explicit choices ignore the OS; system follows it', () => {
-    expect(resolveTheme('dark', true)).toBe('dark');
-    expect(resolveTheme('light', false)).toBe('light');
-    expect(resolveTheme('system', true)).toBe('light');
-    expect(resolveTheme('system', false)).toBe('dark');
+  it('the choice is dark or light; a saved "system" opens as dark', () => {
+    expect(resolveTheme('dark')).toBe('dark');
+    expect(resolveTheme('light')).toBe('light');
+    expect(resolveTheme('system')).toBe('dark');
   });
   it('theme-color is the paper colour', () => {
     expect(THEME_PAPER).toEqual({ dark: '#1c1724', light: '#fcd0af' });
-    expect(isThemePref('system')).toBe(true);
+    expect(isThemePref('dark')).toBe(true);
+    expect(isThemePref('light')).toBe(true);
+    expect(isThemePref('system')).toBe(false);
     expect(isThemePref('auto')).toBe(false);
   });
 });
