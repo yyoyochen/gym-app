@@ -25,6 +25,7 @@ import {
 } from '../engine';
 import { getPlateSettings, type PlateSettings } from './prefs';
 import { displayName } from './labels';
+import { startingSetFor } from './setup';
 
 const EPS = 1e-9;
 
@@ -184,6 +185,7 @@ export async function planToday(db: GymDb, today: ISODate, now: Millis, opts: Pl
     });
     const target = prescribe(slot, exercise, hist, {
       today, readiness, effortScale, bodyweightKg, gapDays, reentry: reentry.reentry, afterLayoff: reentry.afterLayoff, pain,
+      startingSet: startingSetFor(profile, exercise.id),
     });
     out.push(slotPlan(i + 1, raw, exercise, target, hist, effortScale, plates, ps.minimumSlotIds.includes(raw.id), pain));
   }

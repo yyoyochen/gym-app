@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { freshDb } from '../db/test-helpers';
 import {
-  addSet, CommitExistsError, defaultProfile, getCommit, getSessionSets, listSessions, putCommit, saveProfile, saveProgram,
+  addSet, CommitExistsError, defaultProfile, getCommit, getProfile, getSessionSets, listSessions, putCommit, saveProfile, saveProgram,
   sealSession, seedCatalog, startSession, type GymDb,
 } from '../db';
 import { EX, defaultCatalog } from '../domain/catalog';
@@ -9,7 +9,7 @@ import { programFromTemplate, DEFAULT_TEMPLATE_ID } from '../domain/templates';
 import type { ISODate, PainFlag, SetKind } from '../domain/types';
 import { addDays } from '../engine';
 import {
-  commitSession, effectiveSlot, ghostSets, gradeCommit, gradeSession, nextRotationKey, planToday, platesPerSide,
+  commitSession, effectiveSlot, ghostSets, gradeCommit, gradeSession, liftHistory, nextRotationKey, planToday, platesPerSide,
   sessionView, setsParts, skipSession, todayState, warmupRamp,
 } from './coach';
 
@@ -61,6 +61,29 @@ const sessionB = (opts: { ohpPain?: PainFlag } = {}): Lift[] => [
 ];
 
 const targetsOf = (p: Awaited<ReturnType<typeof planToday>>) => p.slots.map(s => s.target);
+
+describe('starting sets (first five minutes)', () => {
+  it('a starting set makes session one a real promise, and Last time stays First time', async () => {
+    const db = await setup();
+    const p = await getProfile(db);
+    await saveProfile(db, { ...p!, startingSets: [{ exerciseId: EX.squat, weight: 140, reps: 3, date: TODAY }] });
+    const plan = await planToday(db, TODAY, at(TODAY, 9));
+    const squat = plan.slots.find(s => s.exercise.id === EX.squat)!;
+    expect(squat.target.rule).toBe('start_seed');
+    expect(squat.target.isNew).toBe(false);
+    expect(squat.lastTime).toEqual([]);
+    expect(plan.slots.find(s => s.exercise.id === EX.bench)!.target.rule).toBe('baseline');
+  });
+  it('starting sets never reach history-based stats', async () => {
+    const db = await setup();
+    const p = await getProfile(db);
+    await saveProfile(db, { ...p!, startingSets: [{ exerciseId: EX.squat, weight: 140, reps: 3, date: TODAY }] });
+    await planToday(db, TODAY, at(TODAY, 9));
+    expect(await db.sets.count()).toBe(0);
+    expect(await db.sessions.count()).toBe(0);
+    expect(await liftHistory(db, EX.squat, TODAY)).toEqual([]);
+  });
+});
 
 describe('promise invariant (spec §2.1)', () => {
   it('the targets shown after commit are byte-identical to what was committed, and grading uses commit.targets', async () => {
