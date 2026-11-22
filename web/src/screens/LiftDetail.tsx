@@ -17,6 +17,7 @@ import { liftChartTargets } from '../ui/progress/chartTargets';
 import { SetCells, SetCellsKey } from '../ui/progress/SetCells';
 import { Sparkline } from '../ui/progress/Sparkline';
 import { anyDecimals } from '../ui/progress/cellRules';
+import { Load } from '../ui/progress/Load';
 import { stepRuns } from '../ui/progress/chartModel';
 import { useScrollTop } from '../ui/session/useNow';
 import { rateExercise } from '../benchmarks/liftRating';
@@ -130,7 +131,7 @@ export function LiftDetail({ params }: { params: string[] }) {
               <div key={r.reps} className="tk-rm">
                 <span className="k">{r.reps}RM</span>
                 <span className="d">{formatDate(r.date, { weekday: false })}</span>
-                <span className="v">{kg(r.weight)}</span>
+                <span className="v"><Load weight={r.weight} bodyweightFactor={ex.bodyweightFactor} decimals={anyDecimals(prs.repMaxes)} /></span>
                 <Sparkline values={r.trail} label={`${r.reps} rep best over time, now ${kg(r.weight)} kg`} w={80} />
               </div>
             ))}

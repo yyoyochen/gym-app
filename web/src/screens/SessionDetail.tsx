@@ -18,7 +18,8 @@ import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
 import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, displayName, formatLoad } from '../app/labels';
 import { SecHead } from '../ui/progress/parts';
-import { setCountsText } from '../ui/progress/cellRules';
+import { anyDecimals, setCountsText } from '../ui/progress/cellRules';
+import { Load } from '../ui/progress/Load';
 import { loadParts } from '../ui/progress/stats';
 
 export function SessionDetail({ params }: { params: string[] }) {
@@ -104,7 +105,7 @@ export function SessionDetail({ params }: { params: string[] }) {
                     <button type="button" className={`tk-srow tk-set${s.kind === 'warmup' ? ' warm' : ''}`} data-press="row" onClick={() => setEditing(s)}
                       aria-label={`Edit set ${k}: ${formatLoad(s.weight, bwFactor.get(s.exerciseId))} × ${s.reps}`}>
                       <span className="k">{k}</span>
-                      <span className="v">{formatLoad(s.weight, bwFactor.get(s.exerciseId))} × {s.reps}</span>
+                      <span className="v"><Load weight={s.weight} reps={s.reps} bodyweightFactor={bwFactor.get(s.exerciseId) ?? 0} decimals={anyDecimals(b.sets)} /></span>
                       <span className="k r">{formatRir(s.rir, scale)}</span>
                       <PixelIcon name="edit" scale={1} />
                     </button>

@@ -132,6 +132,13 @@
 .tk-cell { display: grid; grid-template-columns: 3ch 1.5ch 2ch; justify-content: center; padding: var(--space-2) 0; border: var(--rule-w) solid var(--ink); white-space: nowrap; }
 .tk-cells.dec .tk-cell { grid-template-columns: 3ch 2ch 1.5ch 2ch; }
 .tk-cell .w, .tk-cell .r { text-align: right; }
+.tk-cell .d, .load .d { align-self: start; font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
+.load { display: inline-grid; grid-template-columns: 3ch 2ch 2ch; align-items: baseline; font-variant-numeric: tabular-nums; }
+.load.dec { grid-template-columns: 3ch 2ch 2ch 2ch; }
+.load.solo { grid-template-columns: 3ch; }
+.load.solo.dec { grid-template-columns: 3ch 2ch; }
+.load .w, .load .r { text-align: right; }
+.load .x { text-align: center; color: var(--mid); }
 .tk-cell .x { text-align: center; color: var(--mid); }
 .tk-cell.top, .tk-key.top { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: var(--font-strong); }
 .tk-cell.top .x { color: inherit; }
