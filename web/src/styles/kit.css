@@ -54,7 +54,9 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .gheat-c.wk, .gheat-day.wk { margin-top: var(--space-2); }
 .gheat-c.wk.met { color: var(--accent); }
 .gheat-c.wk.part, .gheat-c.wk.none { color: var(--mid); }
-.gheat-legend { margin-top: var(--space-2); font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--mid); }
+/* legend strip (Legend): label role, swatches and words in a row */
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--mid); }
+.gheat-legend { margin-top: var(--space-2); display: block; }
 
 /* ---------- navbar + large title ---------- */
 .navbar { position: sticky; top: 0; z-index: 8; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: 52px;
@@ -179,7 +181,7 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .sqheat-hit { fill: transparent; cursor: pointer; }
 .sqheat-wk.met { fill: var(--accent); }
 .sqheat-wk.part { fill: var(--rule); }
-.sqheat-legend { display: flex; align-items: center; gap: var(--space-2); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--mid); }
+.sqheat-legend { flex-wrap: nowrap; }
 .sqheat-key { width: 6px; height: 12px; }
 .sqheat-legend-wk { margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-2); }
 .sqheat-legend-wk i { display: inline-block; width: 9px; height: 2px; background: var(--accent); }

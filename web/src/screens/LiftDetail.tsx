@@ -9,7 +9,7 @@ import { addDays, bestRecentE1rm } from '../engine';
 import { kg, setsLine } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
 import { useLive } from '../ui/useLive';
-import { BigNumber, DitherBar, LabelValueGrid, NavBar, PixelIcon, Segmented } from '../ui/kit';
+import { BigNumber, DitherBar, LabelValueGrid, Legend, NavBar, PixelIcon, Segmented } from '../ui/kit';
 import { latestBodyweight, liftPRs, liftStats, liftVerdicts, trendOf } from '../ui/progress/data';
 import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
 import { LiftChart, type LinePoint } from '../ui/progress/LiftChart';
@@ -87,11 +87,11 @@ export function LiftDetail({ params }: { params: string[] }) {
       <section className="tk-sec" aria-label="Chart">
         <Segmented<Metric> label="Chart" options={METRICS} value={metric} onChange={setMetric} />
         <LiftChart points={points} label={chartLabel} />
-        {points.length > 1 && <p className="tk-legend" aria-hidden="true">
+        {points.length > 1 && <Legend className="tk-legend">
           <i className="tk-sw line" />{metric === 'volume' ? 'kg × reps per week' : metric === 'top' ? 'heaviest set' : 'Epley e1RM'}
           {metric !== 'volume' && <><i className="tk-sw pr" />PR</>}
           <i className="tk-sw last" />latest
-        </p>}
+        </Legend>}
       </section>
 
       <section className="tk-sec" aria-label="Verdicts">

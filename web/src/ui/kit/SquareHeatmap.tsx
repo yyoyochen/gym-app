@@ -1,3 +1,4 @@
+import { Legend } from './Display';
 import { useMemo } from 'react';
 import { heatmapGrid } from './dither';
 
@@ -108,7 +109,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
       </svg>
       </div>
       {legend && (
-        <div className="sqheat-legend" aria-hidden="true">
+        <Legend className="sqheat-legend">
           <span>Less</span>
           {[0, 1, 2, 3].map(l => (
             <svg key={l} viewBox={`0 0 ${CELL_W} ${CELL_H}`} className="sqheat-key" shapeRendering="crispEdges">
@@ -117,7 +118,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
           ))}
           <span>More</span>
           {g.weekMarks && <span className="sqheat-legend-wk"><i /> week at target</span>}
-        </div>
+        </Legend>
       )}
     </div>
   );

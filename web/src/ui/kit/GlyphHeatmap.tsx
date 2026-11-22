@@ -1,3 +1,4 @@
+import { Legend } from './Display';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { WEEK_MARK, heatGlyph, heatmapGrid, SHADES, EMPTY } from './dither';
 
@@ -53,7 +54,7 @@ export function GlyphHeatmap({ counts, weeks, end, thresholds, weekTarget, onSel
           ]}
         </div>
       </div>
-      {legend && <div className="gheat-legend" aria-hidden="true">Less <span className="accent">{EMPTY} {SHADES.join(' ')}</span> More</div>}
+      {legend && <Legend className="gheat-legend">Less <span className="accent">{EMPTY} {SHADES.join(' ')}</span> More</Legend>}
     </div>
   );
 }

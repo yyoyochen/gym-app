@@ -1,7 +1,7 @@
 // Ink & Dither UI kit (docs/DESIGN.md). Screens import from here.
 export { PixelIcon } from './PixelIcon';
 export { ICONS, PR_ICON, iconRuns, type IconName } from './icons';
-export { Lockup, BigNumber, LabelValue, LabelValueGrid, Verdict, DitherBar, stampDate, type LabelValueItem, type VerdictKind } from './Display';
+export { Lockup, BigNumber, LabelValue, LabelValueGrid, Verdict, DitherBar, ValueRow, Legend, stampDate, type LabelValueItem, type VerdictKind } from './Display';
 export { GlyphHeatmap } from './GlyphHeatmap';
 export { SquareHeatmap, cellPixels, shadeOn, SUBPIXELS } from './SquareHeatmap';
 export { RecentWeeks, recentWeeks } from './RecentWeeks';

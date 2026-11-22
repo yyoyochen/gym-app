@@ -8,7 +8,7 @@ import { getActiveProgram, getDb, listExercises, putExercise, saveProgram, seedC
 import { exerciseIdFor, nameKey } from '../domain/catalog';
 import { useLive } from '../ui/useLive';
 import { ConfirmButton, DateField, Errors, Group, GroupAction, Segmented, Sheet, Stepper } from '../ui/common';
-import { Button, LabelValueGrid, NavBar, PixelIcon, Toggle, showHud } from '../ui/kit';
+import { Button, LabelValueGrid, NavBar, PixelIcon, Toggle, ValueRow, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate } from '../app/dates';
 import { PAIN_AREAS, PAIN_AREA_LABELS } from '../app/labels';
@@ -361,15 +361,11 @@ function Phases({ phases, onAdd, onChange }: { phases: Phase[]; onAdd: () => voi
       {phases.length > 0 && (
         <div className="sheetblk">
           {phases.map((ph, i) => (
-            <div key={i} className="srow">
-              <span className="srow-k">{pad2(i + 1)}</span>
-              <span className="srow-main">
-                <span className="srow-v">{ph.name}</span>
-                <span className="srow-sub">{formatDate(ph.start, { weekday: false })} – {formatDate(ph.end, { weekday: false })} · {overrideLine(ph)}</span>
-              </span>
+            <ValueRow key={i} k={pad2(i + 1)} value={ph.name}
+              sub={`${formatDate(ph.start, { weekday: false })} – ${formatDate(ph.end, { weekday: false })} · ${overrideLine(ph)}`}>
               <ConfirmButton className="icon-btn" confirmLabel={`Delete the phase “${ph.name}”?`} confirmText="Delete phase" danger
                 onConfirm={() => onChange(phases.filter((_, j) => j !== i))}><PixelIcon name="trash" title={`Delete ${ph.name}`} /></ConfirmButton>
-            </div>
+            </ValueRow>
           ))}
         </div>
       )}

@@ -105,3 +105,39 @@ export function DitherBar({ value, cells = 28, label, valueText, ariaLabel, clas
     </div>
   );
 }
+
+/**
+ * The settings/profile row: key on the left, value (with an optional sub
+ * line and extra `main` content under it), an optional right value, then any
+ * trailing controls. A link when given `href`. Styles: setup.css `.srow*`.
+ */
+export function ValueRow({ k, value, sub, main, right, rightMid, valueClassName, href, className = '', children, ...rest }: {
+  k?: ReactNode;
+  value: ReactNode;
+  sub?: ReactNode;
+  main?: ReactNode;
+  right?: ReactNode;
+  rightMid?: boolean;
+  valueClassName?: string;
+  href?: string;
+  className?: string;
+  children?: ReactNode;
+  [data: `data-${string}`]: string | undefined;
+}) {
+  const v = <span className={valueClassName ? `srow-v ${valueClassName}` : 'srow-v'}>{value}</span>;
+  const inner = (
+    <>
+      {k !== undefined && <span className="srow-k">{k}</span>}
+      {sub || main ? <span className="srow-main">{v}{sub ? <span className="srow-sub">{sub}</span> : null}{main}</span> : v}
+      {right !== undefined && <span className={rightMid ? 'srow-r mid' : 'srow-r'}>{right}</span>}
+      {children}
+    </>
+  );
+  const cls = className ? `srow ${className}` : 'srow';
+  return href ? <a className={cls} href={href} {...rest}>{inner}</a> : <div className={cls} {...rest}>{inner}</div>;
+}
+
+/** A legend strip under a chart or heatmap, in the label role. Decorative: hidden from screen readers. */
+export function Legend({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <div className={className ? `legend ${className}` : 'legend'} aria-hidden="true">{children}</div>;
+}

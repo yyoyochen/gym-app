@@ -70,7 +70,7 @@
 .tk-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: miter; stroke-linecap: square; }
 .tk-pr { fill: var(--ink); shape-rendering: crispEdges; }
 .tk-last { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; shape-rendering: crispEdges; }
-.tk-legend { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-2); font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--mid); }
+.tk-legend { margin: 0; }
 .tk-sw { display: inline-block; flex: none; }
 .tk-sw.line { width: 14px; border-top: var(--rule-w) solid var(--ink); }
 .tk-sw.pr { width: 5px; height: 5px; background: var(--ink); margin-left: var(--space-2); }

@@ -9,7 +9,7 @@ import {
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { DateField, Errors, Group, GroupAction, Segmented, Sheet, Stepper } from '../ui/common';
-import { BigNumber, Button, DitherBar, LabelValueGrid, Lockup, NavBar, PixelIcon, showHud, type LabelValueItem } from '../ui/kit';
+import { BigNumber, Button, DitherBar, LabelValueGrid, Lockup, NavBar, PixelIcon, ValueRow, showHud, type LabelValueItem } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { GOAL_LABELS, PAIN_AREAS, PAIN_AREA_LABELS, SIDE_LABELS } from '../app/labels';
@@ -86,16 +86,12 @@ export function Profile(_props: { params: string[] }) {
       </section>
 
       <nav className="link-rows" aria-label="Program and settings">
-        <a className="srow nav-row" href="#/profile/program" data-press="row">
-          <span className="srow-k"><PixelIcon name="bar" /></span>
-          <span className="srow-main"><span className="srow-v">Program</span><span className="srow-sub">Sessions, slots, phases</span></span>
+        <ValueRow href="#/profile/program" className="nav-row" data-press="row" k={<PixelIcon name="bar" />} value="Program" sub="Sessions, slots, phases">
           <PixelIcon name="chevron" />
-        </a>
-        <a className="srow nav-row" href="#/profile/settings" data-press="row">
-          <span className="srow-k"><PixelIcon name="settings" /></span>
-          <span className="srow-main"><span className="srow-v">Settings</span><span className="srow-sub">Appearance, effort scale, backup</span></span>
+        </ValueRow>
+        <ValueRow href="#/profile/settings" className="nav-row" data-press="row" k={<PixelIcon name="settings" />} value="Settings" sub="Appearance, effort scale, backup">
           <PixelIcon name="chevron" />
-        </a>
+        </ValueRow>
       </nav>
 
       <Group label="Where I am" right={edit('where')}>
@@ -117,17 +113,11 @@ export function Profile(_props: { params: string[] }) {
             {p.targets.map((t, i) => {
               const r = rowFor.get(t.id);
               return (
-                <div key={t.id} className="srow tall">
-                  <span className="srow-k">{pad2(i + 1)}</span>
-                  <span className="srow-main">
-                    <span className="srow-v">{r?.name ?? names.get(t.subject) ?? t.subject}</span>
-                    <span className="srow-sub">{targetLine(t)}</span>
-                    <span className="srow-bars">
-                      <TargetLevelBar gym={gym} ctx={ctx} ex={byId.get(t.subject)} value={t.value} />
-                      {r && <PaceBar row={r} />}
-                    </span>
-                  </span>
-                </div>
+                <ValueRow key={t.id} className="tall" k={pad2(i + 1)} value={r?.name ?? names.get(t.subject) ?? t.subject} sub={targetLine(t)}
+                  main={<span className="srow-bars">
+                    <TargetLevelBar gym={gym} ctx={ctx} ex={byId.get(t.subject)} value={t.value} />
+                    {r && <PaceBar row={r} />}
+                  </span>} />
               );
             })}
           </div>
@@ -139,13 +129,8 @@ export function Profile(_props: { params: string[] }) {
           ? <p className="quiet">None. Areas listed here pre-fill the pain flag and hold progress on lifts that load them.</p>
           : <div className="sheetblk">
               {p.injuries.map((inj, i) => (
-                <div key={i} className="srow">
-                  <span className="srow-k">{inj.side === 'na' ? '—' : SIDE_LABELS[inj.side]}</span>
-                  <span className="srow-main">
-                    <span className="srow-v">{PAIN_AREA_LABELS[inj.area]}</span>
-                    {(inj.since || inj.note) && <span className="srow-sub">{[inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(' · ')}</span>}
-                  </span>
-                </div>
+                <ValueRow key={i} k={inj.side === 'na' ? '—' : SIDE_LABELS[inj.side]} value={PAIN_AREA_LABELS[inj.area]}
+                  sub={(inj.since || inj.note) ? [inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(' · ') : undefined} />
               ))}
             </div>}
       </Group>
@@ -156,18 +141,10 @@ export function Profile(_props: { params: string[] }) {
           : <div className="sheetblk">
               <div className="sheetblk-hd"><span>Lift</span><span>kg · source</span></div>
               {(logMaxes ?? []).map(m => (
-                <div key={m.ex.id} className="srow">
-                  <span className="srow-k">Log</span>
-                  <span className="srow-main"><span className="srow-v">{m.ex.name}</span><span className="srow-sub">Best e1RM · 90 days</span></span>
-                  <span className="srow-r">{kg(Math.round(m.e1rm * 2) / 2)}</span>
-                </div>
+                <ValueRow key={m.ex.id} k="Log" value={m.ex.name} sub="Best e1RM · 90 days" right={kg(Math.round(m.e1rm * 2) / 2)} />
               ))}
               {p.manualMaxes.map((m, i) => (
-                <div key={`m${i}`} className="srow">
-                  <span className="srow-k">1RM</span>
-                  <span className="srow-main"><span className="srow-v">{names.get(m.exerciseId) ?? m.exerciseId}</span><span className="srow-sub">Manual · {formatDate(m.date, { weekday: false })}</span></span>
-                  <span className="srow-r">{kg(m.kg)}</span>
-                </div>
+                <ValueRow key={`m${i}`} k="1RM" value={names.get(m.exerciseId) ?? m.exerciseId} sub={`Manual · ${formatDate(m.date, { weekday: false })}`} right={kg(m.kg)} />
               ))}
             </div>}
       </Group>
@@ -177,11 +154,7 @@ export function Profile(_props: { params: string[] }) {
           ? <p className="quiet">No checkpoint dates.</p>
           : <div className="sheetblk">
               {p.checkpoints.map((c, i) => (
-                <div key={c} className="srow">
-                  <span className="srow-k">{pad2(i + 1)}</span>
-                  <span className="srow-v">{formatDate(c)}</span>
-                  <span className="srow-r mid">{c < today ? 'past' : ''}</span>
-                </div>
+                <ValueRow key={c} k={pad2(i + 1)} value={formatDate(c)} right={c < today ? 'past' : ''} rightMid />
               ))}
             </div>}
       </Group>
@@ -320,12 +293,10 @@ function BodyweightBody({ latestKg, entries, onClose }: { latestKg?: number; ent
         <div className="sheetblk">
           <div className="sheetblk-hd"><span>Recent</span><span>kg</span></div>
           {recent.map(e => (
-            <div key={e.id} className="srow">
-              <span className="srow-k">{e.date.slice(8)}.{e.date.slice(5, 7)}</span>
-              <span className="srow-v tnum">{kg(e.kg)}</span>
+            <ValueRow key={e.id} k={`${e.date.slice(8)}.${e.date.slice(5, 7)}`} value={kg(e.kg)} valueClassName="tnum">
               <button type="button" className="icon-btn" aria-label={`Delete ${kg(e.kg)} kg on ${formatDate(e.date)}`} data-press="dim"
                 onClick={() => deleteBodyweight(getDb(), e.id)}><PixelIcon name="trash" /></button>
-            </div>
+            </ValueRow>
           ))}
         </div>
       )}
@@ -344,15 +315,11 @@ function InjuriesForm({ profile, onChange }: { profile: ProfileT; onChange: (p: 
       {profile.injuries.length > 0 && (
         <div className="sheetblk">
           {profile.injuries.map((inj, i) => (
-            <div key={i} className="srow">
-              <span className="srow-k">{inj.side === 'na' ? '—' : SIDE_LABELS[inj.side]}</span>
-              <span className="srow-main">
-                <span className="srow-v">{PAIN_AREA_LABELS[inj.area]}</span>
-                {(inj.since || inj.note) && <span className="srow-sub">{[inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(' · ')}</span>}
-              </span>
+            <ValueRow key={i} k={inj.side === 'na' ? '—' : SIDE_LABELS[inj.side]} value={PAIN_AREA_LABELS[inj.area]}
+              sub={(inj.since || inj.note) ? [inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(' · ') : undefined}>
               <button type="button" className="icon-btn" aria-label={`Remove ${PAIN_AREA_LABELS[inj.area]}`} data-press="dim"
                 onClick={() => onChange({ ...profile, injuries: profile.injuries.filter((_, j) => j !== i) })}><PixelIcon name="trash" /></button>
-            </div>
+            </ValueRow>
           ))}
         </div>
       )}
@@ -392,12 +359,10 @@ function MaxesForm({ profile, onChange, exercises }: { profile: ProfileT; onChan
       {profile.manualMaxes.length > 0 && (
         <div className="sheetblk">
           {profile.manualMaxes.map((m, i) => (
-            <div key={i} className="srow">
-              <span className="srow-k">1RM</span>
-              <span className="srow-main"><span className="srow-v">{names.get(m.exerciseId) ?? m.exerciseId}</span><span className="srow-sub">{kg(m.kg)} kg · {formatDate(m.date, { weekday: false })}</span></span>
+            <ValueRow key={i} k="1RM" value={names.get(m.exerciseId) ?? m.exerciseId} sub={`${kg(m.kg)} kg · ${formatDate(m.date, { weekday: false })}`}>
               <button type="button" className="icon-btn" aria-label={`Remove ${names.get(m.exerciseId) ?? m.exerciseId} max`} data-press="dim"
                 onClick={() => onChange({ ...profile, manualMaxes: profile.manualMaxes.filter((_, j) => j !== i) })}><PixelIcon name="trash" /></button>
-            </div>
+            </ValueRow>
           ))}
         </div>
       )}
