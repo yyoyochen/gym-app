@@ -21,7 +21,7 @@ import { programFromTemplate } from '../domain/templates';
 import { TemplateList, sessionTitle } from '../app/parts/TemplatePicker';
 
 const MODELS: ModelKind[] = ['double', 'topset', 'linear5x5', 'fixed'];
-const MODEL_SHORT: Record<ModelKind, string> = { double: 'Double', topset: 'Top set', linear5x5: '5 × 5', fixed: 'Fixed' };
+const MODEL_SHORT: Record<ModelKind, string> = { double: 'Reps first', topset: 'Top set', linear5x5: '5 × 5', fixed: 'Fixed' };
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 type Editing = { key: string; slotId: string };
@@ -77,7 +77,7 @@ export function ProgramEditor(_props: { params: string[] }) {
     <section className="screen setup">
       <DemoBanner />
       <NavBar title="Program" backLabel="Profile" fallback="profile" />
-      <p className="note">//Note — edits apply from the next commit. Sessions already committed don’t change.</p>
+      <p className="note">//Note: edits apply to sessions you start from now on. Sessions already started keep their plan.</p>
 
       {!prog && <><p className="quiet">No program yet. Start from a template.</p>{templates}</>}
 
@@ -172,7 +172,7 @@ function SessionBlock({ s, inRotation, exById, apply, onEditSession, onAdd, onEd
             <span className="srow-k">{pad2(j + 1)}</span>
             <button type="button" className="srow-main slot-open" data-press="dim" onClick={() => onEdit(sl.id)}>
               <span className="srow-v">{ex?.name ?? sl.exerciseId}</span>
-              <span className="srow-sub"><Parts items={[...(sl.model === 'topset' ? [] : [MODEL_SHORT[sl.model]]), describeSlot(sl), ...(min ? ['min'] : [])]} /></span>
+              <span className="srow-sub"><Parts items={[...(sl.model === 'topset' ? [] : [MODEL_SHORT[sl.model]]), describeSlot(sl), ...(min ? ['in minimum version'] : [])]} /></span>
             </button>
             <span className="reorder">
               <button type="button" className="icon-btn" aria-label={`Move ${ex?.name ?? 'slot'} up`} disabled={j === 0} data-press="dim"

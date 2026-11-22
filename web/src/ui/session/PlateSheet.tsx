@@ -15,7 +15,7 @@ export function PlateSheet({ weight, plates, onClose }: { weight: number | null;
       ) : (
         <>
           <LabelValueGrid items={[
-            { label: 'Per side', value: load.perSide.length ? load.perSide.map(kg).join(' + ') : 'Empty bar', accent: true },
+            { label: 'Each side', value: load.perSide.length ? load.perSide.map(kg).join(' + ') : 'Empty bar', accent: true },
             { label: 'Bar', value: `${kg(plates.barKg)} kg` },
             ...(load.remainder > 0 ? [{ label: 'Can’t be made', value: `${kg(load.remainder)} kg` }] : []),
           ]} />

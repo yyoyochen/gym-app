@@ -158,7 +158,7 @@ export function Session({ params }: { params: string[] }) {
       {session.sealed && (
         <div className="banner spread"><span>Finished. Changes are marked “edited”.</span><LinkButton href={`#/review/${id}`}>Review</LinkButton></div>
       )}
-      {!view.commit && <p className="note">//Note — this session has no committed promise; sets are logged ungraded.</p>}
+      {!view.commit && <p className="note">//Note: this session has no committed promise; sets are logged ungraded.</p>}
 
       {count.planned > 0 && (
         <DitherBar label={names.short} valueText={`${count.done} of ${count.planned} sets`} value={count.done / count.planned} />
@@ -175,7 +175,7 @@ export function Session({ params }: { params: string[] }) {
             <span>{next.warm ? 'Warm-up' : 'Effort'}{next.rir !== undefined && !next.warm && <b> {effortWords(next.rir, scale)}</b>}</span>
             {load && !load.belowBar && (
               <button type="button" className="next-plates" data-press="dim" onClick={() => setPlates(next.weight)}>
-                Plates <b>{load.perSide.length ? load.perSide.map(kg).join(' + ') : 'empty bar'}</b>
+                Plates each side <b>{load.perSide.length ? load.perSide.map(kg).join(' + ') : 'empty bar'}</b>
               </button>
             )}
           </div>
@@ -209,7 +209,7 @@ export function Session({ params }: { params: string[] }) {
               )}
             </p>
           )}
-          {note && <p className={`note nudge ${note.kind}`} role="status">//{note.kind === 'stop' ? 'Stop' : 'Note'} — {note.text}</p>}
+          {note && <p className={`note nudge ${note.kind}`} role="status">//{note.kind === 'stop' ? 'Stop' : 'Note'}: {note.text}</p>}
         </div>
       )}
 

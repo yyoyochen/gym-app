@@ -14,7 +14,7 @@ import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { readable } from '../ui/readable';
 import {
-  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, PixelIcon, RecentWeeks, Toggle, go, type LabelValueItem,
+  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, RecentWeeks, Toggle, go, type LabelValueItem,
 } from '../ui/kit';
 import { goalRows, loadConsistency, loadWeekBodyParts } from '../ui/progress/data';
 import { ReadinessCheck } from '../ui/session/Readiness';
@@ -102,7 +102,6 @@ export function Today(_props: { params: string[] }) {
     { label: 'Effort floor', value: sp.floorLabel },
     setsPair(sp),
     { label: 'Last time', value: lastTop(sp.lastTime) || 'First time' },
-    { label: 'This week', value: `${heat.thisWeek} of ${target}`, accent: true },
   ] : [];
   if (open?.card) {
     pairs.splice(0, 0,
@@ -119,9 +118,8 @@ export function Today(_props: { params: string[] }) {
       <div className="place">
         <div>
           <h1 className="title">{done && !showNext ? sessionNames(done.session.nameSnapshot).title : showPlan ? names.title : 'Today'}</h1>
-          <p className="quiet">{formatDate(today)}{open ? ', in progress' : ''}</p>
+          <p className="quiet">{formatDate(today)}{open ? `, live ${formatElapsed(clock - open.session.startedAt)}` : ''}</p>
         </div>
-        <PixelIcon name="today" scale={3} />
       </div>
 
       {done && !showNext ? (
@@ -145,7 +143,7 @@ export function Today(_props: { params: string[] }) {
             </div>
           )}
           <div className="promise">
-            <span className="label">{plan.status === 'committed' ? 'Committed' : 'The promise'}: {sp.exercise.name}{sp.inMinimum && minimum ? ', minimum' : ''}</span>
+            <span className="label">{plan.status === 'committed' ? 'Locked in' : 'The promise'}: {sp.exercise.name}{sp.inMinimum && minimum ? ', minimum' : ''}</span>
             <p className="promise-text"><MonoNums text={sp.target.criterion} /></p>
             <p className="quiet">Why: {readable(sp.target.why)}</p>
             {sp.lastNote && <p className="quiet">Last note: {sp.lastNote}</p>}

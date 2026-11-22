@@ -140,7 +140,7 @@ export function Profile(_props: { params: string[] }) {
           : <div className="sheetblk">
               <div className="sheetblk-hd"><span>Lift</span><span>kg and source</span></div>
               {(logMaxes ?? []).map(m => (
-                <ValueRow key={m.ex.id} k="Log" value={m.ex.name} sub="Best e1RM, 90 days" right={kg(Math.round(m.e1rm * 2) / 2)} />
+                <ValueRow key={m.ex.id} k="From log" value={m.ex.name} sub="Best e1RM, 90 days" right={kg(Math.round(m.e1rm * 2) / 2)} />
               ))}
               {p.manualMaxes.map((m, i) => (
                 <ValueRow key={`m${i}`} k="1RM" value={names.get(m.exerciseId) ?? m.exerciseId} sub={`Manual, ${formatDate(m.date, { weekday: false })}`} right={kg(m.kg)} />
@@ -158,7 +158,7 @@ export function Profile(_props: { params: string[] }) {
             </div>}
       </Group>
 
-      <p className="note">//Note — each save keeps the earlier version with its date.</p>
+      <p className="note">//Note: each save keeps the earlier version with its date.</p>
 
       <BodyweightSheet open={open === 'bodyweight'} onClose={close} entries={bodyweight} />
       <EditSheet open={open === 'where'} title="Where I am" base={p} onClose={close}>{(d, set) => <WhereForm p={d} set={set} />}</EditSheet>

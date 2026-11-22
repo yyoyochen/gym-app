@@ -18,6 +18,7 @@ import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
 import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, displayName, formatLoad } from '../app/labels';
 import { SecHead } from '../ui/progress/parts';
+import { setCountsText } from '../ui/progress/cellRules';
 import { loadParts } from '../ui/progress/stats';
 
 export function SessionDetail({ params }: { params: string[] }) {
@@ -91,7 +92,7 @@ export function SessionDetail({ params }: { params: string[] }) {
             <div key={b.key} className="tk-sheet">
               <div className="tk-sheet-hd">
                 <a href={`#/lift/${encodeURIComponent(b.exerciseId)}`} data-press="dim">{b.name}<PixelIcon name="chevron" scale={1} /></a>
-                <span>{b.sets.filter(s => s.kind !== 'warmup').length} working</span>
+                <span>{setCountsText(b.sets, bwFactor.get(b.exerciseId) ?? 0)}</span>
               </div>
               {b.sets.map(s => {
                 const k = s.kind === 'warmup' ? `W${++w}` : s.kind === 'top' ? 'Top' : `${KIND_PREFIX[s.kind] ?? ''}${++n}`;

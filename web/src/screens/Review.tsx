@@ -112,7 +112,7 @@ export function Review({ params }: { params: string[] }) {
                 <article key={s.slotOrder} role="listitem" className={`led ${v}`} style={{ ['--i' as string]: i, ['--n' as string]: n }}>
                   <span className="led-l label">{s.target.exerciseName}</span>
                   <p className="led-p"><MonoNums text={s.target.criterion} /></p>
-                  <p className="led-r">{swappedName}<SetsDone parts={setsParts(s.sets, scale)} /></p>
+                  <p className="led-r">{swappedName}<SetsDone parts={setsParts(s.sets, scale)} warmups={s.sets.length} /></p>
                   <p className="led-d">{s.result.detail}</p>
                   <Verdict kind={v} className="led-v">{s.ungraded ? 'Ungraded' : undefined}</Verdict>
                 </article>
@@ -122,7 +122,7 @@ export function Review({ params }: { params: string[] }) {
               <article key={a.slotOrder} role="listitem" className="led new" style={{ ['--i' as string]: n + i, ['--n' as string]: n }}>
                 <span className="led-l label">{a.name}</span>
                 <p className="led-p">Added during the session</p>
-                <p className="led-r"><SetsDone parts={setsParts(a.sets, scale)} /></p>
+                <p className="led-r"><SetsDone parts={setsParts(a.sets, scale)} warmups={a.sets.length} /></p>
                 <Verdict kind="new" className="led-v">Ungraded</Verdict>
               </article>
             ))}
@@ -144,7 +144,7 @@ export function Review({ params }: { params: string[] }) {
       {safety.length > 0 && (
         <section className="stack" aria-label="Safety">
           <span className="label">Safety</span>
-          {safety.map((x, i) => <p key={i} className="note">//Stop — {x}</p>)}
+          {safety.map((x, i) => <p key={i} className="note">//Stop: {x}</p>)}
         </section>
       )}
 
@@ -163,7 +163,7 @@ export function Review({ params }: { params: string[] }) {
 
       {next && next.status === 'planned' && nextNames && (
         <section className="stack" aria-label="Next session">
-          <p className="note">//Next — {nextNames.title}. Preview only: the promise is set when you start it.</p>
+          <p className="note">//Next: {nextNames.title}. Preview only, the promise is set when you start it.</p>
           <div className="next-list">
             {next.slots.map(sp => (
               <div key={sp.target.slotId} className="next-item">
@@ -176,12 +176,15 @@ export function Review({ params }: { params: string[] }) {
         </section>
       )}
 
-      <LinkButton variant="primary" block href="#/today" iconEnd="chevron">Done</LinkButton>
+      <div className="pin">
+        <LinkButton variant="primary" block href="#/today" iconEnd="chevron">Done</LinkButton>
+      </div>
     </section>
   );
 }
 
-/** What was done for a slot: the set parts, or a dash when nothing was logged. */
-function SetsDone({ parts }: { parts: string[] }) {
-  return parts.length ? <Parts items={parts} /> : <>—</>;
+/** What was done for a slot: the set parts; "warm-ups only" when only warm-ups were saved; a dash when nothing was logged. */
+function SetsDone({ parts, warmups }: { parts: string[]; warmups: number }) {
+  if (parts.length) return <Parts items={parts} />;
+  return warmups ? <>Warm-ups only ({warmups})</> : <>—</>;
 }

@@ -19,6 +19,13 @@ export function classifySets(sets: { weight: number; kind: string }[], bodyweigh
   return sets.map((s, i) => (s.kind === 'warmup' ? 'ramp' : i === ti ? 'top' : i < ti && bodyweightFactor <= 0 && s.weight < 0.8 * top ? 'ramp' : 'work'));
 }
 
+/** "3 working, 3 ramp": the session page's count, using the cells' ramp rule. */
+export function setCountsText(sets: { weight: number; kind: string }[], bodyweightFactor = 0): string {
+  const ramp = classifySets(sets, bodyweightFactor).filter(r => r === 'ramp').length;
+  const work = sets.length - ramp;
+  return ramp ? `${work} working, ${ramp} ramp` : `${work} working`;
+}
+
 /** Weight split for the slots: "82" + ".5"; bodyweight lifts read "BW" or "+10". */
 export function cellWeight(weight: number, bodyweightFactor: number): { int: string; dec: string } {
   if (bodyweightFactor > 0 && weight === 0) return { int: 'BW', dec: '' };

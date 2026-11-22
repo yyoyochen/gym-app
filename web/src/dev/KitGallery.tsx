@@ -58,7 +58,7 @@ export default function KitGallery({ params }: { params: string[] }) {
       <div className="row wrap" style={{ gap: 'var(--space-2)' }}>
         <Verdict kind="beat" /><Verdict kind="hit" /><Verdict kind="missed" /><Verdict kind="new" />
       </div>
-      <p className="note">//Note — last back-off is next. Take it to 1–2 in reserve.</p>
+      <p className="note">//Note: last back-off is next. Take it to 1–2 in reserve.</p>
       <div className="row wrap" style={{ gap: 'var(--space-4)' }}>
         {(Object.keys(ICONS) as IconName[]).map(n => <span key={n} title={n}><PixelIcon name={n} scale={3} /></span>)}
       </div>

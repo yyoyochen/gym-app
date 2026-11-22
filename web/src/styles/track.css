@@ -27,7 +27,7 @@
 .tk-block > .stats { margin-top: var(--space-6); }
 .tk-bars { display: grid; gap: var(--space-3); }
 .tk-block > .tk-bars { margin-top: var(--space-6); }
-.tk-barlink { display: block; color: inherit; }
+.tk-barlink { display: flex; flex-direction: column; justify-content: center; min-height: var(--touch-min); color: inherit; }
 
 /* ---------- sections: spec-sheet header, then rows ---------- */
 .tk-sec { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -96,7 +96,7 @@
 .tk-sheet + .tk-sheet { margin-top: var(--space-4); }
 .tk-sheet-hd { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); padding-bottom: var(--space-2); border-bottom: var(--rule-w) solid var(--ink);
   color: var(--mid); text-transform: uppercase; letter-spacing: var(--track-label); }
-.tk-sheet-hd a { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--ink); font-weight: var(--font-strong); min-height: 32px; }
+.tk-sheet-hd a { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--ink); font-weight: var(--font-strong); min-height: var(--touch-min); }
 .tk-srow { display: grid; grid-template-columns: 12.5ch 1fr auto auto; gap: var(--space-3); align-items: center; width: 100%; min-height: 44px;
   border-bottom: var(--hair); text-align: left; text-transform: uppercase; letter-spacing: var(--track-label); }
 .tk-srow .k { color: var(--mid); }

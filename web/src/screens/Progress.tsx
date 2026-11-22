@@ -179,7 +179,7 @@ export function Progress(_props: { params: string[] }) {
               <li key={l.exercise.id}>
                 <a className="tk-lift" data-press="row" href={`#/lift/${encodeURIComponent(l.exercise.id)}`}>
                   <span className="tk-lift-name">{l.exercise.name}</span>
-                  <span className="tk-lift-v">{l.best90 !== null ? <>{kg(Math.round(l.best90 * 2) / 2)}<small> kg</small></> : '—'}</span>
+                  <span className="tk-lift-v">{l.best90 !== null ? <>{kg(Math.round(l.best90 * 2) / 2)}<small> kg{l.exercise.bodyweightFactor > 0 ? ' incl. BW' : ''}</small></> : '—'}</span>
                   <span className="tk-trend" role="img" aria-label={`trend ${tr === 'unknown' ? 'not enough data' : tr}`}>{glyphs || '·'}</span>
                 </a>
               </li>

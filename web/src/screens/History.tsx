@@ -26,6 +26,7 @@ export function History(_props: { params: string[] }) {
     return {
       today, rows, heat, counts, target: profile?.sessionsPerWeekTarget ?? 3,
       bwFactor: new Map(exercises.map(e => [e.id, e.bodyweightFactor])),
+      names: new Map(exercises.map(e => [e.id, e.name])),
     };
   }, []);
 
@@ -59,7 +60,7 @@ export function History(_props: { params: string[] }) {
         <section key={m.key} className="tk-sec" aria-label={m.label}>
           <SecHead title={m.label} meta={`${m.rows.length} session${m.rows.length === 1 ? '' : 's'}, ${m.rows.reduce((n, d) => n + d.setCount, 0)} sets`} />
           <ul className="tk-rows">
-            {m.rows.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data?.bwFactor} /></li>)}
+            {m.rows.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data?.bwFactor} names={data?.names} /></li>)}
           </ul>
         </section>
       ))}
@@ -68,7 +69,7 @@ export function History(_props: { params: string[] }) {
   );
 }
 
-function SessionRow({ d, bwFactor }: { d: SessionSummary; bwFactor?: Map<string, number> }) {
+function SessionRow({ d, bwFactor, names }: { d: SessionSummary; bwFactor?: Map<string, number>; names?: Map<string, string> }) {
   const s = d.session;
   const [wd, dd, mm] = formatDate(s.date, { year: false }).split(' ');
   return (
@@ -80,7 +81,7 @@ function SessionRow({ d, bwFactor }: { d: SessionSummary; bwFactor?: Map<string,
           {s.edited && <span className="chip tk-chip">edited</span>}
         </span>
         {d.top.length > 0 && (
-          <Parts className="tk-stop" items={d.top.map(t => `${t.name} ${formatLoad(t.weight, bwFactor?.get(t.exerciseId))} × ${t.reps}`)} />
+          <Parts className="tk-stop" items={d.top.map(t => `${names?.get(t.exerciseId) ?? t.name} ${formatLoad(t.weight, bwFactor?.get(t.exerciseId))} × ${t.reps}`)} />
         )}
       </span>
       <span className="tk-scount">{d.setCount}<small>sets</small></span>

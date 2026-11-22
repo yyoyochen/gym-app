@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anyDecimals, cellWeight, classifySets } from './cellRules';
+import { anyDecimals, cellWeight, classifySets, setCountsText } from './cellRules';
 
 const work = (...ws: number[]) => ws.map(weight => ({ weight, kind: 'working' }));
 
@@ -26,6 +26,15 @@ describe('classifySets', () => {
   });
   it('a logged warm-up is always ramp', () => {
     expect(classifySets([{ weight: 20, kind: 'warmup' }, { weight: 100, kind: 'working' }])).toEqual(['ramp', 'top']);
+  });
+});
+
+describe('setCountsText', () => {
+  it('counts work and ramp sets with the same rule as the cells', () => {
+    expect(setCountsText(work(60, 90, 110, 130, 145, 150), 0)).toBe('3 working, 3 ramp');
+    expect(setCountsText(work(100, 100, 100), 0)).toBe('3 working');
+    expect(setCountsText(work(0, 0, 0, 0), 1)).toBe('4 working');
+    expect(setCountsText([{ weight: 20, kind: 'warmup' }, { weight: 100, kind: 'working' }], 0)).toBe('1 working, 1 ramp');
   });
 });
 
