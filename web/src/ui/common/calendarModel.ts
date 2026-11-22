@@ -4,13 +4,15 @@
 import type { ISODate } from '../../domain/types';
 import { addDays, shiftMonth, weekday } from '../../app/dates';
 
-export interface Day { iso: ISODate; inMonth: boolean; disabled: boolean; today: boolean; selected: boolean; marked: boolean }
+/** How much you trained on a day: 0 light, 1 moderate, 2 heavy; null when there is no session. */
+export type DayLevel = 0 | 1 | 2;
+export interface Day { iso: ISODate; inMonth: boolean; disabled: boolean; today: boolean; selected: boolean; level: DayLevel | null }
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const monday = (iso: ISODate): ISODate => addDays(iso, -((weekday(iso) + 6) % 7));
 
 export function monthGrid(year: number, month: number, o: {
-  today: ISODate; selected?: ISODate | ''; min?: ISODate; max?: ISODate; marked?: ReadonlySet<ISODate>;
+  today: ISODate; selected?: ISODate | ''; min?: ISODate; max?: ISODate; levels?: ReadonlyMap<ISODate, DayLevel>;
 }): Day[][] {
   const start = monday(`${year}-${pad(month)}-01`);
   const weeks: Day[][] = [];
@@ -22,7 +24,7 @@ export function monthGrid(year: number, month: number, o: {
       row.push({
         iso, inMonth: y === year && m === month,
         disabled: (o.min !== undefined && iso < o.min) || (o.max !== undefined && iso > o.max),
-        today: iso === o.today, selected: iso === o.selected, marked: !!o.marked?.has(iso),
+        today: iso === o.today, selected: iso === o.selected, level: o.levels?.get(iso) ?? null,
       });
     }
     weeks.push(row);
@@ -55,10 +57,38 @@ export function moveDay(iso: ISODate, key: CalKey): ISODate {
 const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-/** "Thursday 19 November 2026, trained". */
-export function dayLabel(iso: ISODate, marked: boolean): string {
+const LEVEL_WORD = ['light', 'moderate', 'heavy'] as const;
+
+/** "Thursday 19 November 2026, trained, heavy day". */
+export function dayLabel(iso: ISODate, level: DayLevel | null): string {
   const [y, m, d] = iso.split('-').map(Number);
-  return `${WEEKDAYS_LONG[weekday(iso)]} ${d} ${MONTHS_LONG[m - 1]} ${y}${marked ? ', trained' : ''}`;
+  return `${WEEKDAYS_LONG[weekday(iso)]} ${d} ${MONTHS_LONG[m - 1]} ${y}${level === null ? '' : `, trained, ${LEVEL_WORD[level]} day`}`;
+}
+
+/** Working sets per day to three steps, in thirds of the busiest day. A session with no sets is light. */
+export function calendarLevels(counts: ReadonlyMap<ISODate, number>): Map<ISODate, DayLevel> {
+  const out = new Map<ISODate, DayLevel>();
+  const max = Math.max(0, ...counts.values());
+  for (const [d, n] of counts) out.set(d, n <= 0 || max <= 0 ? 0 : (Math.min(2, Math.ceil((3 * n) / max) - 1) as DayLevel));
+  return out;
+}
+
+export const MARKER_W = 24;
+export const MARKER_H = 8;
+
+/**
+ * The day marker as 4 px squares on a 24 × 8 box: light is three dots, moderate
+ * a checker, heavy a solid strip (the History heatmap's patterns, without the
+ * hard-to-read 75% step). Pure so the painter and the legend share it.
+ */
+export function markerRects(level: DayLevel): { x: number; y: number; w: number; h: number }[] {
+  if (level === 2) return [{ x: 0, y: 0, w: MARKER_W, h: MARKER_H }];
+  const out: { x: number; y: number; w: number; h: number }[] = [];
+  for (let y = 0; y < 2; y++) for (let x = 0; x < 6; x++) {
+    const on = level === 0 ? y === 0 && x % 2 === 0 : (x + y) % 2 === 0;
+    if (on) out.push({ x: x * 4, y: y * 4, w: 4, h: 4 });
+  }
+  return out;
 }
 
 /** Pull a date into [min, max] (either may be absent). */

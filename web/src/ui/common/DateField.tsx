@@ -3,7 +3,7 @@ import type { ISODate } from '../../domain/types';
 import { formatDate } from '../../app/dates';
 import { PixelIcon } from '../kit';
 import { DatePickerSheet } from './DatePickerSheet';
-import { useTrainedDates } from './useTrainedDates';
+import { useTrainedDays } from './useTrainedDays';
 
 /** A date under a mono label; tapping it opens the calendar sheet. Value is ISO YYYY-MM-DD or '' for none. */
 export function DateField({ label, value, onChange, min, max, confirmLabel = 'Use this date', clearable }: {
@@ -11,7 +11,7 @@ export function DateField({ label, value, onChange, min, max, confirmLabel = 'Us
 }) {
   const [open, setOpen] = useState(false);
   const labelId = useId(), valueId = useId();
-  const marked = useTrainedDates();
+  const levels = useTrainedDays();
   return (
     <div className="field-wrap">
       <span className="label" id={labelId}>{label}</span>
@@ -20,7 +20,7 @@ export function DateField({ label, value, onChange, min, max, confirmLabel = 'Us
         <PixelIcon name="down" scale={1} />
       </button>
       {open && (
-        <DatePickerSheet open value={value} {...(min ? { min } : {})} {...(max ? { max } : {})} marked={marked} title={label} confirmLabel={confirmLabel}
+        <DatePickerSheet open value={value} {...(min ? { min } : {})} {...(max ? { max } : {})} levels={levels} title={label} confirmLabel={confirmLabel}
           onPick={d => { onChange(d); setOpen(false); }} {...(clearable ? { onClear: () => { onChange(''); setOpen(false); } } : {})} onClose={() => setOpen(false)} />
       )}
     </div>

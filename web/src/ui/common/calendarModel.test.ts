@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { canConfirm, clampDate, dayLabel, monthGrid, moveDay, tabbableDay } from './calendarModel';
+import { calendarLevels, canConfirm, clampDate, dayLabel, markerRects, monthGrid, moveDay, tabbableDay } from './calendarModel';
 
 const flat = (g: ReturnType<typeof monthGrid>) => g.flat();
 const find = (g: ReturnType<typeof monthGrid>, iso: string) => flat(g).find(d => d.iso === iso)!;
 
 describe('monthGrid', () => {
-  const g = monthGrid(2026, 11, { today: '2026-11-22', selected: '2026-11-19', max: '2026-11-22', marked: new Set(['2026-11-19']) });
+  const g = monthGrid(2026, 11, { today: '2026-11-22', selected: '2026-11-19', max: '2026-11-22', levels: new Map([['2026-11-19', 2 as const]]) });
 
   it('six Monday-first weeks, padded with the neighbouring months', () => {
     expect(g).toHaveLength(6);
@@ -16,9 +16,10 @@ describe('monthGrid', () => {
   });
 
   it('marks selected, trained, today and disabled days', () => {
-    expect(find(g, '2026-11-19')).toMatchObject({ selected: true, marked: true, disabled: false, today: false });
+    expect(find(g, '2026-11-19')).toMatchObject({ selected: true, level: 2, disabled: false, today: false });
     expect(find(g, '2026-11-22')).toMatchObject({ today: true, disabled: false });
     expect(find(g, '2026-11-23').disabled).toBe(true);
+    expect(find(g, '2026-11-18').level).toBeNull();
   });
 
   it('min disables earlier days only', () => {
@@ -52,9 +53,11 @@ describe('moveDay', () => {
 });
 
 describe('dayLabel', () => {
-  it('reads the full date, and says when you trained', () => {
-    expect(dayLabel('2026-11-19', true)).toBe('Thursday 19 November 2026, trained');
-    expect(dayLabel('2026-11-19', false)).toBe('Thursday 19 November 2026');
+  it('reads the full date, and says when you trained and how much', () => {
+    expect(dayLabel('2026-11-19', 2)).toBe('Thursday 19 November 2026, trained, heavy day');
+    expect(dayLabel('2026-11-19', 1)).toBe('Thursday 19 November 2026, trained, moderate day');
+    expect(dayLabel('2026-11-19', 0)).toBe('Thursday 19 November 2026, trained, light day');
+    expect(dayLabel('2026-11-19', null)).toBe('Thursday 19 November 2026');
   });
 });
 
@@ -88,5 +91,28 @@ describe('tabbableDay (the one grid cell that takes Tab)', () => {
   it('a month with no enabled day has none', () => {
     const none = monthGrid(2026, 12, { today: '2026-11-22', max: '2026-11-22' });
     expect(tabbableDay(none, '2026-12-05')).toBeNull();
+  });
+});
+
+describe('calendarLevels', () => {
+  it('three steps, in thirds of the busiest day', () => {
+    const l = calendarLevels(new Map([['2026-11-01', 4], ['2026-11-02', 12], ['2026-11-03', 20]]));
+    expect([...l.entries()]).toEqual([['2026-11-01', 0], ['2026-11-02', 1], ['2026-11-03', 2]]);
+  });
+  it('a session with no sets is still marked, as light', () => {
+    expect(calendarLevels(new Map([['2026-11-01', 0], ['2026-11-02', 10]])).get('2026-11-01')).toBe(0);
+  });
+  it('a single trained day is the heaviest; nothing logged is nothing', () => {
+    expect(calendarLevels(new Map([['2026-11-01', 6]])).get('2026-11-01')).toBe(2);
+    expect(calendarLevels(new Map()).size).toBe(0);
+  });
+});
+
+describe('markerRects', () => {
+  it('light is three dots, moderate a checker, heavy a solid strip, on a 24 x 8 box', () => {
+    expect(markerRects(0)).toEqual([{ x: 0, y: 0, w: 4, h: 4 }, { x: 8, y: 0, w: 4, h: 4 }, { x: 16, y: 0, w: 4, h: 4 }]);
+    expect(markerRects(1)).toHaveLength(6);
+    expect(markerRects(1)[3]).toEqual({ x: 4, y: 4, w: 4, h: 4 });
+    expect(markerRects(2)).toEqual([{ x: 0, y: 0, w: 24, h: 8 }]);
   });
 });

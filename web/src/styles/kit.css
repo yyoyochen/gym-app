@@ -123,8 +123,11 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .cal-day:disabled { color: var(--mid); opacity: 0.4; }
 .cal-day.today { border-color: var(--ink); }
 .cal-day.sel { background: var(--ink); color: var(--paper); font-weight: var(--font-strong); }
-.cal-day.has::after { content: ''; position: absolute; bottom: var(--space-1); width: 10px; height: 4px; background: repeating-linear-gradient(90deg, var(--accent) 0 2px, transparent 2px 4px); }
-.cal-day.sel.has::after { background: repeating-linear-gradient(90deg, var(--paper) 0 2px, transparent 2px 4px); }
+.cal-marker { display: block; fill: var(--accent); shape-rendering: crispEdges; }
+.cal-mark { position: absolute; bottom: var(--space-1); left: 50%; translate: -50% 0; }
+.cal-day.sel .cal-marker { fill: var(--paper); }
+.cal-legend { margin: var(--space-3) 0; }
+.cal-legend-in { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--mid); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
 .cal-day:focus-visible { outline: var(--focus-w) solid var(--accent); outline-offset: calc(-1 * var(--focus-w)); }
 .seg { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); min-height: var(--touch-min);
   border: var(--rule-w) solid var(--ink); touch-action: none; user-select: none; -webkit-user-select: none; }

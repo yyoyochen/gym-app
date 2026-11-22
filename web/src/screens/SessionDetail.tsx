@@ -9,7 +9,7 @@ import {
   changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, listExercises, updateSession, updateSet,
 } from '../db';
 import { useLive } from '../ui/useLive';
-import { DatePickerSheet, Errors, useTrainedDates } from '../ui/common';
+import { DatePickerSheet, Errors, useTrainedDays } from '../ui/common';
 import { BigNumber, Button, ConfirmButton, NavBar, Parts, PixelIcon, Segmented, Select, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { gradeCommit } from '../app/coach';
@@ -35,7 +35,7 @@ export function SessionDetail({ params }: { params: string[] }) {
   const [editing, setEditing] = useState<SetEntry | null>(null);
   const [moving, setMoving] = useState(false);
   const [renaming, setRenaming] = useState(false);
-  const trained = useTrainedDates();
+  const trained = useTrainedDays();
 
   if (!data) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel="History" fallback="history" large={false} /></section>;
   const { session, sets, commit, scale, bwFactor, grade } = data;
@@ -129,7 +129,7 @@ export function SessionDetail({ params }: { params: string[] }) {
         <Button block onClick={() => setMoving(true)}>Change date</Button>
         {renaming && <RenameSheet current={displayName(session.nameSnapshot)} onClose={() => setRenaming(false)} onSave={async name => { await updateSession(getDb(), session.id, { nameSnapshot: name }); setRenaming(false); showHud({ text: 'Renamed' }); }} />}
         {moving && (
-          <DatePickerSheet open value={session.date} max={todayISO()} marked={trained} title="Change date" confirmLabel="Move session" requireChange onClose={() => setMoving(false)}
+          <DatePickerSheet open value={session.date} max={todayISO()} levels={trained} title="Change date" confirmLabel="Move session" requireChange onClose={() => setMoving(false)}
             onPick={async d => { await changeSessionDate(getDb(), session.id, d); setMoving(false); showHud({ text: 'Date changed' }); }} />
         )}
         <ConfirmButton danger className="block" confirmLabel="Delete this session and its sets?" confirmText="Delete session"
