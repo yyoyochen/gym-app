@@ -78,6 +78,8 @@ export async function loadDemo(db: GymDb, now: Millis = Date.now(), csvText?: st
     await addBodyweight(db, addDays(today, -ago), kg);
   }
   await setMeta(db, 'demoMode', true);
+  // The wipe cleared the tips list; demo users see the tips (app/tips.ts).
+  await setMeta(db, 'tipsSeen', []);
   return result;
 }
 

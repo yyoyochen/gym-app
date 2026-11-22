@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { SetEntry, Target } from '../../domain/types';
 import type { LiveSlot, SlotPlan } from '../../app/coach';
-import { UNDO_MS, focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, undoable } from './logger';
+import { UNDO_MS, focusSlot, loggerTips, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, undoable } from './logger';
 
 describe('undoable', () => {
   it('the last logged set can be undone for a short while only', () => {
@@ -84,5 +84,15 @@ describe('nextAction (a lift with no history)', () => {
   });
   it('a planned weight logs as planned', () => {
     expect(nextAction({ weight: 62.5 }, 0)).toEqual({ needsWeight: false, hero: '62.5', caption: null, primaryLabel: 'Log as planned' });
+  });
+});
+
+describe('logger tips', () => {
+  const last = { loggedAt: 1_000 } as SetEntry;
+  it('the log tip while a set is next; the undo tip only while Undo is on screen', () => {
+    expect(loggerTips({ hasNext: true, sealed: false, last: null, now: 2_000 })).toEqual({ log: true, undo: false });
+    expect(loggerTips({ hasNext: true, sealed: false, last, now: 1_000 + UNDO_MS - 1 })).toEqual({ log: true, undo: true });
+    expect(loggerTips({ hasNext: true, sealed: false, last, now: 1_000 + UNDO_MS + 1 }).undo).toBe(false);
+    expect(loggerTips({ hasNext: true, sealed: true, last, now: 1_001 })).toEqual({ log: false, undo: false });
   });
 });

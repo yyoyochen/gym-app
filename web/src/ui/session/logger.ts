@@ -136,3 +136,8 @@ export function nextAction(r: Pick<SheetRow, 'weight'>, bodyweightFactor: number
     primaryLabel: needsWeight ? 'Set weight' : 'Log as planned',
   };
 }
+
+/** Which logger tips qualify: the log tip while a set is next, the undo tip only while Undo is on screen. */
+export function loggerTips(o: { hasNext: boolean; sealed: boolean; last: { loggedAt: number } | null; now: number }): { log: boolean; undo: boolean } {
+  return { log: o.hasNext && !o.sealed, undo: !o.sealed && undoable(o.last, o.now) };
+}

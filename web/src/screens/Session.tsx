@@ -19,7 +19,7 @@ import { ExercisePicker } from '../ui/session/ExercisePicker';
 import { useNow, useScrollTop } from '../ui/session/useNow';
 import { pickTip } from '../app/tips';
 import { ScreenTip, useTipsSeen } from '../app/parts/ScreenTip';
-import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, undoable, type SheetRow } from '../ui/session/logger';
+import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, undoable, loggerTips, type SheetRow } from '../ui/session/logger';
 import { priorFromHistory, prMomentFor } from '../ui/session/prs';
 import { effortWords, sessionNames } from '../ui/session/text';
 import { formatDate } from '../app/dates';
@@ -111,7 +111,7 @@ export function Session({ params }: { params: string[] }) {
   const rest = last && lastAt
     ? `Rested ${formatElapsed(now - last.loggedAt)} since ${lastAt.lift !== focus?.exercise.name ? `${lastAt.lift}, ` : ''}${lastAt.label}`
     : null;
-  const tip = pickTip({ log: !!focus && !!next && !session.sealed, undo: !!last && !session.sealed }, tipsSeen);
+  const tip = pickTip(loggerTips({ hasNext: !!focus && !!next, sealed: session.sealed, last: last ?? null, now }), tipsSeen);
   const act = focus && next ? nextAction(next, focus.exercise.bodyweightFactor) : null;
   const load = focus && next && isBarbell(focus.exercise) ? platesPerSide(next.weight, view.plates.barKg, view.plates.platesKg) : null;
   const note = focus?.nudge

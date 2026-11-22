@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { freshDb } from '../db/test-helpers';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { getMeta, setMeta, startSession } from '../db';
+import { loadDemo } from './demo';
 import {
   TIP_IDS, TIP_TEXT, getTipsSeen, goalNudgeDue, initTips, markTipSeen, pickTip, resetTips, suppressTipsIfReturning, tipNumber,
 } from './tips';
@@ -79,6 +82,13 @@ describe('tips storage', () => {
     await markTipSeen(db, 'log');
     expect(await getMeta(db, 'tipsSeen')).toEqual(['log']);
     await resetTips(db);
+    expect(await getTipsSeen(db)).toEqual([]);
+  });
+  it('loading the demo from setup leaves the tips on (the wipe clears meta)', async () => {
+    const db = freshDb();
+    await initTips(db);
+    const csv = readFileSync(fileURLToPath(new URL('../import/__fixtures__/sample-notion.csv', import.meta.url)), 'utf8');
+    await loadDemo(db, Date.now(), csv);
     expect(await getTipsSeen(db)).toEqual([]);
   });
 });
