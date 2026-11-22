@@ -34,9 +34,8 @@ function heroOf(sp: SlotPlan): { value: string; unit: string; caption: string } 
   return { value: kg(t.weight), unit: `kg × ${reps}`, caption: `${sp.plannedSets} working sets` };
 }
 
-/** "last time: 40 × 6 · 90 × 3 · 70 × 6, 6" → its heaviest part, "90 × 3". */
-function lastTop(line: string): string {
-  const parts = line.replace(/^last time:\s*/i, '').split(' · ').filter(Boolean);
+/** ["40 × 6", "90 × 3", "70 × 6, 6"] → its heaviest part, "90 × 3". */
+function lastTop(parts: string[]): string {
   const w = (p: string) => parseFloat(p) || 0;
   return parts.reduce<string>((a, p) => (!a || w(p) > w(a) ? p : a), '');
 }

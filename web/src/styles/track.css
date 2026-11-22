@@ -165,5 +165,4 @@
 .tk-btnrow .grow { flex: 1; }
 .tk-num { font-weight: var(--font-strong); font-variant-numeric: tabular-nums; color: inherit; }
 .tk-herolabel { margin-bottom: var(--space-3); }
-.tk-part { white-space: nowrap; }
 .tk-led-r.none { font: var(--text-body); color: var(--mid); }

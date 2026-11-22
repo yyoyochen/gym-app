@@ -146,12 +146,12 @@ export function niceTicks(lo: number, hi: number, target = 4): number[] {
 }
 
 /**
- * Working sets as one line, runs at one load sharing it: "100 × 2 · 80 × 8, 8, 7".
- * `load` formats the weight (formatLoad for "BW+10"). Failed reps get ✕.
+ * Working sets as parts, runs at one load sharing one: ["100 × 2", "80 × 8, 8, 7"].
+ * `load` formats the weight (formatLoad for "BW+10"). Failed reps get ✕. [] when none.
  */
-export function loadLine(sets: { kind: string; weight: number; reps: number; failed?: boolean }[], load: (w: number) => string = String): string {
+export function loadParts(sets: { kind: string; weight: number; reps: number; failed?: boolean }[], load: (w: number) => string = String): string[] {
   const work = sets.filter(s => s.kind !== 'warmup');
-  if (!work.length) return '—';
+  if (!work.length) return [];
   const parts: string[] = [];
   for (let i = 0; i < work.length;) {
     const w = work[i].weight;
@@ -159,7 +159,7 @@ export function loadLine(sets: { kind: string; weight: number; reps: number; fai
     while (i < work.length && work[i].weight === w) { reps.push(`${work[i].reps}${work[i].failed ? '✕' : ''}`); i++; }
     parts.push(`${load(w)} × ${reps.join(', ')}`);
   }
-  return parts.join(' · ');
+  return parts;
 }
 
 /** PR flags for a chronological series: true where a value beats every earlier one (the first point is not a PR). */

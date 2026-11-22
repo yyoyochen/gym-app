@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { session, set } from './__fixtures__/build';
 import {
-  classifyGap, formatElapsed, lastSessionLine, lastTimeLine, reentryAnchors, reentryNote, reentryState, resumeCard,
+  classifyGap, formatElapsed, lastSessionLine, lastTimeParts, reentryAnchors, reentryNote, reentryState, resumeCard,
 } from './remind';
 
 const H = 3_600_000;
@@ -70,8 +70,8 @@ describe('anchors and cards', () => {
   it('last session and last time lines', () => {
     expect(lastSessionLine('B', '2026-11-18', '2026-11-21', 4, 5)).toBe('Last session: B, 3 days ago, 4/5 kept');
     expect(lastSessionLine('A', '2026-11-20', '2026-11-21', 2, 2)).toBe('Last session: A, yesterday, 2/2 kept');
-    expect(lastTimeLine([set(80, 8), set(80, 8), set(80, 7)])).toBe('last time: 80 × 8, 8, 7');
-    expect(lastTimeLine([set(100, 1, { kind: 'top' }), set(82.5, 8), set(82.5, 8)])).toBe('last time: 100 × 1 · 82.5 × 8, 8');
-    expect(lastTimeLine([])).toBe('');
+    expect(lastTimeParts([set(80, 8), set(80, 8), set(80, 7)])).toEqual(['80 × 8, 8, 7']);
+    expect(lastTimeParts([set(100, 1, { kind: 'top' }), set(82.5, 8), set(82.5, 8)])).toEqual(['100 × 1', '82.5 × 8, 8']);
+    expect(lastTimeParts([])).toEqual([]);
   });
 });

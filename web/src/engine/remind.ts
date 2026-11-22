@@ -154,10 +154,10 @@ export function lastSessionLine(name: string, date: ISODate, today: ISODate, kep
   return `Last session: ${name}, ${ago}, ${kept}/${total} kept`;
 }
 
-/** "last time: 80 × 8, 8, 7" — runs at the same weight share one number. */
-export function lastTimeLine(sets: SetEntry[]): string {
+/** ["100 × 1", "80 × 8, 8, 7"]: last time's working sets, runs at the same weight share one number. [] when none. */
+export function lastTimeParts(sets: SetEntry[]): string[] {
   const work = workingSets(sets);
-  if (!work.length) return '';
+  if (!work.length) return [];
   const parts: string[] = [];
   let i = 0;
   while (i < work.length) {
@@ -166,5 +166,5 @@ export function lastTimeLine(sets: SetEntry[]): string {
     while (i < work.length && work[i].weight === w) reps.push(work[i++].reps);
     parts.push(`${pyG(w)} × ${reps.join(', ')}`);
   }
-  return `last time: ${parts.join(' · ')}`;
+  return parts;
 }

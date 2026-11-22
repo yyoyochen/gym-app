@@ -10,7 +10,7 @@ import {
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { DateField, Errors } from '../ui/common';
-import { BigNumber, Button, ConfirmButton, NavBar, PixelIcon, Segmented, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
+import { BigNumber, Button, ConfirmButton, NavBar, Parts, PixelIcon, Segmented, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { gradeCommit } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
@@ -18,7 +18,7 @@ import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
 import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, formatLoad } from '../app/labels';
 import { SecHead } from '../ui/progress/parts';
-import { loadLine } from '../ui/progress/stats';
+import { loadParts } from '../ui/progress/stats';
 
 export function SessionDetail({ params }: { params: string[] }) {
   const id = params[0];
@@ -64,7 +64,7 @@ export function SessionDetail({ params }: { params: string[] }) {
               <div key={g.target.slotId} className="tk-led">
                 <span className="tk-led-name">{g.target.exerciseName}</span>
                 <span className="tk-led-p">“{readable(g.target.criterion)}”</span>
-                <DoneLine text={loadLine(g.sets, load(g.target.exerciseId))} />
+                <DoneLine parts={loadParts(g.sets, load(g.target.exerciseId))} />
                 <span className="tk-led-d">{readable(g.result.detail)}</span>
                 {g.target.why && <span className="tk-led-d">Why: {readable(g.target.why)}</span>}
                 <Verdict kind={g.ungraded ? 'new' : g.result.verdict}>{g.ungraded ? 'Swapped' : undefined}</Verdict>
@@ -73,7 +73,7 @@ export function SessionDetail({ params }: { params: string[] }) {
             {grade.added.map(a => (
               <div key={`add${a.slotOrder}`} className="tk-led">
                 <span className="tk-led-name">{a.name}</span>
-                <DoneLine text={loadLine(a.sets, load(a.exerciseId))} />
+                <DoneLine parts={loadParts(a.sets, load(a.exerciseId))} />
                 <span className="tk-led-d">Added during the session: logged, not graded</span>
                 <Verdict kind="new">Added</Verdict>
               </div>
@@ -225,8 +225,7 @@ function EditSetSheet({ set, scale, bwFactor, onClose }: { set: SetEntry; scale:
 }
 
 /** What was done for a promise; "—" (nothing) reads as words, not a dash. */
-function DoneLine({ text }: { text: string }) {
-  if (text === '—') return <span className="tk-led-r none">Nothing logged</span>;
-  const parts = text.split(' · ');
-  return <span className="tk-led-r">{parts.map((p, i) => <span key={i} className="tk-part">{p}{i < parts.length - 1 ? ' · ' : ''}</span>)}</span>;
+function DoneLine({ parts }: { parts: string[] }) {
+  if (!parts.length) return <span className="tk-led-r none">Nothing logged</span>;
+  return <Parts items={parts} className="tk-led-r" />;
 }

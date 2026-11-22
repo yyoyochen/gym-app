@@ -8,12 +8,12 @@ import { readable } from '../ui/readable';
 import type { EffortScale } from '../domain/types';
 import { getExerciseHistory, getProfile, getSession, getSessionSets } from '../db';
 import { addDays, formatEffort } from '../engine';
-import { gradeSession, kg, planToday, setsLine, type SessionGrade } from '../app/coach';
+import { gradeSession, kg, planToday, setsParts, type SessionGrade } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
 import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { goalRows } from '../ui/progress/data';
-import { BigNumber, DitherBar, DitherNumber, LinkButton, Lockup, Verdict, prefersReducedMotion } from '../ui/kit';
+import { BigNumber, DitherBar, DitherNumber, LinkButton, Lockup, Parts, Verdict, prefersReducedMotion } from '../ui/kit';
 import { MonoNums, sessionNames } from '../ui/session/text';
 import { priorFromHistory, sessionPrs } from '../ui/session/prs';
 import { useScrollTop } from '../ui/session/useNow';
@@ -112,7 +112,7 @@ export function Review({ params }: { params: string[] }) {
                 <article key={s.slotOrder} role="listitem" className={`led ${v}`} style={{ ['--i' as string]: i, ['--n' as string]: n }}>
                   <span className="led-l label">{s.target.exerciseName}</span>
                   <p className="led-p"><MonoNums text={s.target.criterion} /></p>
-                  <p className="led-r">{swappedName}{setsLine(s.sets, scale)}</p>
+                  <p className="led-r">{swappedName}<SetsDone parts={setsParts(s.sets, scale)} /></p>
                   <p className="led-d">{s.result.detail}</p>
                   <Verdict kind={v} className="led-v">{s.ungraded ? 'Ungraded' : undefined}</Verdict>
                 </article>
@@ -122,7 +122,7 @@ export function Review({ params }: { params: string[] }) {
               <article key={a.slotOrder} role="listitem" className="led new" style={{ ['--i' as string]: n + i, ['--n' as string]: n }}>
                 <span className="led-l label">{a.name}</span>
                 <p className="led-p">Added during the session</p>
-                <p className="led-r">{setsLine(a.sets, scale)}</p>
+                <p className="led-r"><SetsDone parts={setsParts(a.sets, scale)} /></p>
                 <Verdict kind="new" className="led-v">Ungraded</Verdict>
               </article>
             ))}
@@ -179,4 +179,9 @@ export function Review({ params }: { params: string[] }) {
       <LinkButton variant="primary" block href="#/today" iconEnd="chevron">Done</LinkButton>
     </section>
   );
+}
+
+/** What was done for a slot: the set parts, or a dash when nothing was logged. */
+function SetsDone({ parts }: { parts: string[] }) {
+  return parts.length ? <Parts items={parts} /> : <>—</>;
 }

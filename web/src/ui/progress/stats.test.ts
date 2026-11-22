@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  countWord, funComparison, funLine, loadLine, mondayOf, prFlags, niceTicks, pluralLift, tonnage, trainingStats, trendGlyphs, weeklyVolume, weeksSince,
+  countWord, funComparison, funLine, loadParts, mondayOf, prFlags, niceTicks, pluralLift, tonnage, trainingStats, trendGlyphs, weeklyVolume, weeksSince,
 } from './stats';
 
 // Synthetic fixture: three sessions over two weeks.
@@ -94,12 +94,12 @@ describe('weekly volume and weeks', () => {
   });
 });
 
-describe('loadLine', () => {
+describe('loadParts', () => {
   it('groups runs at one load and skips warm-ups', () => {
     const w = (weight: number, reps: number, kind = 'working', failed = false) => ({ weight, reps, kind, failed });
-    expect(loadLine([w(20, 5, 'warmup'), w(100, 2, 'top'), w(80, 8), w(80, 8), w(80, 7, 'working', true)])).toBe('100 × 2 · 80 × 8, 8, 7✕');
-    expect(loadLine([w(0, 10), w(10, 6)], x => (x === 0 ? 'BW' : `BW+${x}`))).toBe('BW × 10 · BW+10 × 6');
-    expect(loadLine([])).toBe('—');
+    expect(loadParts([w(20, 5, 'warmup'), w(100, 2, 'top'), w(80, 8), w(80, 8), w(80, 7, 'working', true)])).toEqual(['100 × 2', '80 × 8, 8, 7✕']);
+    expect(loadParts([w(0, 10), w(10, 6)], x => (x === 0 ? 'BW' : `BW+${x}`))).toEqual(['BW × 10', 'BW+10 × 6']);
+    expect(loadParts([])).toEqual([]);
   });
 });
 

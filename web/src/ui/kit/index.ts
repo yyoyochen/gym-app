@@ -22,3 +22,4 @@ export { useHaptics, initHaptics, setHapticsPref } from './useHaptics';
 export { animateSpring, springAt, springCurve, rubberband, projectFling, nearestStop, VelocityTracker, SPRINGS, type SpringParams } from './motion/spring';
 export { installPressFeedback, cancelPress } from './motion/press';
 export { prefersReducedMotion } from './motion/reduced';
+export { Parts } from './Parts';

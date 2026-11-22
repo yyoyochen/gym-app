@@ -18,7 +18,7 @@ import {
 } from '../db';
 import { guessExercise } from '../domain/catalog';
 import {
-  addDays, classifyGap, daysBetween, formatFloor, grade, lastSessionLine, lastTimeLine, minimumToKeep, nudge,
+  addDays, classifyGap, daysBetween, formatFloor, grade, lastSessionLine, lastTimeParts, minimumToKeep, nudge,
   painEventsFromSets, painStatus, prescribe, reentryNote, reentryState, resumeCard, stopsLiftToday,
   type ExerciseSession, type Gap, type LiftSession, type Nudge, type PainStatus, type PlannedSet,
   type ReentryState, type ResumeCard,
@@ -82,7 +82,8 @@ export interface SlotPlan {
   /** "As planned", one row per planned working set. Logging exactly these keeps the promise. */
   ghost: PlannedSet[];
   warmups: PlannedSet[];
-  lastTime: string;
+  /** Last session's working sets for this lift, as parts ([] = first time). */
+  lastTime: string[];
   lastNote?: string;
   /** Effort floor in the user's scale, e.g. "≥ 2 RIR". */
   floorLabel: string;
@@ -232,7 +233,7 @@ function slotPlan(
     slotOrder, slot, exercise, target, plannedSets,
     ghost: ghostSets(target, plannedSets),
     warmups: warmupRamp(target.topWeight ?? target.weight, exercise, plates.barKg),
-    lastTime: lastDay ? lastTimeLine(lastDay.sets) : '',
+    lastTime: lastDay ? lastTimeParts(lastDay.sets) : [],
     ...(lastNote ? { lastNote } : {}),
     floorLabel: formatFloor(target.rirFloor, scale),
     ...(pain ? { pain } : {}),
@@ -403,10 +404,10 @@ export async function gradeSession(db: GymDb, sessionId: string): Promise<Sessio
   return gradeCommit(commit, sets, profile?.effortScale ?? 'rir');
 }
 
-/** "105 × 2 @ 2 RIR · 85 × 8, 8, 7" — working sets, runs at one weight share it. */
-export function setsLine(sets: SetEntry[], scale: EffortScale): string {
+/** ["105 × 2 @ 2 RIR", "85 × 8, 8, 7"]: working sets as parts, runs at one weight share it. [] when none. */
+export function setsParts(sets: SetEntry[], scale: EffortScale): string[] {
   const work = sets.filter(s => s.kind !== 'warmup');
-  if (!work.length) return '—';
+  if (!work.length) return [];
   const parts: string[] = [];
   let i = 0;
   while (i < work.length) {
@@ -421,7 +422,7 @@ export function setsLine(sets: SetEntry[], scale: EffortScale): string {
     while (i < work.length && work[i].weight === w && work[i].kind !== 'top') { reps.push(`${work[i].reps}${work[i].failed ? '✕' : ''}`); i++; }
     parts.push(`${kg(w)} × ${reps.join(', ')}`);
   }
-  return parts.join(' · ');
+  return parts;
 }
 
 // ---------------------------------------------------------------- remind

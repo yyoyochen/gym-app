@@ -10,7 +10,7 @@ import type { ISODate, PainFlag, SetKind } from '../domain/types';
 import { addDays } from '../engine';
 import {
   commitSession, effectiveSlot, ghostSets, gradeCommit, gradeSession, nextRotationKey, planToday, platesPerSide,
-  sessionView, setsLine, skipSession, todayState, warmupRamp,
+  sessionView, setsParts, skipSession, todayState, warmupRamp,
 } from './coach';
 
 const TODAY: ISODate = '2026-11-21';
@@ -331,7 +331,7 @@ describe('grading edge cases', () => {
     expect(v.slots.map(x => [x.slotOrder, x.exercise.id, x.swapped])).toEqual([[1, EX.squat, false], [2, 'close-grip-bench-press', true], [3, 'dips', false]]);
   });
 
-  it('setsLine reads like the ledger', () => {
+  it('setsParts reads like the ledger', () => {
     const base = { id: 'x', sessionId: 's', exerciseId: 'e', exerciseNameSnapshot: 'E', slotOrder: 1, setOrder: 1, loggedAt: 0 };
     const sets = [
       { ...base, kind: 'warmup' as const, weight: 20, reps: 8 },
@@ -339,8 +339,8 @@ describe('grading edge cases', () => {
       { ...base, kind: 'backoff' as const, weight: 87.5, reps: 8 },
       { ...base, kind: 'backoff' as const, weight: 87.5, reps: 7, failed: true },
     ];
-    expect(setsLine(sets, 'rir')).toBe('105 × 2 @ 2 RIR · 87.5 × 8, 7✕');
-    expect(setsLine(sets, 'rpe')).toBe('105 × 2 @ RPE 8 · 87.5 × 8, 7✕');
+    expect(setsParts(sets, 'rir')).toEqual(['105 × 2 @ 2 RIR', '87.5 × 8, 7✕']);
+    expect(setsParts(sets, 'rpe')).toEqual(['105 × 2 @ RPE 8', '87.5 × 8, 7✕']);
     expect(gradeCommit({ sessionId: 's', committedAt: 0, readiness: 'green', targets: [] }, sets).total).toBe(0);
   });
 });
