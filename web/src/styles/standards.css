@@ -4,6 +4,6 @@
 .std-sum { display: grid; gap: 6px; }
 .std-ev { margin: 0; font: var(--text-quiet); }
 .std-next { margin: 0; font: var(--text-mono); color: var(--accent); }
-.std-level { font: 700 11px/1.2 var(--font-mono); letter-spacing: var(--tracking-stamp); text-transform: uppercase; color: var(--accent); }
+.std-level { font: 700 11px/1.2 var(--font-mono); letter-spacing: var(--track-stamp); text-transform: uppercase; color: var(--accent); }
 .std-conf { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 4px;
   border: 1px solid var(--ink); font: 700 11px/1 var(--font-mono); color: var(--ink); vertical-align: 1px; }

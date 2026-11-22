@@ -37,20 +37,20 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 
 /* ---------- type ---------- */
 .title { font: var(--text-title); letter-spacing: -0.01em; margin: 0; }
-.large-title { font: var(--text-large-title); letter-spacing: -0.035em; margin: 0; }
-.heading { font: var(--text-heading); letter-spacing: -0.01em; margin: 0; }
+.large-title { font: var(--text-title-lg); letter-spacing: -0.035em; margin: 0; }
+.heading { font: var(--text-value); letter-spacing: -0.01em; margin: 0; }
 .hero { font: var(--text-hero); letter-spacing: var(--track-hero); }
 .display { font: var(--text-display); letter-spacing: var(--track-display); }
 .num-lg { font: var(--text-num-lg); letter-spacing: -0.01em; }
-.num-md { font: var(--text-num-md); letter-spacing: -0.01em; }
-.num-sm { font: var(--text-num-sm); }
-.label { font: var(--text-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--mid); }
+.num-md { font: var(--text-value); letter-spacing: -0.01em; }
+.num-sm { font: var(--text-value); }
+.label { font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--mid); }
 .quiet { font: var(--text-quiet); color: var(--mid); }
 .mid { color: var(--mid); }
 .ghost { color: var(--mid); }
 .accent { color: var(--accent); }
 .mono { font-family: var(--font-mono); letter-spacing: 0.02em; }
-.spec { font: var(--text-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); }
+.spec { font: var(--text-mono); text-transform: uppercase; letter-spacing: var(--track-label); }
 
 /* ---------- sections (.card is an unboxed section with a dotted rule) ---------- */
 .card { position: relative; padding-top: 14px; border-top: 1px dotted var(--rule); }
@@ -62,7 +62,7 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 .btn { min-height: var(--touch-min); padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
        border: var(--rule-w) solid var(--ink); background: transparent; color: var(--ink); text-decoration: none;
        font: 400 12px/1.1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
-.btn.primary { min-height: var(--touch-commit); background: var(--ink); color: var(--on-ink); font: var(--text-button); letter-spacing: var(--tracking-button); padding: 0 16px; }
+.btn.primary { min-height: var(--touch-commit); background: var(--ink); color: var(--on-ink); font: var(--text-button); letter-spacing: var(--track-button); padding: 0 16px; }
 .btn.primary.split { justify-content: space-between; } /* "START SESSION A  +" : label left, icon right */
 .btn.quiet { border-color: transparent; color: var(--mid); padding: 0 4px; }
 .btn.danger { border-style: dashed; }
@@ -72,17 +72,17 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 
 /* ---------- chips and verdicts: no colour, only fill / outline / dashes ---------- */
 .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 9px; border: var(--rule-w) solid var(--rule); color: var(--ink);
-        font: var(--text-label); text-transform: uppercase; letter-spacing: var(--tracking-label); }
+        font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); }
 .chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .verdict { display: inline-flex; align-items: center; justify-content: center; min-width: 70px; padding: 6px 9px; border: var(--rule-w) solid transparent;
-           font: 700 11px/1.1 var(--font-mono); letter-spacing: var(--tracking-stamp); text-transform: uppercase; }
+           font: 700 11px/1.1 var(--font-mono); letter-spacing: var(--track-stamp); text-transform: uppercase; }
 .verdict.beat { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .verdict.hit { border-color: var(--ink); color: var(--ink); }
 .verdict.missed { border: var(--rule-w) dashed var(--mid); color: var(--mid); }
 .verdict.new { border: var(--rule-w) dotted var(--rule); color: var(--mid); }
 
 /* ---------- //NOTE and banners ---------- */
-.note { font: var(--text-mono); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--accent);
+.note { font: var(--text-mono); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--accent);
         border-top: 1px dotted var(--rule); border-bottom: 1px dotted var(--rule); padding: 10px 0; margin: 0; line-height: 1.6; }
 .banner { border-top: 1px dotted var(--rule); border-bottom: 1px dotted var(--rule); padding: 12px 0; }
 

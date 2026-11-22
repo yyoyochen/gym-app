@@ -18,7 +18,7 @@
 .link-row .btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: inherit; }
 .btn:disabled { opacity: 0.4; cursor: default; }
-.btn.icon { min-width: 48px; padding: 0; font: var(--text-num-md); font-family: var(--font-mono); }
+.btn.icon { min-width: 48px; padding: 0; font: var(--text-value); font-family: var(--font-mono); }
 .btn.armed { border-color: currentColor; }
 .btn.danger.armed { background: var(--ink); color: var(--paper); }
 .btn.block + .btn.block { margin-top: 0; }
@@ -43,7 +43,7 @@ select.field { appearance: none; background-image: linear-gradient(45deg, transp
 /* ---------- History ---------- */
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
 .cal-head { padding: 4px 0; }
-.cal-day { min-height: 44px; border-radius: 0; color: var(--mid); font: var(--text-num-sm); font-family: var(--font-mono); position: relative; }
+.cal-day { min-height: 44px; border-radius: 0; color: var(--mid); font: var(--text-value); font-family: var(--font-mono); position: relative; }
 .cal-day:disabled { cursor: default; opacity: 1; }
 .cal-day.trained { color: var(--ink); background: var(--paper); }
 .cal-day.trained::after { content: ''; position: absolute; left: 50%; bottom: 6px; width: 6px; height: 6px; margin-left: -3px; background: var(--accent); }
@@ -68,5 +68,5 @@ select.field { appearance: none; background-image: linear-gradient(45deg, transp
 
 /* Links read as text; the affordance is the row, not a blue underline. */
 a { color: inherit; text-decoration: none; }
-a.heading { font: var(--text-heading); }
+a.heading { font: var(--text-value); }
 a.heading::after { content: ' ›'; color: var(--mid); }

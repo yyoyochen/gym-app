@@ -1,0 +1,18 @@
+/* Type role classes: one per role in tokens.css (docs/DESIGN.md §3).
+   Screen CSS uses the --text-*/--track-* pair; JSX can use these. */
+.t-hero { font: var(--text-hero); letter-spacing: var(--track-hero); }
+.t-display { font: var(--text-display); letter-spacing: var(--track-display); }
+.t-num-xl { font: var(--text-num-xl); letter-spacing: var(--track-num-xl); }
+.t-title-lg { font: var(--text-title-lg); letter-spacing: var(--track-title-lg); }
+.t-num-lg { font: var(--text-num-lg); letter-spacing: var(--track-num-lg); }
+.t-num-md { font: var(--text-num-md); letter-spacing: var(--track-num-md); }
+.t-title { font: var(--text-title); letter-spacing: var(--track-title); }
+.t-value { font: var(--text-value); letter-spacing: var(--track-value); }
+.t-body { font: var(--text-body); letter-spacing: var(--track-body); }
+.t-body-strong { font: var(--text-body-strong); letter-spacing: var(--track-body-strong); }
+.t-quiet { font: var(--text-quiet); letter-spacing: var(--track-quiet); color: var(--mid); }
+.t-label { font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; }
+.t-stamp { font: var(--text-stamp); letter-spacing: var(--track-stamp); text-transform: uppercase; }
+.t-mono { font: var(--text-mono); letter-spacing: var(--track-mono); }
+.t-button { font: var(--text-button); letter-spacing: var(--track-button); text-transform: uppercase; }
+.t-micro { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
