@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import type { EffortScale, PainArea, PainFlag, SetKind, Side } from '../../domain/types';
 import { Button, ConfirmButton, Segmented, Sheet, Stepper, Toggle } from '../kit';
-import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS } from '../../app/labels';
+import { PAIN_AREAS, PAIN_AREA_LABELS } from '../../app/labels';
 
 export interface SetDraft {
   weight: number;
@@ -36,8 +36,8 @@ export function EffortPicker({ rir, scale, onChange }: { rir?: number; scale: Ef
   );
 }
 
-export function SetSheet({ open, title, initial, step, scale, kinds, onSave, onDelete, onClose, saveLabel = 'Save' }: {
-  open: boolean; title: string; initial: SetDraft; step: number; scale: EffortScale; kinds: SetKind[];
+export function SetSheet({ open, title, initial, step, scale, onSave, onDelete, onClose, saveLabel = 'Save' }: {
+  open: boolean; title: string; initial: SetDraft; step: number; scale: EffortScale;
   onSave: (d: SetDraft) => void | Promise<void>; onDelete?: () => void | Promise<void>; onClose: () => void; saveLabel?: string;
 }) {
   const [d, setD] = useState(initial);
@@ -51,9 +51,6 @@ export function SetSheet({ open, title, initial, step, scale, kinds, onSave, onD
         <Stepper label="Reps" value={d.reps} step={1} min={0} onChange={reps => set({ reps })} />
       </div>
       {d.kind !== 'warmup' && <EffortPicker rir={d.rir} scale={scale} onChange={rir => set({ rir })} />}
-      {kinds.length > 1 && (
-        <Segmented label="Set kind" options={kinds.map(k => ({ value: k, label: SET_KIND_LABELS[k] }))} value={d.kind} onChange={kind => set({ kind })} />
-      )}
       <div className="sheet-toggles">
         <Toggle label="Failed" hint="Fewer reps than intended" checked={d.failed} onChange={failed => set({ failed })} />
         <Toggle label="Flag pain" hint="Next session holds the load" checked={!!d.pain} onChange={on => set({ pain: on ? pain : undefined })} />

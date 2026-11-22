@@ -12,7 +12,7 @@ import { addSet, deleteSet, getDb, getExerciseHistory, listExercises, updateSet 
 import { finishSession, isBarbell, kg, nextSlotOrder, platesPerSide, sessionView, type LiveSlot, type SlotOverrides } from '../app/coach';
 import { useLive } from '../ui/useLive';
 import { Button, ConfirmButton, DitherBar, LinkButton, PixelIcon, back, go, haptic, showPrMoment } from '../ui/kit';
-import { LiftBlock, kindsFor, type BlockHandlers } from '../ui/session/LiftBlock';
+import { LiftBlock, type BlockHandlers } from '../ui/session/LiftBlock';
 import { SetSheet, type SetDraft } from '../ui/session/SetSheet';
 import { PlateSheet } from '../ui/session/PlateSheet';
 import { ExercisePicker } from '../ui/session/ExercisePicker';
@@ -225,7 +225,7 @@ export function Session({ params }: { params: string[] }) {
 
       {sheet && (
         <SetSheet open title={sheet.set ? `Edit set: ${sheet.slot.exercise.name}` : `Log set: ${sheet.slot.exercise.name}`}
-          initial={sheet.draft} step={sheet.slot.exercise.increment || 2.5} scale={scale} kinds={kindsFor(sheet.slot)}
+          initial={sheet.draft} step={sheet.slot.exercise.increment || 2.5} scale={scale}
           saveLabel={sheet.set ? 'Save' : 'Log set'} onSave={save} onClose={() => setSheet(null)}
           onDelete={sheet.set ? async () => { await deleteSet(getDb(), sheet.set!.id); setSheet(null); } : undefined} />
       )}

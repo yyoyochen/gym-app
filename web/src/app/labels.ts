@@ -1,5 +1,5 @@
 // Plain-language labels for domain enums.
-import type { GoalKind, PainArea, SetKind, Side, TargetType } from '../domain/types';
+import type { GoalKind, PainArea, Side, TargetType } from '../domain/types';
 
 export const GOAL_LABELS: Record<GoalKind, string> = {
   strength: 'Strength', maintain: 'Maintain strength', hypertrophy: 'Hypertrophy', bodycomp: 'Body composition',
@@ -15,10 +15,6 @@ export const PAIN_AREA_LABELS: Record<PainArea, string> = {
 export const PAIN_AREAS = Object.keys(PAIN_AREA_LABELS) as PainArea[];
 
 export const SIDE_LABELS: Record<Side, string> = { left: 'Left', right: 'Right', both: 'Both', na: '—' };
-
-export const SET_KIND_LABELS: Record<SetKind, string> = {
-  warmup: 'Warm-up', working: 'Working', top: 'Top', backoff: 'Back-off', drop: 'Drop',
-};
 
 export const SUBJECT_BODYWEIGHT = 'bodyweight';
 export const SUBJECT_SESSIONS = 'sessions_per_week';

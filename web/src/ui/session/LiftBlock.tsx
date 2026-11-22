@@ -2,7 +2,7 @@
 // mono table of sets. Warm-ups are faded, logged rows carry the pixel check,
 // the next set of the lift in focus is the inverted row. Tap a logged row to edit it, a planned
 // row to log it adjusted.
-import type { EffortScale, SetEntry, SetKind } from '../../domain/types';
+import type { EffortScale, SetEntry } from '../../domain/types';
 import { formatEffort } from '../../engine';
 import { kg, type LiveSlot } from '../../app/coach';
 import { PixelIcon } from '../kit';
@@ -16,10 +16,6 @@ export interface BlockHandlers {
   addSet: (slot: LiveSlot) => void;
   swap: (slot: LiveSlot) => void;
   focus: (slot: LiveSlot) => void;
-}
-
-export function kindsFor(slot: LiveSlot): SetKind[] {
-  return slot.plan?.target.model === 'topset' && !slot.swapped ? ['top', 'backoff', 'drop', 'warmup'] : ['working', 'drop', 'warmup'];
 }
 
 function painText(s: SetEntry): string {

@@ -16,9 +16,10 @@ import { gradeCommit } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
 import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
-import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, displayName, formatLoad } from '../app/labels';
+import { PAIN_AREAS, PAIN_AREA_LABELS, SIDE_LABELS, displayName, formatLoad } from '../app/labels';
 import { SecHead } from '../ui/progress/parts';
 import { anyDecimals, setCountsText } from '../ui/progress/cellRules';
+import { kindAfterWarmupToggle } from '../ui/session/setKind';
 import { Load } from '../ui/progress/Load';
 import { loadParts } from '../ui/progress/stats';
 
@@ -141,7 +142,6 @@ export function SessionDetail({ params }: { params: string[] }) {
 }
 
 
-const KINDS: SetKind[] = ['warmup', 'working', 'top', 'backoff', 'drop'];
 /** Spec-sheet row keys: 1, 2 for working sets; B1 back-off; D1 drop. */
 const KIND_PREFIX: Partial<Record<SetKind, string>> = { backoff: 'B', drop: 'D' };
 
@@ -189,7 +189,7 @@ function EditSetSheet({ set, scale, bwFactor, onClose }: { set: SetEntry; scale:
       {hasEffort && (scale === 'rpe'
         ? <Stepper label="RPE" value={effort} step={0.5} min={5} max={10} onChange={setEffort} />
         : <Stepper label="RIR" value={effort} step={0.5} min={0} max={5} onChange={setEffort} />)}
-      <Segmented<SetKind> label="Kind" value={kind} onChange={setKind} options={KINDS.map(k => ({ value: k, label: SET_KIND_LABELS[k] }))} />
+      <Toggle label="Warm-up" hint="Left out of volume and bests" checked={kind === 'warmup'} onChange={on => setKind(kindAfterWarmupToggle(set.kind, on))} />
       <Toggle label="Failed rep" checked={failed} onChange={setFailed} />
       <Select<PainArea | ''> label="Pain" value={painArea} onChange={setPainArea}
         options={[{ value: '', label: 'None' }, ...PAIN_AREAS.map(a => ({ value: a, label: PAIN_AREA_LABELS[a] }))]} />
