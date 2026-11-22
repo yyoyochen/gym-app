@@ -62,7 +62,7 @@ export function checkCss(text, file) {
   let b;
   while ((b = block.exec(clean))) {
     const body = b[1], start = b.index + 1;
-    let capsAt = -1, capsDecl = '', upper = false;
+    let capsAt = -1, capsDecl = '', upper = false, lowerAt = -1, lowerDecl = '';
     const decl = /([a-z-]+)\s*:\s*([^;]+)/gi;
     let d;
     while ((d = decl.exec(body))) {
@@ -71,9 +71,11 @@ export function checkCss(text, file) {
       const at = start + d.index;
       for (const rule of cssRule(prop, value)) report(at, rule, d[0]);
       if (prop === 'font' && CAPS_ROLES.test(value)) { capsAt = at; capsDecl = d[0]; }
+      if (prop === 'font' && /var\(--text-/.test(value) && !CAPS_ROLES.test(value)) { lowerAt = at; lowerDecl = d[0]; }
       if (prop === 'text-transform' && /uppercase/.test(value)) upper = true;
     }
     if (capsAt >= 0 && !upper) report(capsAt, 'caps', capsDecl);
+    if (lowerAt >= 0 && upper) report(lowerAt, 'caps', lowerDecl); // roles have no case variants
   }
   return { violations, allowed };
 }

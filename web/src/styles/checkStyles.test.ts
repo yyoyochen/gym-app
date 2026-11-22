@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { checkCss, checkTsx } from '../../../tools/check-styles.mjs';
+import { checkCss, checkStyles, checkTsx } from '../../../tools/check-styles.mjs';
 
 const fx = (f: string) => readFileSync(resolve(__dirname, '__fixtures__', f), 'utf8');
 const rules = (r: { violations: { rule: string }[] }) => r.violations.map(v => v.rule).sort();
@@ -26,6 +26,11 @@ describe('style check', () => {
     expect(checkCss(css, 'ok.css').violations).toEqual([]);
   });
 
+  it('uppercase on a non-caps role is a caps violation', () => {
+    const r = checkCss('.x { font: var(--text-mono); letter-spacing: var(--track-mono); text-transform: uppercase; }', 'x.css');
+    expect(rules(r)).toEqual(['caps']);
+  });
+
   it('ds-allow moves a line to allowed', () => {
     const r = checkCss('.p { box-shadow: -1px 0 0 var(--rule); /* ds-allow: page edge during push */ }', 'p.css');
     expect(r.violations).toEqual([]);
@@ -42,5 +47,14 @@ describe('style check', () => {
     expect(r.violations.map(v => [v.rule, v.line])).toEqual([['inline', 3], ['inline', 4]]);
     expect(r.allowed).toHaveLength(1);
     expect(r.allowed[0].reason).toBe('test');
+  });
+});
+
+describe('real styles', () => {
+  const src = resolve(__dirname, '..');
+
+  it('real styles: no type violations', () => {
+    const v = checkStyles(src).violations.filter(v => ['font', 'tracking', 'caps'].includes(v.rule));
+    expect(v.map(x => `${x.file}:${x.line} ${x.rule} ${x.text}`)).toEqual([]);
   });
 });

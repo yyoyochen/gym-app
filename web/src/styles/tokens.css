@@ -35,6 +35,7 @@
   --font-sans: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   /* Block glyphs (░▒▓█) come from GymBro Glyph; Space Mono covers the rest (·, →). */
+  --font-strong: 700; /* emphasis inside running text (a number in a sentence), never a role */
   --font-glyph: 'GymBro Glyph', 'Space Mono', ui-monospace, 'Noto Sans Mono', 'DejaVu Sans Mono', Menlo, monospace;
 
   /* Grotesk: numbers and words. The number is the hero; words are quiet. */
@@ -72,6 +73,11 @@
   --track-button:     0.08em;
   --text-micro:       400 10px/1.2 var(--font-mono);   /* chart ticks, tab captions, small units */
   --track-micro:      0.04em;
+
+  /* Dither glyph sizes (not text roles): bars and trends, and the glyph heatmap. */
+  --text-glyph:       400 14px/1 var(--font-glyph);
+  --text-glyph-sm:    400 11px/1.25 var(--font-glyph);
+  --track-glyph:      0;
 
   /* ---------- space: 4px grid ---------- */
   --space-half: 2px;   /* dither offsets only: one pixel cell */
