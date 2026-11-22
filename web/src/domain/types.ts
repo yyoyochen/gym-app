@@ -166,11 +166,15 @@ export interface Profile {
   goals: GoalKind[];
   targets: GoalTarget[];
   checkpoints: ISODate[];
+  /** Setup's "best set in the last month" per main lift. Seeds a lift's first target only; never a logged set. */
+  startingSets?: StartingSet[];
   /** 'gym' = modeled gym-goer standards (default); 'tested' / 'all' also open the competitive-powerlifter comparison. */
   benchmarkPopulation: BenchmarkPopulation;
 }
 
 export type BenchmarkPopulation = 'gym' | 'tested' | 'all';
+
+export interface StartingSet { exerciseId: string; weight: number; reps: number; date: ISODate }
 
 export interface BodyweightEntry { id: string; date: ISODate; kg: number }
 

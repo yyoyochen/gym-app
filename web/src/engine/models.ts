@@ -13,7 +13,7 @@ import { successCriteria, why as legacyWhy } from './port/criteria';
 import { MIN_SETS_AT_TOP, progressionTarget } from './port/progression';
 import { scoreLift } from './port/scoring';
 import { attemptHistory, easeTarget, workedLoad } from './port/service';
-import { FIVE_RM_FACTOR, floorTo, strengthTarget, TM_BUFFER } from './port/strength';
+import { FIVE_RM_FACTOR, floorTo, strengthTarget, TARGET_SETS, TM_BUFFER } from './port/strength';
 import type { LegacySetRow, LegacyTarget, WR } from './port/types';
 import { workingSets } from './progress';
 
@@ -34,6 +34,8 @@ export interface PrescribeContext {
   bodyweightKg?: number;
   /** For a lift with no history. */
   startingWeight?: number;
+  /** The user's recent best set for a lift with no history: seeds a real first target (rule 'start_seed'). */
+  startingSet?: { weight: number; reps: number };
   /** Days since the previous session of any kind (null: none). */
   gapDays?: number | null;
   /** §3.5: 'note' = first session back after 8–20 days; 'block' = 21+ days, 3 × 8 re-entry. */
@@ -75,6 +77,8 @@ export function prescribe(slot: Slot, exercise: Exercise, history: LiftSession[]
   });
   const last = hist[hist.length - 1];
   const base = { slotId: slot.id, exerciseId: exercise.id, exerciseName: exercise.name, rirFloor: floor.floor };
+
+  if (!last && ctx.startingSet) return seededTarget(slot, exercise, ctx.startingSet, ctx, floor, inc, scale, base);
 
   if (last && reentry === 'block') {
     const anchor = reentryAnchor(last.sets, exercise, inc);
@@ -301,6 +305,63 @@ function topsetTarget(
   };
 }
 
+/**
+ * A first target from the user's starting set (no logged session yet). The
+ * set's Epley e1RM gives the load for the slot's reps with the floor's RIR
+ * left, rounded down to the increment. No jump cap: there is no previous
+ * weight to jump from.
+ */
+function seededTarget(
+  slot: Slot, exercise: Exercise, start: { weight: number; reps: number }, ctx: PrescribeContext,
+  floor: FloorResult, inc: number, scale: EffortScale, base: Base,
+): Target {
+  const p = slot.params;
+  const share = bodyShare(exercise, ctx);
+  const e1 = epley(start.weight + share, start.reps);
+  const loadFor = (n: number) => Math.max(0, floorTo(e1 / (1 + (n + floor.floor) / 30) - share + EPS, inc));
+  const n = slot.model === 'topset' ? p.topReps ?? 1 : slot.model === 'linear5x5' ? TARGET_SETS : p.repMin;
+  const w = round2(loadFor(n));
+  const why = `from your starting set ${pyG(start.weight)} × ${start.reps}: a ${repWord(n)} with ${floor.floor} in reserve ≈ ${pyG(w)} kg`;
+  const rule = 'start_seed';
+
+  if (slot.model === 'topset') {
+    const nB = p.backoffSets ?? p.sets;
+    const B = round2(Math.min(floorTo(((p.backoffPct ?? 80) / 100) * w + EPS, inc), w));
+    const word = repWord(n);
+    return {
+      ...base, model: 'topset', weight: B, targetReps: p.repMin, repMax: p.repMax, targetSets: nB,
+      topWeight: w, topReps: n, addedWeight: false, prevTop: [], isNew: false,
+      criterion: `Top ${word} at ${pyG(w)}kg (${formatFloor(floor.floor, scale)}), then ${nB} × ${p.repMin}+ at ${pyG(B)}kg. Both parts count; a heavier top ${word} at the same effort beats it.`,
+      why, rule, principle: 'Top set + back-offs: one heavy set at a safe effort shows strength; back-offs build volume at a fixed share of it.',
+    };
+  }
+  if (slot.model === 'fixed') return fixedTarget(base, w, p.sets, p.repMin, why, rule);
+  if (slot.model === 'double') {
+    // Every working set at the bottom of the range; graded by gradeSeedDouble.
+    return {
+      ...base, model: 'double', weight: w, targetReps: n, repMax: p.repMax, targetSets: null,
+      addedWeight: false, prevTop: Array.from({ length: p.sets }, () => n), isNew: false,
+      criterion: `Do ${p.sets} × ${n}+ at ${pyG(w)}kg. More reps or more weight beats it.`,
+      why, rule, principle: 'Double progression: build reps to the ceiling at a fixed load, then convert the earned reps into added weight.',
+    };
+  }
+  const lt: LegacyTarget = {
+    lift: exercise.name, weight: w, target_reps: n, added_weight: false, prev_top: [], is_new: false, rationale: why,
+    target_sets: TARGET_SETS, mode: 'strength',
+  };
+  return { ...fromLegacy(lt, slot, exercise, floor), rule };
+}
+
+/** A seeded double: every promised set at the weight and reps; more reps or weight is a beat. */
+function gradeSeedDouble(t: Target, work: SetEntry[], out: Out): LiftResult {
+  const need = t.prevTop.length;
+  const W = pyG(t.weight);
+  const qual = work.filter((s) => s.weight >= t.weight - EPS && s.reps >= t.targetReps && !s.failed);
+  if (qual.length < need) return out('missed', `${qual.length}/${need} sets of ${t.targetReps} at ${W}kg`);
+  const extra = qual.some((s) => s.weight > t.weight + EPS) || qual.reduce((a, s) => a + s.reps, 0) > need * t.targetReps;
+  return extra ? out('beat', `${qual.length} sets of ${t.targetReps}+ at ${W}kg or more`) : out('hit', `${need}x${t.targetReps} at ${W}kg done`);
+}
+
 function bodyShare(exercise: Exercise, ctx: PrescribeContext): number {
   return exercise.bodyweightFactor > 0 ? (ctx.bodyweightKg ?? 0) * exercise.bodyweightFactor : 0;
 }
@@ -358,6 +419,7 @@ export function grade(target: Target, sets: SetEntry[], scale: EffortScale = 'ri
   const work = workingSets(sets);
   const out = (verdict: Verdict, detail: string): LiftResult => ({ slotId: target.slotId, exerciseId: target.exerciseId, verdict, detail });
   if (target.isNew) return work.length ? out('new', 'logged') : out('missed', 'not done');
+  if (target.rule === 'start_seed' && target.model === 'double') return gradeSeedDouble(target, work, out);
   if (target.model === 'double' || target.model === 'linear5x5') {
     const r = scoreLift(toWR(work), toLegacy(target));
     return out(r.status, r.detail);
@@ -424,6 +486,7 @@ export function minimumToKeep(t: Target): PlannedSet[] {
   if (t.model === 'fixed' || t.model === 'linear5x5') {
     return Array.from({ length: t.targetSets ?? 1 }, () => ({ kind: 'working' as const, weight: w, reps: t.targetReps }));
   }
+  if (t.rule === 'start_seed') return t.prevTop.map((r) => ({ kind: 'working' as const, weight: w, reps: r }));
   const lt = toLegacy(t);
   if (lt.added_weight) return [{ kind: 'working', weight: w, reps: t.targetReps }];
   if (t.prevTop.length && t.prevTop.every((r) => r >= t.targetReps)) {

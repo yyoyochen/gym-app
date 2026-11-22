@@ -190,6 +190,55 @@ describe('grade', () => {
   });
 });
 
+describe('prescribe: seeded from a starting set', () => {
+  // Bench 100 x 3 -> e1RM 110 (Epley). Bench increment 2.5, squat 5. Floors 2.
+  const start = { weight: 100, reps: 3 };
+  const topSl = slot('topset', { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 });
+  const dblSl = slot('double', { sets: 3, repMin: 6, repMax: 10, rirFloor: 2 });
+  const fixSl = slot('fixed', { sets: 3, repMin: 5, repMax: 5, rirFloor: 2 });
+  const squat = exercise({ id: 'squat', name: 'Back Squat', increment: 5, benchmarkKey: 'squat' });
+  const linSl = slot('linear5x5', { sets: 5, repMin: 5, repMax: 5, rirFloor: 2 }, 'squat');
+  const planned = (t: Target) => minimumToKeep(t).map((p) => set(p.weight, p.reps, { kind: p.kind, ...(p.rir !== undefined ? { rir: p.rir } : {}) }));
+
+  it('top set: the top reps at the floor, back-offs at their share', () => {
+    const t = prescribe(topSl, bench, [], ctx({ startingSet: start }));
+    expect(t).toMatchObject({ model: 'topset', topWeight: 95, topReps: 2, weight: 70, targetReps: 8, targetSets: 3, isNew: false, rule: 'start_seed' });
+    expect(t.why).toBe('from your starting set 100 × 3: a double with 2 in reserve ≈ 95 kg');
+  });
+  it('double progression: the minimum reps at the floor, every working set', () => {
+    const t = prescribe(dblSl, bench, [], ctx({ startingSet: start }));
+    expect(t).toMatchObject({ model: 'double', weight: 85, targetReps: 6, isNew: false, rule: 'start_seed' });
+    expect(t.why).toBe('from your starting set 100 × 3: a 6-rep set with 2 in reserve ≈ 85 kg');
+  });
+  it('5 × 5 linear: the slot reps at the floor', () => {
+    const t = prescribe(linSl, squat, [], ctx({ startingSet: { weight: 140, reps: 5 } }));
+    expect(t).toMatchObject({ model: 'linear5x5', weight: 130, targetReps: 5, targetSets: 5, isNew: false, rule: 'start_seed' });
+  });
+  it('fixed: the slot reps at the floor', () => {
+    const t = prescribe(fixSl, bench, [], ctx({ startingSet: start }));
+    expect(t).toMatchObject({ model: 'fixed', weight: 87.5, targetReps: 5, targetSets: 3, isNew: false, rule: 'start_seed' });
+  });
+  it('a seed is not held by the one-increment jump cap', () => {
+    const t = prescribe(topSl, bench, [], ctx({ startingSet: { weight: 200, reps: 1 }, gapDays: 30 }));
+    expect(t.topWeight).toBeGreaterThan(150);
+    expect(t.why).not.toContain('held');
+  });
+  it('ignores the starting set once the lift has a logged session', () => {
+    const hist = [session('2026-11-18', sets(60, [8, 8, 8]))];
+    expect(prescribe(topSl, bench, hist, ctx({ startingSet: start })).rule).not.toBe('start_seed');
+    expect(prescribe(dblSl, bench, hist, ctx({ startingSet: start })).rule).not.toBe('start_seed');
+  });
+  it('no starting set keeps the baseline', () => {
+    expect(prescribe(topSl, bench, [], ctx()).rule).toBe('baseline');
+  });
+  it('a seeded promise grades like any other', () => {
+    for (const [sl, ex] of [[topSl, bench], [dblSl, bench], [fixSl, bench], [linSl, squat]] as const) {
+      const t = prescribe(sl, ex, [], ctx({ startingSet: start }));
+      expect(grade(t, planned(t)).verdict, t.criterion).toBe('hit');
+    }
+  });
+});
+
 describe('property: a session logged exactly as prescribed grades hit', () => {
   const models: ModelKind[] = ['double', 'linear5x5', 'topset', 'fixed'];
   const r = rng(20261121);
@@ -219,7 +268,7 @@ describe('property: a session logged exactly as prescribed grades hit', () => {
           topReps: r.pick([1, 2, 3]), backoffPct: r.pick([75, 80, 85]), backoffSets: r.int(2, 4) });
         const c = ctx({
           readiness: r.pick(['green', 'amber', 'red'] as const), effortScale: r.pick(['rir', 'rpe'] as const),
-          startingWeight: r.pick([undefined, 40]), gapDays: r.pick([null, 2, 9]), bodyweightKg: 80,
+          startingWeight: r.pick([undefined, 40]), startingSet: r.pick([undefined, undefined, { weight: 100, reps: 3 }]), gapDays: r.pick([null, 2, 9]), bodyweightKg: 80,
         });
         const t = prescribe(sl, bench, randomHistory(model), c);
         const planned = minimumToKeep(t).map((p) => set(p.weight, p.reps, { kind: p.kind, ...(p.rir !== undefined ? { rir: p.rir } : {}) }));
