@@ -237,6 +237,7 @@ export function Toggle({ label, checked, onChange, hint, disabled }: {
       <button type="button" role="switch" aria-checked={checked} disabled={disabled} className={`toggle${held ? ' held' : ''}`}
         onPointerDown={() => setHeld(true)} onPointerUp={() => setHeld(false)} onPointerCancel={() => setHeld(false)} onPointerLeave={() => setHeld(false)}
         onClick={() => onChange(!checked)}>
+        <span className="toggle-word" aria-hidden="true">{checked ? 'On' : 'Off'}</span>
         <span className="toggle-knob" />
       </button>
     </label>
