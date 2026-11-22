@@ -38,3 +38,11 @@ describe('design tokens', () => {
     expect(token('--section')).toBe('28px');
   });
 });
+
+describe('glyph font', () => {
+  it('glyph font is first in --font-glyph', () => {
+    expect(tokens).toContain("font-family: 'GymBro Glyph'");
+    expect(tokens).toContain('unicode-range: U+2588, U+2591-2593');
+    expect(tokens).toMatch(/--font-glyph: 'GymBro Glyph',/);
+  });
+});

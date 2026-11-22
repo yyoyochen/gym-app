@@ -1,5 +1,5 @@
 /* Type role classes: one per role in tokens.css (docs/DESIGN.md §3).
-   Screen CSS uses the --text-*/--track-* pair; JSX can use these. */
+   Screen CSS uses the --text-<role> and --track-<role> pair; JSX can use these. */
 .t-hero { font: var(--text-hero); letter-spacing: var(--track-hero); }
 .t-display { font: var(--text-display); letter-spacing: var(--track-display); }
 .t-num-xl { font: var(--text-num-xl); letter-spacing: var(--track-num-xl); }
