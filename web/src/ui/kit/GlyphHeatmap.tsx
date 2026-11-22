@@ -1,4 +1,6 @@
 import { Legend } from './Display';
+import { InfoButton } from './InfoButton';
+import { HEATMAP_INFO } from './heatmapInfo';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { WEEK_MARK, heatGlyph, heatmapGrid, SHADES, EMPTY } from './dither';
 
@@ -54,7 +56,12 @@ export function GlyphHeatmap({ counts, weeks, end, thresholds, weekTarget, onSel
           ]}
         </div>
       </div>
-      {legend && <Legend className="gheat-legend">Less <span className="accent">{EMPTY} {SHADES.join(' ')}</span> More</Legend>}
+      {legend && (
+        <div className="legend-row">
+          <Legend className="gheat-legend">Less <span className="accent">{EMPTY} {SHADES.join(' ')}</span> More</Legend>
+          <InfoButton label="About the heatmap">{HEATMAP_INFO}</InfoButton>
+        </div>
+      )}
     </div>
   );
 }

@@ -59,6 +59,11 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .part { white-space: nowrap; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--mid); }
+.info-btn { position: relative; display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border: var(--rule-w) solid var(--ink); color: var(--ink); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; font-weight: var(--font-strong); }
+.info-btn::after { content: ''; position: absolute; inset: -14px; } /* 48px touch target */
+.info-body { display: flex; flex-direction: column; gap: var(--space-3); }
+.legend-row { display: flex; align-items: center; gap: var(--space-3); }
+.legend-row > .legend { flex: 1; min-width: 0; }
 .gheat-legend { margin-top: var(--space-2); display: block; }
 
 /* ---------- navbar + large title ---------- */

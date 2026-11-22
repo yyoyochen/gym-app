@@ -24,3 +24,4 @@ export { installPressFeedback, cancelPress } from './motion/press';
 export { prefersReducedMotion } from './motion/reduced';
 export { Parts } from './Parts';
 export { Select, type SelectOption } from './Select';
+export { InfoButton } from './InfoButton';
