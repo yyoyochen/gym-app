@@ -78,3 +78,5 @@ Build decisions not already settled in [PWA-SPEC.md](PWA-SPEC.md). Newest last.
 **Preview-only code is compiled out of production.** `vite build --mode preview` adds `window.__gymbro` (data-layer functions for local seeding scripts) and a `#/kit` component gallery. Both hang off `import.meta.env.MODE === 'preview'`, a build-time constant, so production builds drop them; `tools/check-bundle.mjs` (run by `npm run build`) fails if either string reaches `dist/`.
 
 **PR detection is a pure helper, not wired yet.** `app/bests.ts` `isNewBest()` (heavier than any earlier working set, else a better e1RM by more than 0.05 kg; never on a lift's first log). The logger and Review are marked `TODO(PrMoment)` for the screen rewrites.
+
+**2026-11-22: the powerlifter comparison was removed.** The OpenPowerlifting data, loader, Progress and lift-page sections and the Benchmark population setting are gone; `profile.benchmarkPopulation` stays in the data model so old backups restore. Levels use the gym-goer standards only. Entries above that describe the comparison are history.

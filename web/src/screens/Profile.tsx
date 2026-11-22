@@ -327,7 +327,7 @@ function InjuriesForm({ profile, onChange }: { profile: ProfileT; onChange: (p: 
       <Segmented<Side> label="Side" value={side} onChange={setSide}
         options={(['left', 'right', 'both', 'na'] as Side[]).map(s => ({ value: s, label: s === 'na' ? 'N/A' : SIDE_LABELS[s] }))} />
       <div className="grid2">
-        <DateField label="Since (optional)" value={since} max={todayISO()} onChange={setSince} />
+        <DateField label="Since (optional)" value={since} max={todayISO()} clearable onChange={setSince} />
         <label className="field-wrap">
           <span className="label">Note (optional)</span>
           <input className="field" value={note} onChange={e => setNote(e.target.value)} />

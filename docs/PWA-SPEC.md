@@ -212,6 +212,8 @@ Other reminders:
 - **Progress → Benchmarks:** every mapped lift with its level, percentile, a level ladder in the tier ramp and its confidence badge, plus the caveat and attribution. **Lift page:** level, the table of every level for this lifter and "next: Advanced at X kg". **Profile targets:** the level and percentile a target would mean.
 - **Settings → Benchmark population:** Gym-goers (default) / Tested lifters / All lifters. Levels always use the gym-goer model; Tested or All opens the powerlifter comparison below with that group (otherwise it is a collapsed section using the tested table).
 
+> Removed 2026-11-22 (see docs/DECISIONS.md): the section below describes a comparison the app no longer has.
+
 **Optional comparison: competitive powerlifters (OpenPowerlifting), squat, bench and deadlift only.**
 - The competition data is dedicated to the **public domain**. Attribution is requested, not required; the app credits it anyway on the benchmark screen and in the README.
 - Download: https://data.openpowerlifting.org (bulk CSV). Docs: https://openpowerlifting.gitlab.io/opl-csv/.

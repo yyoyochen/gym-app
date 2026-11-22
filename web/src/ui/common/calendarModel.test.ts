@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabel, monthGrid, moveDay } from './calendarModel';
+import { canConfirm, clampDate, dayLabel, monthGrid, moveDay, tabbableDay } from './calendarModel';
 
 const flat = (g: ReturnType<typeof monthGrid>) => g.flat();
 const find = (g: ReturnType<typeof monthGrid>, iso: string) => flat(g).find(d => d.iso === iso)!;
@@ -55,5 +55,38 @@ describe('dayLabel', () => {
   it('reads the full date, and says when you trained', () => {
     expect(dayLabel('2026-11-19', true)).toBe('Thursday 19 November 2026, trained');
     expect(dayLabel('2026-11-19', false)).toBe('Thursday 19 November 2026');
+  });
+});
+
+describe('canConfirm', () => {
+  it('needs a day inside the range; with requireChange also a different day', () => {
+    expect(canConfirm({ sel: '2026-11-17', value: '2026-11-19', max: '2026-11-22', requireChange: true })).toBe(true);
+    expect(canConfirm({ sel: '2026-11-19', value: '2026-11-19', max: '2026-11-22', requireChange: true })).toBe(false);
+    expect(canConfirm({ sel: '2026-11-19', value: '2026-11-19', max: '2026-11-22' })).toBe(true);
+    expect(canConfirm({ sel: '', value: '', max: '2026-11-22' })).toBe(false);
+    expect(canConfirm({ sel: '2026-11-25', value: '', max: '2026-11-22' })).toBe(false);
+  });
+});
+
+describe('clampDate', () => {
+  it('pulls a date into [min, max]', () => {
+    expect(clampDate('2026-12-30', undefined, '2026-11-22')).toBe('2026-11-22');
+    expect(clampDate('2026-01-01', '2026-11-10', '2026-11-22')).toBe('2026-11-10');
+    expect(clampDate('2026-11-15', '2026-11-10', '2026-11-22')).toBe('2026-11-15');
+  });
+});
+
+describe('tabbableDay (the one grid cell that takes Tab)', () => {
+  const g = monthGrid(2026, 11, { today: '2026-11-22', max: '2026-11-22' });
+  it('the focused day when it is shown and enabled', () => {
+    expect(tabbableDay(g, '2026-11-19')).toBe('2026-11-19');
+  });
+  it('otherwise the first enabled day of the month shown (focus left the month, or sits on a disabled day)', () => {
+    expect(tabbableDay(g, '2026-10-05')).toBe('2026-11-01');
+    expect(tabbableDay(g, '2026-11-25')).toBe('2026-11-01');
+  });
+  it('a month with no enabled day has none', () => {
+    const none = monthGrid(2026, 12, { today: '2026-11-22', max: '2026-11-22' });
+    expect(tabbableDay(none, '2026-12-05')).toBeNull();
   });
 });

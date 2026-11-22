@@ -2,7 +2,7 @@
 // promise with a verdict per lift (graded by the engine via app/coach), then
 // the sets as spec-sheet rows — with edit set (sheet), delete set, change date
 // and delete session.
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { readable } from '../ui/readable';
 import type { EffortScale, PainArea, SetEntry, SetKind, Side } from '../domain/types';
 import {
@@ -129,7 +129,7 @@ export function SessionDetail({ params }: { params: string[] }) {
         <Button block onClick={() => setMoving(true)}>Change date</Button>
         {renaming && <RenameSheet current={displayName(session.nameSnapshot)} onClose={() => setRenaming(false)} onSave={async name => { await updateSession(getDb(), session.id, { nameSnapshot: name }); setRenaming(false); showHud({ text: 'Renamed' }); }} />}
         {moving && (
-          <DatePickerSheet open value={session.date} max={todayISO()} marked={trained} title="Change date" confirmLabel="Move session" onClose={() => setMoving(false)}
+          <DatePickerSheet open value={session.date} max={todayISO()} marked={trained} title="Change date" confirmLabel="Move session" requireChange onClose={() => setMoving(false)}
             onPick={async d => { await changeSessionDate(getDb(), session.id, d); setMoving(false); showHud({ text: 'Date changed' }); }} />
         )}
         <ConfirmButton danger className="block" confirmLabel="Delete this session and its sets?" confirmText="Delete session"
@@ -226,11 +226,14 @@ function DoneLine({ parts }: { parts: string[] }) {
 function RenameSheet({ current, onSave, onClose }: { current: string; onSave: (name: string) => void; onClose: () => void }) {
   const [text, setText] = useState(current);
   const name = cleanSessionName(text);
+  const input = useRef<HTMLInputElement>(null);
+  // The sheet focuses its own panel when it opens; take focus after that so typing starts at once.
+  useEffect(() => { const t = setTimeout(() => input.current?.focus(), 60); return () => clearTimeout(t); }, []);
   return (
     <Sheet open title="Rename session" onClose={onClose}>
       <label className="field-wrap">
         <span className="label">Session name</span>
-        <input className="field" value={text} maxLength={SESSION_NAME_MAX} autoFocus onChange={e => setText(e.target.value)}
+        <input className="field" ref={input} value={text} maxLength={SESSION_NAME_MAX} onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && name) onSave(name); }} />
       </label>
       <p className="quiet">Renames this session only.</p>

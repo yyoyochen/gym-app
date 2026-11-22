@@ -60,3 +60,28 @@ export function dayLabel(iso: ISODate, marked: boolean): string {
   const [y, m, d] = iso.split('-').map(Number);
   return `${WEEKDAYS_LONG[weekday(iso)]} ${d} ${MONTHS_LONG[m - 1]} ${y}${marked ? ', trained' : ''}`;
 }
+
+/** Pull a date into [min, max] (either may be absent). */
+export function clampDate(iso: ISODate, min?: ISODate, max?: ISODate): ISODate {
+  if (max && iso > max) return max;
+  if (min && iso < min) return min;
+  return iso;
+}
+
+/** May the sheet's confirm button act? A day is chosen, inside the range, and (when asked) different from the current value. */
+export function canConfirm(i: { sel: ISODate | ''; value: ISODate | ''; min?: ISODate; max?: ISODate; requireChange?: boolean }): boolean {
+  if (!i.sel) return false;
+  if ((i.min && i.sel < i.min) || (i.max && i.sel > i.max)) return false;
+  return !(i.requireChange && i.sel === i.value);
+}
+
+/**
+ * The one grid cell that takes Tab (roving tabindex): the focused day when it is
+ * shown and enabled, else the first enabled day of the month shown, else none.
+ */
+export function tabbableDay(grid: Day[][], focus: ISODate): ISODate | null {
+  const days = grid.flat();
+  const f = days.find(d => d.iso === focus);
+  if (f && !f.disabled) return f.iso;
+  return days.find(d => d.inMonth && !d.disabled)?.iso ?? null;
+}

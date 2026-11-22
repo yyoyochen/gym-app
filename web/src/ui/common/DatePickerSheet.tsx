@@ -5,17 +5,17 @@ import { useEffect, useRef, useState } from 'react';
 import type { ISODate } from '../../domain/types';
 import { monthLabel, shiftMonth, todayISO } from '../../app/dates';
 import { Button, PixelIcon, Sheet } from '../kit';
-import { dayLabel, monthGrid, moveDay, type CalKey } from './calendarModel';
+import { canConfirm, clampDate, dayLabel, monthGrid, moveDay, tabbableDay, type CalKey } from './calendarModel';
 
 const KEYS = new Set<string>(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-export function DatePickerSheet({ open, value, min, max, marked, title, confirmLabel, onPick, onClose }: {
+export function DatePickerSheet({ open, value, min, max, marked, title, confirmLabel, requireChange, onPick, onClear, onClose }: {
   open: boolean; value: ISODate | ''; min?: ISODate; max?: ISODate; marked?: ReadonlySet<ISODate>;
-  title: string; confirmLabel: string; onPick: (d: ISODate) => void; onClose: () => void;
+  title: string; confirmLabel: string; requireChange?: boolean; onPick: (d: ISODate) => void; onClear?: () => void; onClose: () => void;
 }) {
   const today = todayISO();
-  const start: ISODate = value || (max && max < today ? max : today);
+  const start: ISODate = clampDate(value || today, min, max);
   const [sel, setSel] = useState<ISODate | ''>(value);
   const [focus, setFocus] = useState<ISODate>(start);
   const [ym, setYm] = useState({ year: Number(start.slice(0, 4)), month: Number(start.slice(5, 7)) });
@@ -32,9 +32,18 @@ export function DatePickerSheet({ open, value, min, max, marked, title, confirmL
 
   const weeks = monthGrid(ym.year, ym.month, { today, selected: sel, ...(min ? { min } : {}), ...(max ? { max } : {}), ...(marked ? { marked } : {}) });
   const ok = (d: ISODate) => !(min && d < min) && !(max && d > max);
-  const go = (n: number) => { const t = shiftMonth(ym.year, ym.month, n); setYm(t); };
+  // Changing month moves the focused day with it (same day number, clamped), so Tab always has a cell.
+  const go = (n: number) => { setYm(shiftMonth(ym.year, ym.month, n)); setFocus(moveDay(focus, n > 0 ? 'PageDown' : 'PageUp')); };
+  const tab = tabbableDay(weeks, focus);
 
+  const range = { ...(min ? { min } : {}), ...(max ? { max } : {}) };
   const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      // Enter picks the focused day outright.
+      e.preventDefault();
+      if (canConfirm({ sel: focus, value, ...range, ...(requireChange ? { requireChange } : {}) })) onPick(focus);
+      return;
+    }
     if (!KEYS.has(e.key)) return;
     e.preventDefault();
     const next = moveDay(focus, e.key as CalKey);
@@ -56,8 +65,8 @@ export function DatePickerSheet({ open, value, min, max, marked, title, confirmL
         {weeks.map((w, i) => (
           <div key={i} role="row" className="cal-week">
             {w.map(d => (
-              <button key={d.iso} type="button" role="gridcell" data-iso={d.iso} disabled={d.disabled} aria-pressed={d.selected} aria-label={dayLabel(d.iso, d.marked)}
-                tabIndex={d.iso === focus ? 0 : -1}
+              <button key={d.iso} type="button" role="gridcell" data-iso={d.iso} disabled={d.disabled} aria-selected={d.selected} aria-label={dayLabel(d.iso, d.marked)}
+                tabIndex={d.iso === tab ? 0 : -1}
                 className={`cal-day${d.inMonth ? '' : ' out'}${d.today ? ' today' : ''}${d.selected ? ' sel' : ''}${d.marked ? ' has' : ''}`}
                 onClick={() => { setSel(d.iso); setFocus(d.iso); }}>
                 {Number(d.iso.slice(8))}
@@ -68,8 +77,9 @@ export function DatePickerSheet({ open, value, min, max, marked, title, confirmL
       </div>
       <div className="tk-btnrow">
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="primary" className="grow" disabled={!sel || !ok(sel)} onClick={() => sel && onPick(sel)}>{confirmLabel}</Button>
+        <Button variant="primary" className="grow" disabled={!canConfirm({ sel, value, ...(min ? { min } : {}), ...(max ? { max } : {}), ...(requireChange ? { requireChange } : {}) })} onClick={() => sel && onPick(sel)}>{confirmLabel}</Button>
       </div>
+      {onClear && value && <Button variant="quiet" block onClick={onClear}>No date</Button>}
     </Sheet>
   );
 }
