@@ -1,4 +1,4 @@
-# Gym App
+# gym-app
 
 A strength-training log for lifters who already know what they're doing.
 

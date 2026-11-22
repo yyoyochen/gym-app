@@ -91,7 +91,7 @@ const out = {
     population: 'Modeled self-reported gym-goers (not competition lifters)',
     levels: LEVELS,
     confidence: m.confidence,
-    source: 'Gym App gym-goer strength standards model (docs/STANDARDS-METHODOLOGY.md).',
+    source: 'gym-app gym-goer strength standards model (docs/STANDARDS-METHODOLOGY.md).',
     attribution: 'Strength Standards data by FitnessVolt (CC BY 4.0)',
     attributionUrl: 'https://fitnessvolt.com/strength-standards/',
     licenceNote: 'Squat, bench and deadlift anchors (men 20-29 percentiles and under-20 ratios) are self-reported gym percentiles from the Symmetric Strength dataset, as published by FitnessVolt under CC BY 4.0 (https://fitnessvolt.com/strength-standards/strength-data/, read 2026-11-22). Everything else is modeled by this app; neither site endorses these figures.',
