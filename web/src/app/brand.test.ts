@@ -23,6 +23,13 @@ describe('the app is just called gym-app', () => {
     expect(readFileSync(join(web, 'index.html'), 'utf8')).toContain('<link rel="apple-touch-icon" href="./apple-touch-icon.png" />');
     expect(statSync(join(web, 'public/apple-touch-icon.png')).size).toBeGreaterThan(0);
   });
+  it('the icon is cream gym/app letters with a checker shadow in the accent colour', () => {
+    for (const f of ['icon.svg', 'icon-maskable.svg']) {
+      const svg = readFileSync(join(web, 'public', f), 'utf8');
+      expect(svg, f).toContain('fill="#fef8ec"');
+      expect(svg, f).toContain('fill="#fcd0af"');
+    }
+  });
   it('no screen text still says GymBro or ATG (internal names like the glyph font and storage keys may stay)', () => {
     const hits = files(join(web, 'src'))
       .filter(f => /\.tsx?$/.test(f) && !/\.test\.ts$/.test(f))
