@@ -57,4 +57,11 @@ describe('real styles', () => {
     const v = checkStyles(src).violations.filter(v => ['font', 'tracking', 'caps'].includes(v.rule));
     expect(v.map(x => `${x.file}:${x.line} ${x.rule} ${x.text}`)).toEqual([]);
   });
+
+  it('real styles: zero violations, few allowed', () => {
+    const r = checkStyles(src);
+    expect(r.violations.map(x => `${x.file}:${x.line} ${x.rule} ${x.text}`)).toEqual([]);
+    expect(r.allowed.length).toBeLessThanOrEqual(6);
+    for (const a of r.allowed) expect(a.reason.trim(), `${a.file}:${a.line}`).not.toBe('');
+  });
 });

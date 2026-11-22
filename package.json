@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite web",
-    "build": "tsc -p web && vite build web && node tools/check-bundle.mjs dist",
+    "build": "tsc -p web && vite build web && node tools/check-bundle.mjs dist && node tools/check-styles.mjs web/src",
     "preview": "vite preview web",
     "typecheck": "tsc -p web --noEmit",
     "test": "vitest run --root web",

@@ -37,7 +37,7 @@ export default function KitGallery({ params }: { params: string[] }) {
         { label: 'Effort floor', value: '2 in reserve' }, { label: 'Back-offs', value: '3 × 8 at 75' },
         { label: 'Last time', value: '105 × 2' }, { label: 'This week', value: '2 of 3', accent: true },
       ]} />
-      <div className="stack" style={{ gap: 10 }}>
+      <div className="stack" style={{ gap: 'var(--space-3)' }}>
         <DitherBar label="This week" valueText="2 of 3" value={2 / 3} />
         <DitherBar label="Squat · hold 120 by 31 Dec" valueText="116.7 · 97%" value={116.7 / 120} />
         <DitherBar label="Empty" valueText="0" value={0} />
@@ -48,11 +48,11 @@ export default function KitGallery({ params }: { params: string[] }) {
       </div>
       {counts && <GlyphHeatmap counts={counts} weeks={34} end={today} label="Since April" />}
       <LabelValueGrid variant="stats" items={[{ label: 'Favourite lift:', value: 'Back squat' }, { label: 'Busiest day:', value: 'Sunday' }]} />
-      <div className="row wrap" style={{ gap: 8 }}>
+      <div className="row wrap" style={{ gap: 'var(--space-2)' }}>
         <Verdict kind="beat" /><Verdict kind="hit" /><Verdict kind="missed" /><Verdict kind="new" />
       </div>
       <p className="note">//Note — last back-off is next. Take it to 1–2 in reserve.</p>
-      <div className="row wrap" style={{ gap: 14 }}>
+      <div className="row wrap" style={{ gap: 'var(--space-4)' }}>
         {(Object.keys(ICONS) as IconName[]).map(n => <span key={n} title={n}><PixelIcon name={n} scale={3} /></span>)}
       </div>
       <Segmented<ThemePref> label="Theme" value={theme} onChange={setTheme}

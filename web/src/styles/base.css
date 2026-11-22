@@ -8,7 +8,7 @@ body { font: var(--text-body); font-family: var(--font-sans); -webkit-font-smoot
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; touch-action: manipulation; border-radius: 0; }
 input, select, textarea { font: inherit; color: inherit; border-radius: 0; }
 a { color: inherit; text-decoration: none; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: calc(var(--rule-w) * 2) solid var(--accent); outline-offset: 2px; }
 ::selection { background: var(--ink); color: var(--paper); }
 
 /* Paper grain, light mode only (--grain is 0 in dark). Above everything, never interactive. */
@@ -23,17 +23,17 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
         padding-top: env(safe-area-inset-top); -webkit-overflow-scrolling: touch; }
 .page.with-tabs { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
 .page-dim { position: absolute; inset: 0; background: var(--dim); opacity: 0; pointer-events: none; z-index: 30; }
-.page.moving { will-change: transform; box-shadow: -1px 0 0 var(--rule); }
+.page.moving { will-change: transform; box-shadow: -1px 0 0 var(--rule); /* ds-allow: page edge while a page slides during push and pop */ }
 
 /* Tabular figures only where columns must align: Schibsted's tnum also widens
    . , : — set globally it spaces out ordinary sentences. */
 .tnum, .num-md, .num-sm, input.field, .stats, .dbar { font-variant-numeric: tabular-nums; }
 
 /* ---------- layout ---------- */
-.screen { padding: 22px var(--gutter) 32px; display: flex; flex-direction: column; gap: var(--section); }
-.row { display: flex; align-items: center; gap: 12px; }
-.spread { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.stack { display: flex; flex-direction: column; gap: 8px; }
+.screen { padding: var(--space-6) var(--gutter) var(--space-8); display: flex; flex-direction: column; gap: var(--section); }
+.row { display: flex; align-items: center; gap: var(--space-3); }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.stack { display: flex; flex-direction: column; gap: var(--space-2); }
 
 /* ---------- type ---------- */
 .title { font: var(--text-title); letter-spacing: var(--track-title); margin: 0; }
@@ -53,28 +53,28 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 .spec { font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); }
 
 /* ---------- sections (.card is an unboxed section with a dotted rule) ---------- */
-.card { position: relative; padding-top: 14px; border-top: 1px dotted var(--rule); }
+.card { position: relative; padding-top: var(--space-4); border-top: var(--hair); }
 .card.tick::before { content: none; }
-.rule { border: 0; border-top: 1px dotted var(--rule); margin: 0; }
+.rule { border: 0; border-top: var(--hair); margin: 0; }
 .rule.solid { border-top: var(--rule-w) solid var(--ink); }
 
 /* ---------- buttons: primary ink block, outline, quiet ---------- */
-.btn { min-height: var(--touch-min); padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+.btn { min-height: var(--touch-min); padding: 0 var(--space-4); display: inline-flex; align-items: center; justify-content: center; gap: var(--space-3);
        border: var(--rule-w) solid var(--ink); background: transparent; color: var(--ink); text-decoration: none;
        font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; text-align: center; }
-.btn.primary { min-height: var(--touch-commit); background: var(--ink); color: var(--on-ink); font: var(--text-button); letter-spacing: var(--track-button); text-transform: uppercase; padding: 0 16px; }
+.btn.primary { min-height: var(--touch-commit); background: var(--ink); color: var(--on-ink); font: var(--text-button); letter-spacing: var(--track-button); text-transform: uppercase; padding: 0 var(--space-4); }
 .btn.primary.split { justify-content: space-between; } /* "START SESSION A  +" : label left, icon right */
-.btn.quiet { border-color: transparent; color: var(--mid); padding: 0 4px; }
+.btn.quiet { border-color: transparent; color: var(--mid); padding: 0 var(--space-1); }
 .btn.danger { border-style: dashed; }
 .btn.block { width: 100%; }
 .btn:disabled { opacity: 0.4; cursor: default; }
 .btn .px { flex: none; }
 
 /* ---------- chips and verdicts: no colour, only fill / outline / dashes ---------- */
-.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 9px; border: var(--rule-w) solid var(--rule); color: var(--ink);
+.chip { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 30px; padding: 0 var(--space-2); border: var(--rule-w) solid var(--rule); color: var(--ink);
         font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); }
 .chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.verdict { display: inline-flex; align-items: center; justify-content: center; min-width: 70px; padding: 6px 9px; border: var(--rule-w) solid transparent;
+.verdict { display: inline-flex; align-items: center; justify-content: center; min-width: 70px; padding: var(--space-2) var(--space-2); border: var(--rule-w) solid transparent;
            font: var(--text-stamp); letter-spacing: var(--track-stamp); text-transform: uppercase; }
 .verdict.beat { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .verdict.hit { border-color: var(--ink); color: var(--ink); }
@@ -83,15 +83,15 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 
 /* ---------- //NOTE and banners ---------- */
 .note { font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--accent);
-        border-top: 1px dotted var(--rule); border-bottom: 1px dotted var(--rule); padding: 10px 0; margin: 0; line-height: 1.6; }
-.banner { border-top: 1px dotted var(--rule); border-bottom: 1px dotted var(--rule); padding: 12px 0; }
+        border-top: var(--hair); border-bottom: var(--hair); padding: var(--space-3) 0; margin: 0; line-height: 1.6; }
+.banner { border-top: var(--hair); border-bottom: var(--hair); padding: var(--space-3) 0; }
 
 /* ---------- fields: an underline, not a box ---------- */
 input.field, select.field, textarea.field { width: 100%; min-height: var(--touch-min); background: transparent; border: 0;
-  border-bottom: var(--rule-w) solid var(--ink); padding: 0 2px; color: var(--ink); }
-textarea.field { padding: 10px 2px; min-height: 96px; resize: vertical; }
+  border-bottom: var(--rule-w) solid var(--ink); padding: 0 var(--space-half); color: var(--ink); }
+textarea.field { padding: var(--space-3) var(--space-half); min-height: 96px; resize: vertical; }
 input.field::placeholder, textarea.field::placeholder { color: var(--mid); }
-input.field:focus-visible, select.field:focus-visible, textarea.field:focus-visible { outline: 0; border-bottom-width: 3px; }
+input.field:focus-visible, select.field:focus-visible, textarea.field:focus-visible { outline: 0; border-bottom-width: calc(var(--rule-w) * 2); }
 
 /* ---------- touch-down feedback (applied on pointerdown by ui/kit/motion/press.ts) ---------- */
 .btn, [data-press] { transition: opacity var(--dur-press) ease-out, transform 380ms var(--ease-spring), background-color var(--dur-press) ease-out; }
