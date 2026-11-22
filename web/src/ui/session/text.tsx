@@ -2,7 +2,9 @@ import { Fragment } from 'react';
 import type { EffortScale } from '../../domain/types';
 import { formatEffort } from '../../engine';
 import { readable } from '../readable';
-import { isUnloaded } from '../../app/labels';
+import { LEGACY_DOT, displayName, isUnloaded } from '../../app/labels';
+
+export { displayName };
 
 const NUM = /(\d+(?:\.\d+)?(?:\s?kg)?(?:\s?[×x]\s?\d+\+?)?)/g;
 
@@ -20,14 +22,12 @@ export function MonoNums({ text }: { text: string }) {
   );
 }
 
-/** Stored before 2026-11-22 as "A \u00B7 Squat + Bench"; never migrated, so still parsed. */
-const LEGACY_DOT = '\u00B7';
 const KEYED = new RegExp(`^(\\S{1,3})(?: ${LEGACY_DOT} |: )(.+)$`);
 
 /** "A: Squat + Bench" → short "Session A", title "Session A, Squat + Bench". Other names pass through. */
 export function sessionNames(name: string): { short: string; title: string } {
   const m = KEYED.exec(name.trim());
-  if (!m) { const short = name.split(new RegExp(`\\s${LEGACY_DOT}|:`))[0].trim() || name; return { short, title: name }; }
+  if (!m) { const shown = displayName(name); const short = shown.split(': ')[0].trim() || shown; return { short, title: shown }; }
   return { short: `Session ${m[1]}`, title: `Session ${m[1]}, ${m[2]}` };
 }
 

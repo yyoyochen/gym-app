@@ -24,6 +24,7 @@ import {
   type ReentryState, type ResumeCard,
 } from '../engine';
 import { getPlateSettings, type PlateSettings } from './prefs';
+import { displayName } from './labels';
 
 const EPS = 1e-9;
 
@@ -449,7 +450,7 @@ export async function todayState(db: GymDb, today: ISODate, now: Millis): Promis
   const g = await gradeSession(db, last.id);
   const d = daysBetween(last.date, today);
   const ago = d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`;
-  const lastLine = g && g.total ? lastSessionLine(last.nameSnapshot, last.date, today, g.kept, g.total) : `Last session: ${last.nameSnapshot}, ${ago}`;
+  const lastLine = g && g.total ? lastSessionLine(displayName(last.nameSnapshot), last.date, today, g.kept, g.total) : `Last session: ${displayName(last.nameSnapshot)}, ${ago}`;
   const doneToday = last.sealed && last.date === today ? { session: last, kept: g?.kept ?? 0, total: g?.total ?? 0 } : undefined;
   return { gap, lastLine, last, ...(doneToday ? { doneToday } : {}) };
 }

@@ -36,8 +36,10 @@ export function ticksWithin(lo: number, hi: number): number[] {
 export function chartScale(i: { values: number[]; zeroBased?: boolean; targets: ChartTarget[] }): Scale {
   const vals = i.values.filter(Number.isFinite);
   if (!vals.length) return { lo: 0, hi: 1, ticks: [], inRange: [], pinned: [] };
-  const lo = i.zeroBased ? 0 : Math.min(...vals) * FLOOR;
-  let hi = Math.max(...vals) * CEILING;
+  // Padded by magnitude so negative values (assisted lifts) get the same headroom as positive ones.
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const lo = i.zeroBased ? 0 : min - Math.abs(min) * (1 - FLOOR);
+  let hi = max + Math.abs(max) * (CEILING - 1);
   if (hi <= lo) hi = lo + 1;
   const room = ((hi - lo) * LANE_ROOM_PX) / PLOT_PX;
   const inRange = i.targets.filter(t => t.value >= lo && t.value <= hi - room);

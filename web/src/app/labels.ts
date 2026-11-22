@@ -46,3 +46,11 @@ export function formatLoad(weight: number, bodyweightFactor = 0): string {
   }
   return isUnloaded(weight, bodyweightFactor) ? '—' : String(weight);
 }
+
+/** Session names stored before 2026-11-22 read "A \u00B7 Squat + Bench"; they are never migrated. */
+export const LEGACY_DOT = '\u00B7';
+
+/** A stored name as shown: an older "A \u00B7 Squat + Bench" reads "A: Squat + Bench". */
+export function displayName(name: string): string {
+  return name.replace(new RegExp(`\\s+${LEGACY_DOT}\\s+`, 'g'), ': ');
+}

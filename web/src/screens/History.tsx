@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { getProfile, listSessions, sortSets } from '../db';
 import { useLive } from '../ui/useLive';
 import { DemoBanner } from '../app/DemoBanner';
-import { formatLoad } from '../app/labels';
+import { displayName, formatLoad } from '../app/labels';
 import { formatDate, monthLabel, todayISO } from '../app/dates';
 import { groupBySession, summarizeSession, type SessionSummary } from '../app/history';
 import { LinkButton, Lockup, Parts, PixelIcon, SquareHeatmap, go } from '../ui/kit';
@@ -75,7 +75,7 @@ function SessionRow({ d, bwFactor }: { d: SessionSummary; bwFactor?: Map<string,
     <a className="tk-srow-link" data-press="row" href={`#/history/${encodeURIComponent(s.id)}`}>
       <span className="tk-sdate"><b>{dd}</b><span>{wd} {mm}</span></span>
       <span className="tk-smain">
-        <span className="tk-sname">{s.nameSnapshot}
+        <span className="tk-sname">{displayName(s.nameSnapshot)}
           {!s.sealed && <span className="chip tk-chip">in progress</span>}
           {s.edited && <span className="chip tk-chip">edited</span>}
         </span>

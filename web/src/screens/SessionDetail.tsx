@@ -16,7 +16,7 @@ import { gradeCommit } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
 import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
-import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, formatLoad } from '../app/labels';
+import { PAIN_AREAS, PAIN_AREA_LABELS, SET_KIND_LABELS, SIDE_LABELS, displayName, formatLoad } from '../app/labels';
 import { SecHead } from '../ui/progress/parts';
 import { loadParts } from '../ui/progress/stats';
 
@@ -43,7 +43,7 @@ export function SessionDetail({ params }: { params: string[] }) {
 
   return (
     <section className="screen tk-screen tk-nav">
-      <NavBar title={session.nameSnapshot} backLabel="History" fallback="history">
+      <NavBar title={displayName(session.nameSnapshot)} backLabel="History" fallback="history">
         <div className="tk-sub">
           <span className="tk-mono">{formatDate(session.date)}</span>
           {!session.sealed && <span className="chip tk-chip">in progress</span>}

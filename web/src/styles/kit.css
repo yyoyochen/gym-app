@@ -57,6 +57,7 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 /* legend strip (Legend): label role, swatches and words in a row */
 .parts { display: inline-flex; flex-wrap: wrap; column-gap: var(--space-3); row-gap: var(--space-half); }
 .part { white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--mid); }
 .gheat-legend { margin-top: var(--space-2); display: block; }
 

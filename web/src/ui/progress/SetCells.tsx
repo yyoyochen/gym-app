@@ -6,7 +6,7 @@ import type { SetEntry } from '../../domain/types';
 import { cellWeight, classifySets } from './cellRules';
 
 export function SetCells({ sets, bodyweightFactor, decimals }: { sets: SetEntry[]; bodyweightFactor: number; decimals: boolean }) {
-  const roles = classifySets(sets);
+  const roles = classifySets(sets, bodyweightFactor);
   return (
     <span className={decimals ? 'tk-cells dec' : 'tk-cells'}>
       {sets.map((s, i) => {

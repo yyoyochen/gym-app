@@ -20,6 +20,10 @@ describe('classifySets', () => {
   it('bodyweight sets at 0 kg have no ramp', () => {
     expect(classifySets(work(0, 0))).toEqual(['top', 'work']);
   });
+  it('bodyweight lifts get no ramp, since the load excludes the body', () => {
+    expect(classifySets(work(0, 5, 10, 20), 1)).toEqual(['work', 'work', 'work', 'top']);
+    expect(classifySets(work(-25, -20), 1)).toEqual(['work', 'top']);
+  });
   it('a logged warm-up is always ramp', () => {
     expect(classifySets([{ weight: 20, kind: 'warmup' }, { weight: 100, kind: 'working' }])).toEqual(['ramp', 'top']);
   });

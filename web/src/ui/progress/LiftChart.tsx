@@ -27,12 +27,6 @@ function bandPath(plotTop: number): string {
   return d;
 }
 
-/** Paper behind a micro-caps label so the line under it never cuts through the text (10px mono ≈ 6.2px a character). */
-const labelBg = (text: string, x: number, baseline: number, anchorEnd = false) => {
-  const w = text.length * 6.2 + 4;
-  return <rect className="tk-label-bg" x={anchorEnd ? x - w + 2 : x - 2} y={baseline - 9} width={w} height={12} />;
-};
-
 /** `current` is what target gaps are measured from (the lift page passes its best e1RM in 90 days); defaults to the last point. */
 export function LiftChart({ points, label, kind = 'step', targets = [], current, empty = 'Two sessions or more draw the line.' }: {
   points: LinePoint[]; label: string; kind?: 'step' | 'bars'; targets?: ChartTarget[]; current?: number | null; empty?: string;
@@ -76,6 +70,16 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
           );
         })}
 
+        {s.inRange.map(t => {
+          const ty = y(t.value), name = `${t.name} ${kg(t.value)} kg`, gap = gapText(t.value, now);
+          return (
+            <g key={t.name}>
+              <line className="tk-target" x1={L} x2={W - R} y1={ty} y2={ty} />
+              <text className="tk-target-tx" x={L + 4} y={ty - 5}>{name}</text>
+              <text className="tk-target-tx" x={W - R} y={ty - 5} textAnchor="end">{gap}</text>
+            </g>
+          );
+        })}
         {bars ? data.map((p, i) => {
           const bx = ev(L + 6 + i * step);
           return p.value > 0
@@ -95,18 +99,6 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
             <rect className="tk-last" x={x(last.date) - 3.5} y={y(last.value) - 3.5} width={7} height={7} />
           </>
         )}
-        {s.inRange.map(t => {
-          const ty = y(t.value), name = `${t.name} ${kg(t.value)} kg`, gap = gapText(t.value, now);
-          return (
-            <g key={t.name}>
-              <line className="tk-target" x1={L} x2={W - R} y1={ty} y2={ty} />
-              {labelBg(name, L + 4, ty - 5)}
-              <text className="tk-target-tx" x={L + 4} y={ty - 5}>{name}</text>
-              {labelBg(gap, W - R, ty - 5, true)}
-              <text className="tk-target-tx" x={W - R} y={ty - 5} textAnchor="end">{gap}</text>
-            </g>
-          );
-        })}
       </svg>
     </figure>
   );

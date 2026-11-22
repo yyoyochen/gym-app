@@ -6,13 +6,17 @@ import { kg } from '../../app/coach';
 
 export type CellRole = 'top' | 'work' | 'ramp';
 
-/** Same length and order as `sets`. The top is the first set at the heaviest weight. */
-export function classifySets(sets: { weight: number; kind: string }[]): CellRole[] {
+/**
+ * Same length and order as `sets`. The top is the first set at the heaviest weight.
+ * Bodyweight lifts (`bodyweightFactor > 0`) get no inferred ramp: their logged load
+ * leaves out the body, so 80% of it means nothing.
+ */
+export function classifySets(sets: { weight: number; kind: string }[], bodyweightFactor = 0): CellRole[] {
   const counted = sets.filter(s => s.kind !== 'warmup');
   if (!counted.length) return sets.map(() => 'ramp');
   const top = Math.max(...counted.map(s => s.weight));
   const ti = sets.findIndex(s => s.kind !== 'warmup' && s.weight === top);
-  return sets.map((s, i) => (s.kind === 'warmup' ? 'ramp' : i === ti ? 'top' : i < ti && s.weight < 0.8 * top ? 'ramp' : 'work'));
+  return sets.map((s, i) => (s.kind === 'warmup' ? 'ramp' : i === ti ? 'top' : i < ti && bodyweightFactor <= 0 && s.weight < 0.8 * top ? 'ramp' : 'work'));
 }
 
 /** Weight split for the slots: "82" + ".5"; bodyweight lifts read "BW" or "+10". */

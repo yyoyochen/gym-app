@@ -44,6 +44,11 @@ describe('chartScale', () => {
     expect(s.ticks).toEqual([0, 1000, 2000, 3000, 4000]);
     expect(s.pinned).toEqual([]);
   });
+  it('negative values (assisted lifts) stay inside the plot', () => {
+    const s = chartScale({ values: [-20, -10], targets: [] });
+    expect(s.lo).toBeLessThan(-20);
+    expect(s.hi).toBeGreaterThan(-10);
+  });
   it('degenerate series never give NaN or a zero-height scale', () => {
     const empty = chartScale({ values: [], targets: [{ name: 'X', value: 10 }] });
     expect(empty.ticks).toEqual([]);

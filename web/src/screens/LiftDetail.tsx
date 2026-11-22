@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { getExercise, getProfile } from '../db';
 import { addDays, bestRecentE1rm } from '../engine';
 import { kg } from '../app/coach';
+import { displayName } from '../app/labels';
 import { formatDate, todayISO } from '../app/dates';
 import { useLive } from '../ui/useLive';
 import { BigNumber, DitherBar, LabelValueGrid, Legend, NavBar, PixelIcon, Segmented } from '../ui/kit';
@@ -180,7 +181,7 @@ export function LiftDetail({ params }: { params: string[] }) {
           {shown.map(d => (
             <li key={d.sessionId}>
               <a className="tk-hrow cells" data-press="row" href={`#/history/${encodeURIComponent(d.sessionId)}`}>
-                <span className="tk-hrow-k"><span>{formatDate(d.date, { weekday: false, year: false })}</span><span className="mid">{d.name}</span></span>
+                <span className="tk-hrow-k"><span>{formatDate(d.date, { weekday: false, year: false })}</span><span className="mid">{displayName(d.name)}</span></span>
                 <SetCells sets={d.sets} bodyweightFactor={ex.bodyweightFactor} decimals={decimals} />
                 <PixelIcon name="chevron" scale={1} />
               </a>
