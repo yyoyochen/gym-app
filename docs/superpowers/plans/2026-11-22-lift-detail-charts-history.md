@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-22-lift-detail-charts-history-design.md` (approved 2026-11-22). Mockup (outside the repo, real numbers, never commit it): `gymbro/mockups/lift-detail-ideas.html`, served at http://127.0.0.1:5192/lift-detail-ideas.html.
 
-All paths below are relative to the repo root `/Users/yoyochen/Desktop/claude/gymbro/gymbro`. Run commands from there.
+All paths below are relative to the repo root. Run commands from there.
 
 ## Global Constraints
 
