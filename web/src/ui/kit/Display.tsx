@@ -4,15 +4,17 @@ import type { ReactNode } from 'react';
 import { PixelIcon } from './PixelIcon';
 import { ditherBar } from './dither';
 
-/** ©dd.mm.yy, as on the mood board. */
+const STAMP_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const STAMP_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** "Sun 22 Nov": the date in the header lockup and the PR moment label. */
 export function stampDate(d: Date = new Date()): string {
-  const p = (n: number) => String(n).padStart(2, '0');
-  return `©${p(d.getDate())}.${p(d.getMonth() + 1)}.${p(d.getFullYear() % 100)}`;
+  return `${STAMP_DAYS[d.getDay()]} ${d.getDate()} ${STAMP_MONTHS[d.getMonth()]}`;
 }
 
 /**
  * Boxed header lockup: [mark | INVERTED CELL | right]. Mono caps.
- * e.g. <Lockup mid="Training log //Session A" /> → [▮GB | TRAINING LOG //SESSION A | ©21.11.26]
+ * e.g. <Lockup mid="Training log //Session A" /> → [▮GB | TRAINING LOG //SESSION A | Fri 21 Nov]
  */
 export function Lockup({ mid, left, right, date, className = '' }: {
   mid: ReactNode; left?: ReactNode; right?: ReactNode; date?: Date; className?: string;

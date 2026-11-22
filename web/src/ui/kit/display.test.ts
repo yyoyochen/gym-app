@@ -1,7 +1,7 @@
 import { createElement as h } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Legend, ValueRow } from './Display';
+import { Legend, ValueRow, stampDate } from './Display';
 
 const html = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(el);
 
@@ -32,5 +32,12 @@ describe('Legend', () => {
   it('renders children in order inside a label-role strip', () => {
     const m = html(h(Legend, null, h('span', null, 'Less'), h('span', null, 'More')));
     expect(m).toBe('<div class="legend" aria-hidden="true"><span>Less</span><span>More</span></div>');
+  });
+});
+
+describe('stampDate', () => {
+  it('a plain short date, no copyright mark', () => {
+    expect(stampDate(new Date(2026, 10, 22))).toBe('Sun 22 Nov');
+    expect(stampDate(new Date(2027, 0, 3))).toBe('Sun 3 Jan');
   });
 });

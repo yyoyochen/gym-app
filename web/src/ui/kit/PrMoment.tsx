@@ -85,7 +85,7 @@ export interface PrMomentData {
   unit?: string;
   /** Quiet text after the unit, e.g. "new best double". */
   caption?: string;
-  /** Lift name for the spec line: "[PR] //Back squat · ©21.11.26". */
+  /** Lift name for the spec line: "[PR] //Back squat, Fri 21 Nov". */
   lift?: string;
   /** Label/value pairs below (previous best, e1RM change). */
   pairs?: { label: string; value: ReactNode }[];

@@ -21,7 +21,7 @@ export const TYPE_ROLES: readonly TypeRole[] = [
   { role: 'body', family: 'sans', caps: false, sample: 'Squat felt quick off the floor today.', job: 'sentences; the 15px floor' },
   { role: 'body-strong', family: 'sans', caps: false, sample: 'Hold 120 kg for 3 sessions', job: 'promise, criteria, captions' },
   { role: 'quiet', family: 'sans', caps: false, sample: 'last week', job: 'the grey label over a value' },
-  { role: 'label', family: 'mono', caps: true, sample: '[Session A]  ©22.11.26', job: 'spec labels, legends, day initials' },
+  { role: 'label', family: 'mono', caps: true, sample: '[Session A]  Sun 22 Nov', job: 'spec labels, legends, day initials' },
   { role: 'stamp', family: 'mono', caps: true, sample: 'Beat  Hit  Ready', job: 'verdicts, level chips, ready mark' },
   { role: 'mono', family: 'mono', caps: false, sample: '//NOTE 4×8 @ RPE 8', job: 'stats, notes, set sheets' },
   { role: 'button', family: 'mono', caps: true, sample: 'Log set', job: 'buttons' },
