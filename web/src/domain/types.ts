@@ -112,7 +112,7 @@ export interface Slot {
 
 export interface ProgramSession {
   key: string;            // "A", "B", "C"
-  name: string;           // "A · Squat + Bench"
+  name: string;           // "A: Squat + Bench" (older stored names use a middle dot)
   slots: Slot[];
   /** Slot ids kept in the minimum version of this session. */
   minimumSlotIds: string[];

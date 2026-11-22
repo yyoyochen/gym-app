@@ -43,19 +43,19 @@ function fullBody(): Program {
   return {
     id: t, name: 'Full body A/B/C', templateId: t, rotation: ['A', 'B', 'C'], phases: [],
     sessions: [
-      session(t, 'A', 'A · Squat + Bench', [
+      session(t, 'A', 'A: Squat + Bench', [
         [EX.squat, 'topset', top(2, 3, 8, 10, 75)],
         [EX.bench, 'topset', top(2, 3, 8, 10, 75)],
         ['barbell-row', 'double', dbl(3, 8, 12)],
         ['db-lateral-raise', 'double', dbl(3, 12, 20, true)],
       ], [0, 1]),
-      session(t, 'B', 'B · Deadlift + OHP', [
+      session(t, 'B', 'B: Deadlift + OHP', [
         [EX.deadlift, 'topset', top(2, 2, 8, 10, 75)],
         [EX.ohp, 'topset', top(2, 3, 8, 10, 75)],
         ['pull-up', 'double', dbl(3, 6, 10)],
         ['cable-tricep-pushdown', 'double', dbl(3, 10, 15, true)],
       ], [0, 1]),
-      session(t, 'C', 'C · Accessories', [
+      session(t, 'C', 'C: Accessories', [
         ['incline-db-bench-press', 'double', dbl(3, 8, 12)],
         ['romanian-deadlift', 'double', dbl(3, 8, 12)],
         ['cable-row', 'double', dbl(3, 10, 15)],
@@ -72,27 +72,27 @@ function upperLower(): Program {
   return {
     id: t, name: 'Upper / Lower', templateId: t, rotation: ['U1', 'L1', 'U2', 'L2'], phases: [],
     sessions: [
-      session(t, 'U1', 'Upper 1 · Heavy bench', [
+      session(t, 'U1', 'Upper 1: Heavy bench', [
         [EX.bench, 'topset', top(3, 3, 5, 8)],
         ['barbell-row', 'double', dbl(4, 6, 10)],
         [EX.ohp, 'double', dbl(3, 8, 10)],
         ['lat-pulldown', 'double', dbl(3, 8, 12)],
         ['db-curl', 'double', dbl(2, 10, 15, true)],
       ], [0, 1]),
-      session(t, 'L1', 'Lower 1 · Heavy squat', [
+      session(t, 'L1', 'Lower 1: Heavy squat', [
         [EX.squat, 'topset', top(3, 3, 5, 8)],
         ['romanian-deadlift', 'double', dbl(3, 6, 10)],
         ['leg-curl', 'double', dbl(3, 10, 15, true)],
         ['calf-raise', 'double', dbl(3, 10, 15, true)],
       ], [0, 1]),
-      session(t, 'U2', 'Upper 2 · Heavy press', [
+      session(t, 'U2', 'Upper 2: Heavy press', [
         [EX.ohp, 'topset', top(3, 3, 6, 8)],
         [EX.bench, 'double', dbl(3, 8, 12)],
         ['pull-up', 'double', dbl(3, 6, 10)],
         ['db-lateral-raise', 'double', dbl(3, 12, 20, true)],
         ['cable-tricep-pushdown', 'double', dbl(2, 10, 15, true)],
       ], [0, 1]),
-      session(t, 'L2', 'Lower 2 · Heavy deadlift', [
+      session(t, 'L2', 'Lower 2: Heavy deadlift', [
         [EX.deadlift, 'topset', top(2, 2, 4, 6)],
         [EX.frontSquat, 'double', dbl(3, 6, 10)],
         ['hip-thrust', 'double', dbl(3, 8, 12)],
@@ -107,12 +107,12 @@ function fiveByFive(): Program {
   return {
     id: t, name: '5 × 5 linear', templateId: t, rotation: ['A', 'B'], phases: [],
     sessions: [
-      session(t, 'A', 'A · Squat, Bench, Row', [
+      session(t, 'A', 'A: Squat, Bench, Row', [
         [EX.squat, 'linear5x5', lin()],
         [EX.bench, 'linear5x5', lin()],
         ['barbell-row', 'linear5x5', lin()],
       ], [0, 1, 2]),
-      session(t, 'B', 'B · Squat, OHP, Deadlift', [
+      session(t, 'B', 'B: Squat, OHP, Deadlift', [
         [EX.squat, 'linear5x5', lin()],
         [EX.ohp, 'linear5x5', lin()],
         [EX.deadlift, 'linear5x5', { sets: 1, repMin: 5, repMax: 5, rirFloor: RIR_FLOOR.compound }],
@@ -172,7 +172,7 @@ const BUILDERS: Record<string, () => Program> = {
 };
 
 export const TEMPLATES: TemplateInfo[] = [
-  { id: 'fullbody-abc', name: 'Full body A/B/C', days: '3 (min 2: A + B)', shape: 'A: squat + bench · B: deadlift + OHP · C: accessories', fitsGoal: 'maintain strength + size' },
+  { id: 'fullbody-abc', name: 'Full body A/B/C', days: '3 (min 2: A + B)', shape: 'A: squat + bench; B: deadlift + OHP; C: accessories', fitsGoal: 'maintain strength + size' },
   { id: 'upper-lower', name: 'Upper / Lower', days: '4', shape: 'Two upper, two lower; one heavy top set per main lift per week', fitsGoal: 'strength + size' },
   { id: 'linear-5x5', name: '5 × 5 linear', days: '3', shape: 'A/B alternating, three main lifts each', fitsGoal: 'strength block' },
   { id: 'hypertrophy-split', name: 'Hypertrophy split', days: '4–5', shape: 'Push / pull / legs + upper / lower, double progression', fitsGoal: 'size' },

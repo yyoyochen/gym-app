@@ -6,7 +6,7 @@ import { TEMPLATES, programFromTemplate } from '../../domain/templates';
 import { PixelIcon } from '../../ui/kit';
 import { describeSlot } from '../program';
 
-/** "A · Squat + Bench" → "Squat + Bench" (the key has its own cell). */
+/** "A: Squat + Bench" (or an older stored dot form) → "Squat + Bench" (the key has its own cell). */
 export function sessionTitle(s: Pick<ProgramSession, 'key' | 'name'>): string {
   const esc = s.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return s.name.replace(new RegExp(`^${esc}\\s*[·:\\-–]\\s*`), '').trim() || s.name;
