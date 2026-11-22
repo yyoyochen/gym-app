@@ -3,7 +3,7 @@
 // name, so column order doesn't matter. One CSV row = one set. Rows group into
 // sessions by (date, Session label). Re-importing the same export is a no-op:
 // each session carries importKey = hash of its normalised source rows.
-import type { Exercise, ImportFlag, ISODate, Millis, Session } from '../domain/types';
+import type { Exercise, ImportFlag, ISODate, Millis, Session, SetKind } from '../domain/types';
 import { findInCatalog, guessExercise, nameKey } from '../domain/catalog';
 import type { GymDb, StoredSet } from '../db/schema';
 import { daysInMonth, hashString, noonUTC, pad } from '../db/util';
@@ -24,13 +24,17 @@ export interface NotionRow {
   notes: string;
   /** Normalised source fields, for hashing. */
   raw: string;
+  /** Hevy/Strong only (import/formats.ts): the set's kind and effort, and the workout it belongs to. */
+  kind?: SetKind;
+  rir?: number;
+  group?: string;
 }
 
 export interface RowProblem { line: number; reason: string }
 
 export interface ParsedNotion { rows: NotionRow[]; skipped: RowProblem[]; columns: string[] }
 
-const HEADERS: Record<keyof Omit<NotionRow, 'line' | 'raw'>, string[]> = {
+const HEADERS: Record<keyof Omit<NotionRow, 'line' | 'raw' | 'kind' | 'rir' | 'group'>, string[]> = {
   date: ['date', 'day'],
   label: ['session', 'session label', 'label', 'workout'],
   exercise: ['exercise', 'exercise name', 'lift'],
