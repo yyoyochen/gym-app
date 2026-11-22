@@ -13,6 +13,8 @@ import { formatDate, todayISO } from '../app/dates';
 import { TARGET_TYPE_LABELS, feasibilityWord } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { goalRows } from '../ui/progress/data';
+import { pickTip } from '../app/tips';
+import { ScreenTip, useTipsSeen } from '../app/parts/ScreenTip';
 import { BigNumber, DitherBar, DitherNumber, LinkButton, Lockup, Parts, Verdict, prefersReducedMotion } from '../ui/kit';
 import { MonoNums, sessionNames } from '../ui/session/text';
 import { priorFromHistory, sessionPrs } from '../ui/session/prs';
@@ -65,6 +67,7 @@ export function Review({ params }: { params: string[] }) {
   }, [id]);
 
   const [reveal, setReveal] = useState(false);
+  const tipsSeen = useTipsSeen();
   useScrollTop(id);
   useEffect(() => {
     if (!data?.session || !data.grade) return;
@@ -127,6 +130,7 @@ export function Review({ params }: { params: string[] }) {
               </article>
             ))}
           </div>
+          <ScreenTip id="grade" shown={pickTip({ grade: session.sealed && grade.slots.some(s => !s.ungraded && s.result.verdict !== 'new') }, tipsSeen)} />
         </>
       ) : <p className="quiet">No committed promise for this session, so there is nothing to grade.</p>}
 

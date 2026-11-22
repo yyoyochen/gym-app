@@ -239,3 +239,14 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 
 /* kit gallery: type roles */
 .kit-type { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) 0; border-bottom: var(--hair); overflow: hidden; white-space: nowrap; }
+
+/* ---------- tip (in-place, shown once; app/tips.ts) ---------- */
+.tip { position: relative; margin: var(--space-2) 0 var(--space-3); padding: var(--space-3) var(--space-3) 0; border: var(--rule-w) solid var(--accent); background: var(--paper); }
+.tip::before { content: ''; position: absolute; top: -7px; left: var(--space-6); width: 12px; height: 12px; background: var(--paper);
+  border-left: var(--rule-w) solid var(--accent); border-top: var(--rule-w) solid var(--accent); transform: rotate(45deg); }
+.tip-k { display: block; margin-bottom: var(--space-1); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--accent); font-weight: var(--font-strong); }
+.tip-text { margin: 0; font: var(--text-body); color: var(--ink); }
+.tip-foot { display: flex; align-items: center; justify-content: space-between; }
+.tip-n { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--mid); }
+.tip-ok { min-height: 48px; padding: 0 0 0 var(--space-4); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; font-weight: var(--font-strong); color: var(--accent); text-decoration: underline; }
+.tip-link { display: inline-flex; align-items: center; min-height: 48px; }

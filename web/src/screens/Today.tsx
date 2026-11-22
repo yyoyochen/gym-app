@@ -3,11 +3,13 @@
 // promise word for word, label/value pairs, this week + goal pace bars,
 // readiness, the glyph heatmap, and START pinned above the tab bar.
 import { useState } from 'react';
-import { getDb, getMeta, getProfile } from '../db';
+import { getDb, getMeta, getProfile, listSessions } from '../db';
 import type { ReadinessAnswers } from '../engine';
 import { formatElapsed, readinessFromAnswers, formatEffort } from '../engine';
 import { backupDue, commitSession, kg, planToday, skipSession, todayState, type SlotPlan } from '../app/coach';
 import { useFirstRunRedirect } from '../app/firstRun';
+import { goalNudgeDue } from '../app/tips';
+import { ScreenTip, useScreenTip } from '../app/parts/ScreenTip';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { TARGET_TYPE_LABELS } from '../app/labels';
@@ -64,7 +66,7 @@ export function Today(_props: { params: string[] }) {
     const now = Date.now();
     const today = todayISO(now);
     const profile = await getProfile(db);
-    const [state, plan, heat, backup, demo, goals, parts] = await Promise.all([
+    const [state, plan, heat, backup, demo, goals, parts, sessions] = await Promise.all([
       todayState(db, today, now),
       planToday(db, today, now, { readiness, minimum }),
       loadConsistency(db, today, 52, profile),
@@ -72,11 +74,19 @@ export function Today(_props: { params: string[] }) {
       getMeta(db, 'demoMode'),
       profile ? goalRows(db, profile, today) : Promise.resolve([]),
       loadWeekBodyParts(db, today, profile?.sessionsPerWeekTarget ?? 3),
+      listSessions(db),
     ]);
+    const finished = sessions.filter(s => s.sealed);
     const counts: Record<string, number> = {};
     for (const col of heat.grid.columns) for (const c of col) if (c.inWindow && c.count > 0) counts[c.date] = c.count;
-    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals, parts };
+    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals, parts, finished: finished.length, firstFinished: finished[0]?.date ?? null };
   }, [readiness, minimum]);
+
+  const tip = useScreenTip(data ? {
+    promise: data.plan.status === 'committed' || (data.plan.status === 'planned' && (!data.state.doneToday || showNext)),
+    readiness: data.plan.status === 'planned' && !data.state.open && (!data.state.doneToday || showNext) && data.finished >= 1,
+    goalNudge: goalNudgeDue(data.firstFinished, data.today, (data.profile?.targets.length ?? 0) > 0),
+  } : {});
 
   if (gate !== 'ready' || !data) return <section className="screen today" aria-busy="true" />;
   const { today, profile, state, plan, heat, counts, backup, demo, goals, parts } = data;
@@ -148,6 +158,7 @@ export function Today(_props: { params: string[] }) {
             <p className="quiet">Why: {readable(sp.target.why)}</p>
             {sp.lastNote && <p className="quiet">Last note: {sp.lastNote}</p>}
           </div>
+          <ScreenTip id="promise" shown={tip} />
           {sp.pain?.painCheck && <p className="note">//Pain check — how does it feel warming up? {sp.pain.reasons[0]}</p>}
           <LabelValueGrid items={pairs} />
         </>
@@ -177,6 +188,8 @@ export function Today(_props: { params: string[] }) {
         ))}
       </div>
 
+      <ScreenTip id="goalNudge" shown={tip} />
+
       {done && !showNext && plan.status === 'planned' && (
         <Button block iconEnd="chevron" className="split" onClick={() => setShowNext(true)}>Show the next session ({names.short})</Button>
       )}
@@ -184,6 +197,7 @@ export function Today(_props: { params: string[] }) {
       {canStart && (
         <>
           <ReadinessCheck answers={answers} onChange={setAnswers} readiness={readiness} />
+          <ScreenTip id="readiness" shown={tip} />
           {plan.slots.some(s => s.inMinimum) && (
             <Toggle label="Minimum version" hint="Only the lifts that keep the week on track" checked={minimum} onChange={setMinimum} />
           )}

@@ -10,6 +10,7 @@ import { useLive } from '../ui/useLive';
 import { ConfirmButton, Group, GroupAction, Segmented, Stepper, downloadText } from '../ui/common';
 import { Button, LabelValueGrid, NavBar, Toggle, go, showHud, useHaptics, useTheme, type ThemePref } from '../ui/kit';
 import { DemoBanner, useDemoMode } from '../app/DemoBanner';
+import { resetTips } from '../app/tips';
 import { formatDate, todayISO } from '../app/dates';
 import { DEFAULT_PLATES, STANDARD_PLATES, getPlateSettings, savePlateSettings, type PlateSettings } from '../app/prefs';
 import { ImportNotionPanel } from '../app/parts/ImportNotionPanel';
@@ -93,6 +94,7 @@ function Appearance() {
       <Segmented<ThemePref> label="Theme" value={theme} onChange={v => { void setTheme(v); }}
         options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
       <Toggle label="Haptics" hint="A short buzz on set commit and on a new best. Android only." checked={enabled} onChange={v => { void setEnabled(v); }} />
+      <Button block onClick={async () => { await resetTips(getDb()); showHud({ text: 'Tips will show again', icon: 'check' }); }}>Show tips again</Button>
     </Group>
   );
 }

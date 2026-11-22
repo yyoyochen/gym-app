@@ -1,6 +1,8 @@
 // Progress (spec §3.2, §3.6, §4) in Ink & Dither: a glyph heatmap since the
 // first session, terminal-style stats, gym-goer levels as dither bars, a fun
 // tonnage line, then the goal board, benchmarks and the lift list.
+import { pickTip } from '../app/tips';
+import { ScreenTip, useTipsSeen } from '../app/parts/ScreenTip';
 import type { ISODate } from '../domain/types';
 import { getProfile, listExercises, listSessions } from '../db';
 import { addDays } from '../engine';
@@ -49,8 +51,10 @@ export function Progress(_props: { params: string[] }) {
     if (!tonnage(sets, funIds) && stats.favourite) { funIds = new Set([stats.favourite.exerciseId]); funWord = pluralLift(byId.get(stats.favourite.exerciseId)?.name ?? 'lift'); }
     const fun = funComparison(tonnage(sets, funIds));
     const goals = profile ? await goalRows(db, profile, today) : [];
-    return { today, profile, bw, stats, lifts, goals, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined };
+    return { today, profile, bw, stats, lifts, goals, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined,
+      finished: sessions.filter(s => s.sealed).length };
   }, []);
+  const tipsSeen = useTipsSeen();
 
   if (!data) return <section className="screen" aria-busy="true" />;
   const { today, profile, bw, stats, lifts, goals, fun, funWord, favName } = data;
@@ -150,6 +154,7 @@ export function Progress(_props: { params: string[] }) {
             );
           })}
         </ul>
+        <ScreenTip id="progress" shown={pickTip({ progress: data.finished >= 2 && lifts.length > 0 }, tipsSeen)} />
       </section>
 
       {stats.sessions > 0 && (
