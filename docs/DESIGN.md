@@ -228,7 +228,7 @@ these at 6. Today there are 4:
 
 | Component | Notes |
 |---|---|
-| `PixelIcon name scale` | 1-bit icons on a 9×9 grid (`icons.ts`; the settings gear is 13×13, filled with a plus-shaped hole), crisp at integer scales |
+| `PixelIcon name scale` | 1-bit icons on a 9×9 grid (`icons.ts`; the settings gear is 13×13, an outline cog around a plus-shaped hole), crisp at integer scales |
 | `Lockup mid left? right?` | boxed header, middle cell inverted, a plain short date (`Sun 22 Nov`) default |
 | `BigNumber value unit? caption? size` | hero / display / lg |
 | `LabelValue`, `LabelValueGrid items columns variant` | pairs grid, or `stats` (ink label, accent value) |

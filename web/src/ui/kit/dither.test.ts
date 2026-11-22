@@ -81,10 +81,10 @@ describe('pixel icons', () => {
       expect(rows.join('').includes('#'), name).toBe(true);
     }
   });
-  it('the gear is the filled cog with a plus-shaped hole; the calendar has rings, a header and day dots', () => {
+  it('the gear is the outline cog with a ringed plus-shaped hole; the calendar has rings, a header and day dots', () => {
     expect(ICONS.settings).toEqual([
-      '.....###.....', '..##.###.##..', '.###########.', '.###########.', '..#########..', '######.######', '#####...#####',
-      '######.######', '..#########..', '.###########.', '.###########.', '..##.###.##..', '.....###.....',
+      '.....###.....', '..##.#.#.##..', '.#..##.##..#.', '.#.........#.', '..#..###..#..', '###.##.##.###', '#...#...#...#',
+      '###.##.##.###', '..#..###..#..', '.#.........#.', '.#..##.##..#.', '..##.#.#.##..', '.....###.....',
     ]);
     expect(ICONS.calendar).toEqual(['.#.....#.', '#########', '#########', '#.......#', '#.#.#.#.#', '#.......#', '#.#.#.#.#', '#.......#', '#########']);
   });

@@ -77,7 +77,7 @@ export function Profile({ params }: { params: string[] }) {
   return (
     <section className="screen setup">
       <DemoBanner />
-      <NavBar title="Profile" right={
+      <NavBar title="Profile" titleAction={
         <a className="icon-btn" href="#/profile/settings" aria-label="Settings" data-press="dim"><PixelIcon name="settings" /></a>
       }>
         <Lockup mid={`Profile //${GOAL_SHORT[p.primaryGoal]}`} />

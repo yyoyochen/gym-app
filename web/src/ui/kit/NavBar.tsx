@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PixelIcon } from './PixelIcon';
 import { back as navBack } from './navigation';
 
-export function NavBar({ title, backLabel, onBack, fallback = 'today', right, large = true, children }: {
+export function NavBar({ title, backLabel, onBack, fallback = 'today', right, titleAction, large = true, children }: {
   title: string;
   /** Show a back button with this label (e.g. 'Progress'). */
   backLabel?: string;
@@ -14,6 +14,8 @@ export function NavBar({ title, backLabel, onBack, fallback = 'today', right, la
   onBack?: () => void;
   fallback?: string;
   right?: ReactNode;
+  /** A control on the large title's line (e.g. Profile's Settings gear); it moves into the bar once the title scrolls under it. */
+  titleAction?: ReactNode;
   /** Render the large title under the bar (default true). */
   large?: boolean;
   /** Extra content under the large title (subtitle, lockup…). */
@@ -46,9 +48,14 @@ export function NavBar({ title, backLabel, onBack, fallback = 'today', right, la
           )}
         </div>
         <div className="navbar-title" aria-hidden={large ? !collapsed : undefined}>{title}</div>
-        <div className="navbar-side right">{right}</div>
+        <div className="navbar-side right">{right}{titleAction && (collapsed || !large) ? titleAction : null}</div>
       </div>
-      {large && <h1 className="large-title navbar-large" ref={sentinel}>{title}</h1>}
+      {large && (titleAction ? (
+        <div className="navbar-large-row">
+          <h1 className="large-title navbar-large" ref={sentinel}>{title}</h1>
+          {!collapsed && titleAction}
+        </div>
+      ) : <h1 className="large-title navbar-large" ref={sentinel}>{title}</h1>)}
       {children}
     </>
   );
