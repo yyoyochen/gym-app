@@ -126,6 +126,27 @@ export function checkTsx(text, file) {
   return { violations, allowed };
 }
 
+/**
+ * The no-dot rule (docs/DESIGN.md): a middle dot with whitespace beside it is a
+ * separator, and separators are a gap, a comma, parentheses or a colon instead.
+ * A lone '·' (a placeholder glyph) and the escape \u00B7 pass; comments are ignored.
+ */
+export function checkText(text, file) {
+  const lines = text.split('\n');
+  const clean = text
+    .replace(/\/\*[\s\S]*?\*\//g, c => c.replace(/[^\n]/g, ' '))
+    .split('\n')
+    .map(l => l.replace(/(^|\s)\/\/.*$/, '$1'));
+  const violations = [], allowed = [];
+  clean.forEach((l, i) => {
+    if (!/\s\u00B7|\u00B7\s/.test(l)) return;
+    const reason = allowReason(lines[i]);
+    if (reason) allowed.push({ file, line: i + 1, rule: 'dot', reason });
+    else violations.push({ file, line: i + 1, rule: 'dot', text: lines[i].trim() });
+  });
+  return { violations, allowed };
+}
+
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
     if (name === '__fixtures__' || name === 'node_modules') continue;
@@ -144,6 +165,10 @@ export function checkStyles(srcDir) {
     if (name.endsWith('.css') && !SKIP_CSS.has(name)) r = checkCss(readFileSync(p, 'utf8'), relative(srcDir, p));
     else if (name.endsWith('.tsx') && !/\.test\.tsx$/.test(name)) r = checkTsx(readFileSync(p, 'utf8'), relative(srcDir, p));
     if (r) { violations.push(...r.violations); allowed.push(...r.allowed); }
+    if (/\.tsx?$/.test(name) && !/\.test\.tsx?$/.test(name) && !name.endsWith('.d.ts')) {
+      const t = checkText(readFileSync(p, 'utf8'), relative(srcDir, p));
+      violations.push(...t.violations); allowed.push(...t.allowed);
+    }
   }
   return { violations, allowed };
 }

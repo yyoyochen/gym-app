@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { checkCss, checkStyles, checkTsx } from '../../../tools/check-styles.mjs';
+import { checkCss, checkStyles, checkText, checkTsx } from '../../../tools/check-styles.mjs';
 
 const fx = (f: string) => readFileSync(resolve(__dirname, '__fixtures__', f), 'utf8');
 const rules = (r: { violations: { rule: string }[] }) => r.violations.map(v => v.rule).sort();
@@ -96,5 +96,19 @@ describe('real styles', () => {
     expect(r.violations.map(x => `${x.file}:${x.line} ${x.rule} ${x.text}`)).toEqual([]);
     expect(r.allowed.length).toBeLessThanOrEqual(6);
     for (const a of r.allowed) expect(a.reason.trim(), `${a.file}:${a.line}`).not.toBe('');
+  });
+
+  it('a middle dot with space beside it is a separator and fails', () => {
+    const DOT = '\u00B7';
+    expect(rules(checkText(`const a = 'Height ${DOT} cm';`, 'a.ts'))).toEqual(['dot']);
+    expect(rules(checkText(`const El = () => <span> ${DOT} {unit}</span>;`, 'a.tsx'))).toEqual(['dot']);
+    expect(checkText("const a = 'Height \\u00B7 cm';", 'a.ts').violations).toEqual([]);
+    expect(checkText(`const EMPTY = '${DOT}';`, 'a.ts').violations).toEqual([]);
+    expect(checkText(`// Height ${DOT} cm\n/* a ${DOT} b */\nconst x = 1; // y ${DOT} z`, 'a.ts').violations).toEqual([]);
+    expect(rules(checkText(fx('bad.ts.txt'), 'bad.ts'))).toEqual(['dot', 'dot']);
+  });
+
+  it('the app has no dot separators', () => {
+    expect(checkStyles(resolve(__dirname, '..')).violations.filter(v => v.rule === 'dot')).toEqual([]);
   });
 });

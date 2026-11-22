@@ -3,4 +3,5 @@ export interface StyleAllowed { file: string; line: number; rule: string; reason
 export interface StyleResult { violations: StyleViolation[]; allowed: StyleAllowed[] }
 export function checkCss(text: string, file: string): StyleResult;
 export function checkTsx(text: string, file: string): StyleResult;
+export function checkText(text: string, file: string): StyleResult;
 export function checkStyles(srcDir: string): StyleResult;

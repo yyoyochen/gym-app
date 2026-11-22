@@ -1,0 +1,5 @@
+// A spaced dot here is only a comment: Height · cm
+export const label = 'Height · cm';
+export const lone = '·';
+export const El = () => <span> · {unit}</span>;
+/* block · comment */

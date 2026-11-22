@@ -137,6 +137,52 @@ gallery renders every role from `ui/kit/typeRoles.ts`.
 - Rings sit inside a cell with `outline` and a negative `outline-offset`,
   never `box-shadow`.
 
+### Separators: no middle dot
+
+A middle dot between facts reads as template chrome, so it is not used as a
+separator anywhere in the UI. Use instead:
+
+| Form | Write |
+|---|---|
+| Field label plus unit or qualifier | `Height (cm)`, `Since (optional)` |
+| File or format on a button | `Export backup (JSON)` |
+| Title or button followed by a name or date | `Edit set: Deadlift`, `Start logging: 12 Nov` |
+| Two things named together | `Level and pace`, `Adjust weight, reps, effort` |
+| Facts in a string prop (meta, label, valueText, title, aria) | commas: `12 sessions, 3 weeks at target` |
+| Facts you render as JSX | `<Parts items={[...]} />` (spans with a gap, no glyph) |
+| Clauses that already hold commas or colons, or a free-text note | `; ` |
+
+A lone `·` used as a placeholder glyph (empty heatmap cell, unknown trend) is
+not a separator and stays. Session names stored before 2026-11-22 still hold a
+dot; `sessionNames` reads both forms and nothing is migrated.
+
+### Charts: step line, one y-axis rule, ceiling lane
+
+`ui/progress/LiftChart.tsx` paints what `chartModel.ts` decides:
+
+- **Step line:** a value holds until the next session, then steps. A hold
+  longer than 42 days is dotted (no sessions, so the flat line is an assumption).
+  No fills or shading under a line. Weekly volume is solid bars, with a 4 × 2 px
+  tick for a week with nothing.
+- **Y-axis:** ceiling = 120% of the best value in view, floor = 90% of the
+  lowest (volume floors at 0), 3 to 6 round ticks inside, a 150 px plot.
+- **Targets:** a target at least 22 px under the ceiling is drawn at its real
+  height (dashed accent line, label on a paper backing, gap at the right). Any
+  other target is pinned in a lane above the plot with an up-arrow and its gap
+  ("Advanced 191.5 kg +35.5"), and never moves the scale. A target below the
+  floor is not drawn. A thin two-row Bayer dither band marks the ceiling edge.
+- **Which targets:** e1RM gets the next level (plain kg e1RM only) and the
+  lifter's own goal for the lift (earliest deadline). Top set and Weekly volume
+  get none. Gaps count from the best e1RM in 90 days, rounded to 0.5 kg.
+
+### Set cells (lift History)
+
+One cell per set, all the same size within a list: weight in a 3 ch slot (plus
+a 2 ch decimal slot when the list has any fractional weight), `×`, reps in a
+2 ch slot, all right-aligned so the digits line up. Fill = top set, outline =
+work set, dotted = ramp (a set before the day's heaviest and under 80% of it,
+inferred for display only). Failed reps are struck through.
+
 ### The check
 
 `tools/check-styles.mjs` runs at the end of `npm run build`, and as a vitest
@@ -151,6 +197,7 @@ test. It fails on any of these outside the token files:
 - a radius
 - a shadow
 - the same in TSX inline styles
+- a middle dot with whitespace beside it in a `.ts` or `.tsx` string (rule `dot`, comments ignored)
 
 The escape hatch is a same-line `/* ds-allow: <reason> */` in CSS, or
 `// ds-allow: <reason>` in TSX. The reason is required, and the test caps
