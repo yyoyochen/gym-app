@@ -19,14 +19,14 @@ visible "next level" target, and History they can read at a glance.
 3. **Targets live in a ceiling lane** above the plot when they are out of range,
    at their real height when they are comfortably in range.
 4. History rows show each set as an **equal-size cell** with digit-aligned numbers.
-5. No middle dot used as a separator on this page (new work only, see Non-goals).
+5. **Dot sweep:** no middle dot (·) used as a separator anywhere in the app, and a
+   style-check rule so it cannot come back (see "Dot sweep" below).
 
 ## Non-goals
 
 - A weekly-volume target or benchmark. The app has none and the user chose none.
   The volume chart shows only the trend.
 - Changing stored data. Warm-up detection is display only.
-- The app-wide sweep of the ~100 other middle-dot separators. Separate follow-up.
 - Shading, gradients or area fills under any line.
 
 ## Anti-goals
@@ -93,6 +93,27 @@ near the top ran into the ceiling band.
   has no warm-up flag), so this is the only source of ramp information.
 - A legend below the list explains the three cell styles.
 
+## Dot sweep (app-wide)
+
+The user does not want the middle dot as a delimiter ("very AI feel"). Scan on
+2026-11-22: 149 lines contain it in `web/src`, in ~35 non-test files; 47 are code
+comments (left alone), ~100 are user-visible. They fall into five kinds:
+
+| Kind | Examples | Replacement (proposed, awaiting the user's pick) |
+|---|---|---|
+| Joined facts in one line | "12 sessions · 3 weeks at target", "Intermediate · 54th percentile", set lists | Separate spans with a gap, no glyph (the `Parts` pattern already in LiftDetail, SessionDetail, Today). The functions that build these lines (`stats.ts`, `standards.ts`, `consistency.ts`, `coach.ts` setsLine, `logger.ts`) return `string[]`; a `joinParts` helper gives ", " for plain text (aria, title). |
+| Label qualifiers | "Height · cm", "Since · optional", "Plates available · kg" | Parentheses: "Height (cm)", "Since (optional)". |
+| Button and sheet titles | "Export backup · JSON", "Edit set · Deadlift" | "Export backup (JSON)", "Edit set: Deadlift". |
+| Stored session names | "A · Squat + Bench" in `domain/templates.ts`, parsed by `sessionNames` | New templates use "A: Squat + Bench". **Existing stored names keep the dot**, so `sessionNames` accepts both forms. No data migration. |
+| Placeholders, not delimiters | `EMPTY = '·'` (dither.ts), unknown-trend glyph, `glyphs \|\| '·'` | Kept. A string that is only "·" is a placeholder, not a separator. |
+
+- **Style check:** `tools/check-styles.mjs` gains a `dot` rule for `.ts`/`.tsx`
+  strings: a `·` with whitespace beside it is a violation, a lone `'·'` is not.
+  Comments are ignored. No `ds-allow` needed (cap stays at 6).
+- **Tests:** 9 test files assert on dot strings and are updated with the code they cover.
+- **Order:** the chart and History work first, then the sweep as its own tasks on
+  the same branch, with separate commits, so each can be reviewed or reverted alone.
+
 ## Constraints
 
 - Design-system rules apply: tokens only, `npm run build` check-styles stays at 0
@@ -107,5 +128,5 @@ near the top ran into the ceiling band.
 - How a `GoalTarget` value compares with e1RM for the "your target" line. Assumed
   to be a kg figure comparable to e1RM; confirm against `validate.ts` before drawing.
 - Accessibility text for the chart (summary sentence including pinned targets).
-- Tests: the y-axis rule (ceiling, floor, pinned vs in-range, stacking), the 6-week
+- Tests: the dot rule in the style check (fixture with a bad and a good string), `sessionNames` with both name forms, the y-axis rule (ceiling, floor, pinned vs in-range, stacking), the 6-week
   dotted hold, ramp inference, and digit alignment of cell slots.
