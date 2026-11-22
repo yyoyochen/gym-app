@@ -219,7 +219,7 @@ export async function importNotionCsv(db: GymDb, text: string, opts: NotionImpor
   return importParsed(db, parseNotionCsv(text), opts);
 }
 
-export const UNKNOWN_CSV = 'GymBro can read three kinds of CSV: the GymBro template (Date, Session, Exercise, Order, Set, Reps, Weight (kg), Notes), a Hevy export, or a Strong export. This file is none of them.';
+export const UNKNOWN_CSV = 'The app reads three kinds of CSV: its own template (Date, Session, Exercise, Order, Set, Reps, Weight (kg), Notes), a Hevy export, or a Strong export. This file is none of them.';
 
 /** A Strong export with no unit anywhere (the iOS export): the person must say kg or lb before importing. */
 export function needsUnit(text: string): boolean {
@@ -227,7 +227,7 @@ export function needsUnit(text: string): boolean {
   return detectFormat(header) === 'strong' && unitOfStrong(header) === null;
 }
 
-/** "Import a CSV": the GymBro template, a Hevy export or a Strong export, told apart by the header. */
+/** "Import a CSV": the app template, a Hevy export or a Strong export, told apart by the header. */
 export async function importCsv(
   db: GymDb, text: string, opts: NotionImportOptions & { unit?: WeightUnit } = {},
 ): Promise<NotionImportResult & { format: CsvFormat }> {

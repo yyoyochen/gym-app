@@ -20,7 +20,7 @@ export const TIP_TEXT: Record<TipId, string> = {
   readiness: "Three quick taps before you start. A bad night or sore legs eases today's targets; skip them and they count as good.",
   progress: "Each lift's trend and level. Tap a lift for its chart, its next level and your best weight at each rep count.",
 };
-export const GOAL_NUDGE_TEXT = "Have a target in mind? Set a goal and its date in Profile, and GymBro will tell you if you're on pace.";
+export const GOAL_NUDGE_TEXT = "Have a target in mind? Set a goal and its date in Profile, and the app will tell you if you're on pace.";
 export const GOAL_NUDGE_DAYS = 7;
 
 export const tipNumber = (id: TipId): number => TIP_IDS.indexOf(id) + 1;
@@ -56,7 +56,7 @@ export async function resetTips(db: GymDb): Promise<void> {
   await setMeta(db, 'tipsSeen', []);
 }
 
-/** A log that isn't demo data means someone who already uses GymBro. */
+/** A log that isn't demo data means someone who already uses the app. */
 async function returningUser(db: GymDb): Promise<boolean> {
   return (await db.sessions.count()) > 0 && (await getMeta(db, 'demoMode')) !== true;
 }

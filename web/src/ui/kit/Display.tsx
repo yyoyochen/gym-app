@@ -21,7 +21,7 @@ export function Lockup({ mid, left, right, date, className = '' }: {
 }) {
   return (
     <div className={`lockup ${className}`}>
-      <span className="lockup-mark">{left ?? <><PixelIcon name="bar" />GB</>}</span>
+      <span className="lockup-mark">{left ?? <><PixelIcon name="bar" /></>}</span>
       <span className="lockup-inv">{mid}</span>
       <span className="lockup-right">{right ?? stampDate(date)}</span>
     </div>

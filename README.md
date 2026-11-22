@@ -1,8 +1,8 @@
-# GymBro
+# Gym App
 
 A strength-training log for lifters who already know what they're doing.
 
-Before each session GymBro shows a **promise**: the numbers to hit for every
+Before each session the app shows a **promise**: the numbers to hit for every
 lift, and why. It locks when you start. Afterwards the session is **graded**
 against that exact promise (beat, hit or missed), and the next promise follows
 from the result.
@@ -25,7 +25,7 @@ Once installed it opens full screen and runs with no connection.
 - **Day-one promises.** Setup takes about 90 seconds. Enter your best recent set for squat, bench, deadlift and overhead press, and the first session already has real targets.
 - **Readiness.** Three quick taps (sleep, soreness, stress) ease the day's targets on a bad day.
 - **Progress.** e1RM trends, strength levels against gym-goers, best weight at each rep count, PRs, weekly sets by body part and a training calendar.
-- **Bring your log.** Import a CSV: GymBro's own template (download it in the app), or an export from **Hevy** or **Strong** (iPhone or Android). Warm-ups, effort (RPE) and units carry over; re-importing the same file adds nothing.
+- **Bring your log.** Import a CSV: the app’s own template (download it in the app), or an export from **Hevy** or **Strong** (iPhone or Android). Warm-ups, effort (RPE) and units carry over; re-importing the same file adds nothing.
 - **Your data stays yours.** Everything is stored on your phone. Export a backup file any time and restore it on another device.
 
 ## Privacy
@@ -73,11 +73,11 @@ Every push to `main` runs the tests and the build, then deploys to GitHub Pages
 
 ## Data credits
 
-Strength levels use GymBro's own modeled gym-goer standards
+Strength levels use the app’s own modeled gym-goer standards
 ([methodology](docs/STANDARDS-METHODOLOGY.md)). The squat, bench and deadlift
 anchors are self-reported gym percentiles from the Symmetric Strength dataset,
 as published by [Strength Standards data by FitnessVolt](https://fitnessvolt.com/strength-standards/)
-(CC BY 4.0). Everything else is modeled by GymBro; neither site endorses these
+(CC BY 4.0). Everything else is modeled by this app; neither site endorses these
 figures.
 
 ## License

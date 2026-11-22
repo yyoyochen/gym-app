@@ -1,6 +1,6 @@
 {
-  "name": "GymBro",
-  "short_name": "GymBro",
+  "name": "Gym App",
+  "short_name": "Gym App",
   "description": "A workout log that promises, grades and coaches. Offline; your data stays on your phone.",
   "start_url": "./",
   "scope": "./",

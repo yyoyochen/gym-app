@@ -142,12 +142,12 @@ function HistorySheet({ open, onClose }: { open: boolean; onClose: () => void })
   return (
     <Sheet open={open} title="Bring your log" onClose={onClose}>
       <div className="choice-list">
-        <Choice k="01" title="Import a CSV" sub="GymBro template, Hevy or Strong" open={mode === 'csv'} onClick={() => pick('csv')} />
+        <Choice k="01" title="Import a CSV" sub="App template, Hevy or Strong" open={mode === 'csv'} onClick={() => pick('csv')} />
         {mode === 'csv' && <div className="choice-body">
           <ImportCsvPanel onDone={r => setImported(r.sessionsAdded > 0 || r.sessionsUnchanged > 0)} />
           {imported && <Button variant="primary" block iconEnd="chevron" onClick={onClose}>Continue setup</Button>}
         </div>}
-        <Choice k="02" title="Restore a backup" sub="A GymBro .json export" open={mode === 'restore'} onClick={() => pick('restore')} />
+        <Choice k="02" title="Restore a backup" sub="A .json backup from this app" open={mode === 'restore'} onClick={() => pick('restore')} />
         {mode === 'restore' && <div className="choice-body">
           <RestorePanel onRestored={finish} />
           <p className="quiet">A restore brings back your profile and program too, so it goes straight to Today.</p>
@@ -249,8 +249,8 @@ function StepNumbers({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
   };
   return (
     <>
-      <Question sub="Your best set in the last month for each lift. GymBro sets your first targets from these.">Your numbers</Question>
-      {rows && !rows.length && <p className="quiet">Your log already covers these lifts. GymBro plans from it.</p>}
+      <Question sub="Your best set in the last month for each lift. Your first targets come from these.">Your numbers</Question>
+      {rows && !rows.length && <p className="quiet">Your log already covers these lifts. The app plans from it.</p>}
       {rows && rows.length > 0 && (
         <div className="num-rows">
           {rows.map((r, i) => (
@@ -309,7 +309,7 @@ function StepHow({ onBack }: { onBack?: () => void }) {
   };
   return (
     <>
-      <Question>How GymBro works</Question>
+      <Question>How it works</Question>
       <ol className="onb-how">
         {HOW.map((line, i) => (
           <li key={i}><span className="srow-k">{pad2(i + 1)}</span><span>{line}</span></li>

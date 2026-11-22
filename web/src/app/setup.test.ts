@@ -69,7 +69,7 @@ describe('starting sets', () => {
 
 describe('setup steps', () => {
   it('setup has four steps in order', () => {
-    expect(SETUP_STEPS).toEqual(['About you', 'Program', 'Your numbers', 'How GymBro works']);
+    expect(SETUP_STEPS).toEqual(['About you', 'Program', 'Your numbers', 'How it works']);
   });
 });
 

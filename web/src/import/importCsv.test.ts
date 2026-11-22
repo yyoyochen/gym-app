@@ -62,7 +62,7 @@ describe('one CSV import for the template, Hevy and Strong', () => {
   });
   it('an unknown header is refused with the three shapes named', async () => {
     const d = await db();
-    await expect(importCsv(d, 'a,b\n1,2\n')).rejects.toThrow(/GymBro template.*Hevy.*Strong/);
+    await expect(importCsv(d, 'a,b\n1,2\n')).rejects.toThrow(/template.*Hevy.*Strong/);
   });
   it('a template re-saved by a spreadsheet with semicolons still imports', async () => {
     const d = await db();

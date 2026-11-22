@@ -71,7 +71,7 @@ export async function pendingStartingSets(db: GymDb, profile: Profile | undefine
 }
 
 /** The setup screens, in order (screens/Onboarding.tsx routes onboarding/1…4). */
-export const SETUP_STEPS = ['About you', 'Program', 'Your numbers', 'How GymBro works'] as const;
+export const SETUP_STEPS = ['About you', 'Program', 'Your numbers', 'How it works'] as const;
 
 /** Fix a typo in a starting set: new weight and reps (1–12), same date. */
 export function editStartingSet(list: StartingSet[], exerciseId: string, weight: number, reps: number): StartingSet[] {

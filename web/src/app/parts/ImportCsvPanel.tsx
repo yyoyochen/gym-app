@@ -10,7 +10,7 @@ import { formatDate } from '../dates';
 import { CSV_TEMPLATE } from '../csvTemplate';
 
 type Result = NotionImportResult & { format: CsvFormat };
-const READ_AS: Record<CsvFormat, string> = { gymbro: 'Read as the GymBro template', hevy: 'Read as a Hevy export', strong: 'Read as a Strong export' };
+const READ_AS: Record<CsvFormat, string> = { gymbro: 'Read as the app template', hevy: 'Read as a Hevy export', strong: 'Read as a Strong export' };
 
 export function ImportCsvPanel({ onDone }: { onDone?: (r: Result) => void }) {
   const [aliases, setAliases] = useState<AliasMap | null>(null);
@@ -34,8 +34,8 @@ export function ImportCsvPanel({ onDone }: { onDone?: (r: Result) => void }) {
 
   return (
     <div className="form-group">
-      <p className="quiet">A GymBro template, or an export from Hevy or Strong. Re-importing the same file adds nothing.</p>
-      <Button block icon="export" onClick={() => downloadText('gymbro-template.csv', CSV_TEMPLATE, 'text/csv')}>Download the template</Button>
+      <p className="quiet">The app’s own template, or an export from Hevy or Strong. Re-importing the same file adds nothing.</p>
+      <Button block icon="export" onClick={() => downloadText('gym-app-template.csv', CSV_TEMPLATE, 'text/csv')}>Download the template</Button>
       <FilePicker label={busy ? 'Importing…' : 'Choose a CSV'} accept=".csv,text/csv" onText={async text => {
         setError(''); setResult(null);
         if (needsUnit(text)) { setPending(text); return; }

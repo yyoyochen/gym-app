@@ -56,10 +56,10 @@ export function Settings(_props: { params: string[] }) {
         ]} />
         <Button variant="primary" block iconEnd="export" onClick={async () => {
           const text = await exportBackupJson(getDb());
-          downloadText(`gymbro-backup-${todayISO()}.json`, text, 'application/json');
+          downloadText(`gym-app-backup-${todayISO()}.json`, text, 'application/json');
           showHud({ text: 'Backup saved', icon: 'export' });
         }}>Export backup (JSON)</Button>
-        <Button block iconEnd="export" onClick={async () => downloadText(`gymbro-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>Export sets (CSV)</Button>
+        <Button block iconEnd="export" onClick={async () => downloadText(`gym-app-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>Export sets (CSV)</Button>
       </Group>
 
       <Group label="Restore from backup">
@@ -151,7 +151,7 @@ function About() {
         { label: 'Code:', value: 'MIT licence' },
       ]} />
       <span className="label">Data credits</span>
-      <p className="quiet">Strength benchmarks: modeled gym-goer standards. Squat, bench and deadlift anchors are self-reported gym percentiles from the Symmetric Strength dataset, as published by <a className="link" href="https://fitnessvolt.com/strength-standards/" target="_blank" rel="noopener">Strength Standards data by FitnessVolt</a> (CC BY 4.0). Everything else is modeled by GymBro; neither site endorses these figures.</p>
+      <p className="quiet">Strength benchmarks: modeled gym-goer standards. Squat, bench and deadlift anchors are self-reported gym percentiles from the Symmetric Strength dataset, as published by <a className="link" href="https://fitnessvolt.com/strength-standards/" target="_blank" rel="noopener">Strength Standards data by FitnessVolt</a> (CC BY 4.0). Everything else is modeled by this app; neither site endorses these figures.</p>
     </Group>
   );
 }
