@@ -7,7 +7,7 @@ import type { Exercise, ImportFlag, ISODate, Millis, Session, SetKind } from '..
 import { findInCatalog, guessExercise, nameKey } from '../domain/catalog';
 import type { GymDb, StoredSet } from '../db/schema';
 import { daysInMonth, hashString, noonUTC, pad } from '../db/util';
-import { parseCsv, sniffDelimiter } from './csv';
+import { parseCsv, parseTable, sniffDelimiter } from './csv';
 import { detectFormat, parseHevy, parseStrong, unitOfStrong, type CsvFormat, type WeightUnit } from './formats';
 
 export type AliasMap = Record<string, string>;
@@ -231,7 +231,7 @@ export function needsUnit(text: string): boolean {
 export async function importCsv(
   db: GymDb, text: string, opts: NotionImportOptions & { unit?: WeightUnit } = {},
 ): Promise<NotionImportResult & { format: CsvFormat }> {
-  const table = parseCsv(text, sniffDelimiter(text));
+  const table = parseTable(text);
   if (!table.length) throw new Error('Empty CSV');
   const format = detectFormat(table[0]);
   if (!format) throw new Error(UNKNOWN_CSV);

@@ -44,3 +44,16 @@ export function parseCsv(text: string, delimiter: ',' | ';' = ','): string[][] {
   // Drop fully blank lines.
   return rows.filter(r => r.some(f => f.trim() !== ''));
 }
+
+/**
+ * Sniff the delimiter, parse, and repair one spreadsheet mishap seen in real
+ * Strong files: a re-save that wrapped each whole row in quotes, so the row
+ * reads as one field holding the delimiter.
+ */
+export function parseTable(text: string): string[][] {
+  const d = sniffDelimiter(text);
+  const t = parseCsv(text, d);
+  const width = t[0]?.length ?? 0;
+  if (width < 2) return t;
+  return t.map((row, i) => (i > 0 && row.length === 1 && row[0].includes(d) ? parseCsv(row[0], d)[0] ?? row : row));
+}

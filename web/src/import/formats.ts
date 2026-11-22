@@ -27,8 +27,9 @@ export function detectFormat(header: string[]): CsvFormat | null {
 export function unitOfStrong(header: string[]): WeightUnit | 'row' | null {
   const h = header.map(norm);
   for (const c of h) {
-    const m = /^weight \((kg|lbs?)\)$/.exec(c);
-    if (m) return m[1] === 'kg' ? 'kg' : 'lb';
+    // "Weight (kg)" (Android), or a bare "lbs" / "kg" weight column (2018 files).
+    const m = /^(?:weight \((kg|lbs?)\)|(kgs?|lbs?))$/.exec(c);
+    if (m) return (m[1] ?? m[2]).startsWith('kg') ? 'kg' : 'lb';
   }
   return h.includes('weight unit') ? 'row' : null;
 }
@@ -71,8 +72,36 @@ function clock(h: number, min: number, ampm?: string): string | null {
   return `${pad(hh)}:${pad(min)}`;
 }
 
-/** Hevy's start_time in the phone's locale: "18 Nov 2026, 18:22", "Jun 19, 2026, 9:40 AM", "14 ott 2026, 20:39". */
-export function parseHevyDateTime(input: string): { date: ISODate; time: string } | null {
+/** Day-first or month-first, for numeric dates like "03/12/2023 11:25" (older Hevy exports). */
+export type NumericOrder = 'dmy' | 'mdy';
+const NUMERIC = /^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/;
+
+/** A whole file's numeric date order: month-first only if some second number tops 12 and no first number does. */
+export function numericOrderOf(values: string[]): NumericOrder {
+  let firstBig = false, secondBig = false;
+  for (const v of values) {
+    const m = NUMERIC.exec(v.trim());
+    if (!m) continue;
+    if (Number(m[1]) > 12) firstBig = true;
+    if (Number(m[2]) > 12) secondBig = true;
+  }
+  return secondBig && !firstBig ? 'mdy' : 'dmy';
+}
+
+/** Hevy's start_time in the phone's locale: "18 Nov 2026, 18:22", "Jun 19, 2026, 9:40 AM", "14 ott 2026, 20:39", "03/12/2023 11:25". */
+export function parseHevyDateTime(input: string, order: NumericOrder = 'dmy'): { date: ISODate; time: string } | null {
+  const numeric = new RegExp('^(\\d{1,2})[/.-](\\d{1,2})[/.-](\\d{4}),?\\s+(\\d{1,2}):(\\d{2})(?::\\d{2})?(?:\\s*([AaPp])\\.?\\s?[Mm]\\.?)?$')
+    .exec(input.replace(/[  ]/g, ' ').trim());
+  if (numeric) {
+    const [a, b] = [Number(numeric[1]), Number(numeric[2])];
+    const date = order === 'mdy' ? isoOf(Number(numeric[3]), a, b) : isoOf(Number(numeric[3]), b, a);
+    const time = clock(Number(numeric[4]), Number(numeric[5]), numeric[6]);
+    return date && time ? { date, time } : null;
+  }
+  return parseNamedDateTime(input);
+}
+
+function parseNamedDateTime(input: string): { date: ISODate; time: string } | null {
   const s = input.replace(/[  ]/g, ' ').trim();
   const ampm = '(?:\\s*([AaPp])\\.?\\s?[Mm]\\.?)?';
   let m = new RegExp(`^(\\d{1,2})\\.?\\s+([^\\d\\s,]+?)\\.?\\s+(\\d{4}),?\\s+(\\d{1,2}):(\\d{2})${ampm}$`).exec(s);
@@ -157,11 +186,12 @@ export function parseHevy(table: string[][]): ParsedNotion {
   };
   const drafts: Draft[] = [];
   const skipped: RowProblem[] = [];
+  const order = numericOrderOf(table.slice(1).map(r => (c.start >= 0 ? r[c.start] ?? '' : '')));
   for (let i = 1; i < table.length; i++) {
     const r = table[i];
     const line = i + 1;
     const get = (j: number) => (j >= 0 ? (r[j] ?? '').trim() : '');
-    const when = parseHevyDateTime(get(c.start));
+    const when = parseHevyDateTime(get(c.start), order);
     const exercise = get(c.exercise).replace(/\s+/g, ' ');
     if (!when) { skipped.push({ line, reason: `unreadable date "${get(c.start)}"` }); continue; }
     if (!exercise) { skipped.push({ line, reason: 'no exercise' }); continue; }
@@ -195,7 +225,7 @@ export function parseStrong(table: string[][], unit: WeightUnit): ParsedNotion {
   const fileUnit = unitOfStrong(header);
   const c = {
     no: col('workout #'), date: col('date'), name: col('workout name'), exercise: col('exercise name'), order: col('set order'),
-    weight: col('weight', 'weight (kg)', 'weight (lb)', 'weight (lbs)'), unit: col('weight unit'), reps: col('reps'), rpe: col('rpe'),
+    weight: col('weight', 'weight (kg)', 'weight (lb)', 'weight (lbs)', 'kg', 'kgs', 'lb', 'lbs'), unit: col('weight unit'), reps: col('reps'), rpe: col('rpe'),
     seconds: col('seconds'), distance: col('distance', 'distance (meters)', 'distance (km)', 'distance (miles)'), notes: col('notes'),
   };
   const drafts: Draft[] = [];

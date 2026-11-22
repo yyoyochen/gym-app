@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { parseCsv, sniffDelimiter } from './csv';
+import { parseCsv, parseTable, sniffDelimiter } from './csv';
 import { detectFormat, parseHevy, parseHevyDateTime, parseStrong, unitOfStrong } from './formats';
 
 const fixture = (name: string) => readFileSync(fileURLToPath(new URL(`./__fixtures__/${name}`, import.meta.url)), 'utf8');
@@ -97,3 +97,21 @@ describe('Strong rows', () => {
     expect(p.rows.map(r => r.weight)).toEqual([12.5, 61.23]);
   });
 });
+
+describe('older exports', () => {
+  it('numeric Hevy dates: day-first unless the file shows otherwise', () => {
+    expect(parseHevyDateTime('03/12/2023 11:25')).toEqual({ date: '2023-12-03', time: '11:25' });
+    expect(parseHevyDateTime('03/12/2023 11:25', 'mdy')).toEqual({ date: '2023-03-12', time: '11:25' });
+    expect(parseHevyDateTime('12/31/2023, 9:05 PM', 'mdy')).toEqual({ date: '2023-12-31', time: '21:05' });
+    const p = parseHevy(table('hevy-old.csv'));
+    expect(p.rows.map(r => r.date)).toEqual(['2023-12-03', '2024-01-13']);
+    const us = parseHevy(parseCsv('title,start_time,exercise_title,set_index,set_type,weight_kg,reps\nA,01/13/2024 10:00,Squat (Barbell),0,normal,100,5\nB,02/03/2024 10:00,Squat (Barbell),0,normal,100,5\n'));
+    expect(us.rows.map(r => r.date)).toEqual(['2024-01-13', '2024-02-03']);
+  });
+  it('a 2018 Strong file: weight column named lbs, rows wrapped in quotes', () => {
+    const t = parseTable(fixture('strong-2018.csv'));
+    expect(unitOfStrong(t[0])).toBe('lb');
+    expect(parseStrong(t, 'kg').rows.map(r => [r.exercise, r.weight, r.reps])).toEqual([['Squat', 6.8, 5], ['Squat', 7.94, 5]]);
+  });
+});
+

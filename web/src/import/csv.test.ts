@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { parseCsv, sniffDelimiter } from './csv';
+import { parseCsv, parseTable, sniffDelimiter } from './csv';
 
 const fixture = (name: string) => readFileSync(fileURLToPath(new URL(`./__fixtures__/${name}`, import.meta.url)), 'utf8');
 
@@ -19,5 +19,10 @@ describe('semicolon CSVs', () => {
   });
   it('commas are the default', () => {
     expect(parseCsv('a,b\n1,2\n')).toEqual([['a', 'b'], ['1', '2']]);
+  });
+  it('a spreadsheet re-save that wrapped each row in quotes is unwrapped', () => {
+    const t = parseTable(fixture('strong-2018.csv'));
+    expect(t[1]).toEqual(['2018-06-27 16:26:53', 'B', 'Squat', '1', '15', '5', '', '0', '', '']);
+    expect(t[2]).toHaveLength(10);
   });
 });
