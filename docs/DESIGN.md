@@ -248,6 +248,7 @@ these at 6. Today there are 4:
 | `DateField` / `DatePickerSheet` | a field that opens a calendar sheet: Monday first, today outlined, the picked day filled, days outside min/max dimmed; trained days carry a 24 x 8 strip in three steps (dots, checker, solid = light, moderate, heavy, in thirds of your busiest day) with a Less/More legend and an (i); replaces the native date input |
 | `InfoButton label` | a 20 px (i) with a 48 px hit area that opens an explanation sheet (levels, heatmap legend) |
 | `Parts items` | facts as spans with a gap, no separator glyph |
+| `Tip text footer? onDismiss` | an accent-outlined note in the page flow under the thing it explains, with a notch at the top-left, "Tip" in the micro role, "n of 6" and a Got it text button (48 px); `role="note"`, never an overlay, never takes focus. Which tip shows: `app/tips.ts` (one at a time, lowest number first) |
 | `Sheet open title onClose detents?` | see §5 |
 | `ActionSheet`, `ConfirmButton` | confirm before irreversible actions |
 | `showHud(text)` | "Session saved" confirmation |

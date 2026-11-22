@@ -424,12 +424,12 @@ Ideas taken from the competitor teardown (not code):
   - the public URL opens with the synthetic dataset
   - a banner explains it's a demo
   - "Start my log" wipes the sample and starts onboarding
-- **Onboarding (expert, ≤ 2 minutes):**
-  1. Profile basics: sex, birth year, bodyweight, units, effort scale (RIR default)
-  2. Import Notion CSV / restore backup / start empty
-  3. Goals, targets and dates (with "from my log" maxes if history was imported)
-  4. Program: pick a template (§3.8), adjust in the editor or later
-  Each step can be skipped.
+- **Setup (expert, about 90 seconds;** `docs/superpowers/specs/2026-11-23-first-five-minutes-design.md`**):**
+  1. About you: effort scale (RIR default), bodyweight, and optional sex and birth year for strength levels. A link opens Import Notion CSV / Restore a backup / Explore with demo data.
+  2. Program: pick a template (§3.8), adjust in the editor or later
+  3. Your numbers: the best set in the last month for each main lift (squat, bench, deadlift, overhead press) the program holds and the log doesn't. A starting set seeds that lift's first target (rule `start_seed`); it is never stored as a set. Skipped lifts start with a baseline session.
+  4. How GymBro works: three lines, then Start the first session or Look around first
+  Goals and targets are set later in Profile (a one-time nudge on Today, a week after the first session). Six tips, each shown once in place, explain the promise, logging, undo, the grade, readiness and Progress; Settings can show them again. Existing logs (at startup or after a restore) mark them all seen.
 
 ### 7.1 Moving pieces — kept to a minimum
 
