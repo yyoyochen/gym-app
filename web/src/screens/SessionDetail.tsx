@@ -37,11 +37,11 @@ export function SessionDetail({ params }: { params: string[] }) {
   const [renaming, setRenaming] = useState(false);
   const trained = useTrainedDays();
 
-  if (!data) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel="History" fallback="history" large={false} /></section>;
+  if (!data) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel="Calendar" fallback="history" large={false} /></section>;
   const { session, sets, commit, scale, bwFactor, grade } = data;
   if (!session) return (
     <section className="screen tk-screen tk-nav">
-      <NavBar title="Session" backLabel="History" fallback="history" />
+      <NavBar title="Session" backLabel="Calendar" fallback="history" />
       <p className="tk-quiet">This session doesn’t exist any more.</p>
     </section>
   );
@@ -49,7 +49,7 @@ export function SessionDetail({ params }: { params: string[] }) {
 
   return (
     <section className="screen tk-screen tk-nav">
-      <NavBar title={displayName(session.nameSnapshot)} backLabel="History" fallback="history">
+      <NavBar title={displayName(session.nameSnapshot)} backLabel="Calendar" fallback="history">
         <div className="tk-sub">
           <span className="tk-mono">{formatDate(session.date)}</span>
           {!session.sealed && <span className="chip tk-chip">in progress</span>}

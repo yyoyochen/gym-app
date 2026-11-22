@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ditherBar, ditherBarText, heatLevel, heatmapGrid, heatmapText } from './dither';
-import { ICONS, iconRuns } from './icons';
+import { ICONS, iconRuns, iconSize } from './icons';
 
 describe('ditherBar', () => {
   it('solid run, ▓▒░ tail, dotted track — always exactly `cells` wide', () => {
@@ -73,12 +73,24 @@ describe('heatmap', () => {
 });
 
 describe('pixel icons', () => {
-  it('every icon is 9 × 9 of # and .', () => {
+  it('every icon is a square of # and .: 9 × 9, the gear 13 × 13', () => {
     for (const [name, rows] of Object.entries(ICONS)) {
-      expect(rows, name).toHaveLength(9);
-      for (const r of rows) expect(r, name).toMatch(/^[#.]{9}$/);
+      const n = name === 'settings' ? 13 : 9;
+      expect(rows, name).toHaveLength(n);
+      for (const r of rows) expect(r, name).toMatch(new RegExp(`^[#.]{${n}}$`));
       expect(rows.join('').includes('#'), name).toBe(true);
     }
+  });
+  it('the gear is the filled cog with a plus-shaped hole; the calendar has rings, a header and day dots', () => {
+    expect(ICONS.settings).toEqual([
+      '.....###.....', '..##.###.##..', '.###########.', '.###########.', '..#########..', '######.######', '#####...#####',
+      '######.######', '..#########..', '.###########.', '.###########.', '..##.###.##..', '.....###.....',
+    ]);
+    expect(ICONS.calendar).toEqual(['.#.....#.', '#########', '#########', '#.......#', '#.#.#.#.#', '#.......#', '#.#.#.#.#', '#.......#', '#########']);
+  });
+  it('an icon is drawn at its own grid size times the scale', () => {
+    expect(iconSize('today', 2)).toBe(18);
+    expect(iconSize('settings', 2)).toBe(26);
   });
 
   it('chevron mirrors back; runs cover exactly the ink pixels', () => {

@@ -228,7 +228,7 @@ these at 6. Today there are 4:
 
 | Component | Notes |
 |---|---|
-| `PixelIcon name scale` | 18 icons on a 9×9 grid (`icons.ts`), crisp at integer scales |
+| `PixelIcon name scale` | 1-bit icons on a 9×9 grid (`icons.ts`; the settings gear is 13×13, filled with a plus-shaped hole), crisp at integer scales |
 | `Lockup mid left? right?` | boxed header, middle cell inverted, a plain short date (`Sun 22 Nov`) default |
 | `BigNumber value unit? caption? size` | hero / display / lg |
 | `LabelValue`, `LabelValueGrid items columns variant` | pairs grid, or `stats` (ink label, accent value) |
@@ -238,7 +238,7 @@ these at 6. Today there are 4:
 | `SquareHeatmap counts weeks end thresholds? weekTarget? onSelect? legend?` | History's 52-week heatmap: Monday-first, Mon–Sun labels, tall shade cells, week-at-target marks |
 | `RecentWeeks counts end weekTarget onSelect` | Today's rolling 4-week calendar: the last 4 columns of the same grid, so shades match History |
 | `GlyphHeatmap …` | kit gallery only (`#/kit`); no screen uses it |
-| `TabBar` | Today · Progress · History · Profile; the active tab is a square box (accent outline around icon and label, icon half filled) with a dither shadow |
+| `TabBar` | Today, Progress, Calendar (route `#/history`), Profile; the active tab is a square box (accent outline around icon and label, icon half filled) with a dither shadow |
 | `Verdict kind` | beat / hit / missed / new |
 | `Button` / `LinkButton variant icon iconEnd block` | primary ink block · outline · quiet · danger (dashed) |
 | `Stepper` | changes on touch-down, repeats while held (500 ms, then 160 → 60 ms), typeable |

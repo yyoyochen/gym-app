@@ -25,7 +25,7 @@ import { Onboarding } from './screens/Onboarding';
 //   #/review/<id>               verdict ledger after finishing
 //   #/progress                  heatmap, goal board, benchmarks, lifts
 //   #/lift/<exerciseId>         per-lift page
-//   #/history                   calendar + session list
+//   #/history                   Calendar tab: calendar + session list
 //   #/history/<sessionId>       session detail (ledger, edit)
 //   #/profile                   where I am, goals, targets
 //   #/profile/program           program editor

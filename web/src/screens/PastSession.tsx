@@ -25,7 +25,7 @@ export function PastSession(_props: { params: string[] }) {
   };
   return (
     <section className="screen setup">
-      <NavBar title="Log past session" backLabel="History" fallback="history" />
+      <NavBar title="Log past session" backLabel="Calendar" fallback="history" />
       <DateField label="Day trained" value={date} max={today} confirmLabel="Use this day" onChange={setDate} />
       <p className="note">//Note: Past sessions are logged ungraded: add each lift and its sets. No promise is made for them.</p>
       <Button variant="primary" block iconEnd="chevron" disabled={!valid || busy} onClick={start}>

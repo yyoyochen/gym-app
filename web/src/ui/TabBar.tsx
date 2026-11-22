@@ -3,10 +3,10 @@ import type { IconName } from './kit/icons';
 import { go } from './kit/navigation';
 import { scrollPageTo } from './kit/PageStack';
 
-const TABS: { key: string; label: string; icon: IconName }[] = [
+export const TABS: { key: string; label: string; icon: IconName }[] = [
   { key: 'today', label: 'Today', icon: 'today' },
   { key: 'progress', label: 'Progress', icon: 'progress' },
-  { key: 'history', label: 'History', icon: 'history' },
+  { key: 'history', label: 'Calendar', icon: 'calendar' },
   { key: 'profile', label: 'Profile', icon: 'profile' },
 ];
 

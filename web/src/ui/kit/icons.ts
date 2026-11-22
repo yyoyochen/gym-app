@@ -37,7 +37,13 @@ export const ICONS = {
   trash: ['...###...', '#########', '.#.....#.', '.#.#.#.#.', '.#.#.#.#.', '.#.#.#.#.', '.#.#.#.#.', '.#.....#.', '.#######.'],
   export: ['....#....', '...###...', '..#.#.#..', '....#....', '....#....', '#...#...#', '#.......#', '#.......#', '#########'],
   import: ['....#....', '....#....', '....#....', '..#.#.#..', '...###...', '#...#...#', '#.......#', '#.......#', '#########'],
-  settings: ['....#....', '.#.###.#.', '..#####..', '.##...##.', '###...###', '.##...##.', '..#####..', '.#.###.#.', '....#....'],
+  // The gear is drawn on a 13 × 13 grid (the user's reference cog, filled, with a plus-shaped hole).
+  settings: [
+    '.....###.....', '..##.###.##..', '.###########.', '.###########.', '..#########..', '######.######', '#####...#####',
+    '######.######', '..#########..', '.###########.', '.###########.', '..##.###.##..', '.....###.....',
+  ],
+  // Calendar page: two binding rings, a solid header, day dots.
+  calendar: ['.#.....#.', '#########', '#########', '#.......#', '#.#.#.#.#', '#.......#', '#.#.#.#.#', '#.......#', '#########'],
 } satisfies Record<string, string[]>;
 
 export type IconName = keyof typeof ICONS;
@@ -45,6 +51,11 @@ export type IconName = keyof typeof ICONS;
 export const PR_ICON: IconName = 'flame';
 
 /** Horizontal runs of ink, one rect each (fewer SVG nodes than per-pixel). */
+/** Drawn size in px: the icon's own grid (9, or 13 for the gear) times an integer scale. */
+export function iconSize(name: IconName, scale = 2): number {
+  return ICONS[name].length * Math.max(1, Math.round(scale));
+}
+
 export function iconRuns(rows: readonly string[]): { x: number; y: number; w: number }[] {
   const out: { x: number; y: number; w: number }[] = [];
   rows.forEach((row, y) => {
