@@ -16,7 +16,7 @@ export function ImportNotionPanel({ onDone }: { onDone?: (r: NotionImportResult)
   return (
     <div className="form-group">
       <p className="quiet">A Notion export with columns Date, Session, Exercise, Order, Set, Reps, Weight (kg), Notes. Re-importing the same file adds nothing.</p>
-      <FilePicker label="Alias file · optional .json" accept=".json,application/json" onText={text => {
+      <FilePicker label="Alias file (optional, .json)" accept=".json,application/json" onText={text => {
         try { const a = readAliasFile(JSON.parse(text)); setAliases(a); setAliasError(''); }
         catch (e) { setAliases(null); setAliasError(e instanceof Error ? e.message : 'Could not read the alias file'); }
       }} />

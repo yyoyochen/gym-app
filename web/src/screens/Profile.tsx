@@ -65,7 +65,7 @@ export function Profile(_props: { params: string[] }) {
     { label: 'Born', value: p.birthYear ?? '—' },
     { label: 'Height', value: p.heightCm !== undefined ? `${p.heightCm} cm` : '—' },
     { label: 'Training age', value: p.trainingAgeYears !== undefined ? `${p.trainingAgeYears} yr` : '—' },
-    { label: 'Sessions a week', value: `${p.sessionsPerWeekTarget} · min ${p.sessionsPerWeekMin}`, accent: true },
+    { label: 'Sessions a week', value: `${p.sessionsPerWeekTarget}, min ${p.sessionsPerWeekMin}`, accent: true },
     { label: 'Max session', value: p.maxSessionMinutes !== undefined ? `${p.maxSessionMinutes} min` : '—' },
   ];
   const rowFor = new Map((rows ?? []).map(r => [r.target.id, r]));
@@ -109,7 +109,7 @@ export function Profile(_props: { params: string[] }) {
         {p.targets.length === 0 && <p className="quiet">No targets yet. A target puts a deadline and a pace on a lift, your bodyweight or sessions a week.</p>}
         {p.targets.length > 0 && (
           <div className="sheetblk">
-            <div className="sheetblk-hd"><span>Target</span><span>Level · pace</span></div>
+            <div className="sheetblk-hd"><span>Target</span><span>Level and pace</span></div>
             {p.targets.map((t, i) => {
               const r = rowFor.get(t.id);
               return (
@@ -124,13 +124,13 @@ export function Profile(_props: { params: string[] }) {
         )}
       </Group>
 
-      <Group label="Injuries · areas to protect" right={edit('injuries', p.injuries.length ? 'Edit' : 'Add')}>
+      <Group label="Injuries (areas to protect)" right={edit('injuries', p.injuries.length ? 'Edit' : 'Add')}>
         {p.injuries.length === 0
           ? <p className="quiet">None. Areas listed here pre-fill the pain flag and hold progress on lifts that load them.</p>
           : <div className="sheetblk">
               {p.injuries.map((inj, i) => (
                 <ValueRow key={i} k={inj.side === 'na' ? '—' : SIDE_LABELS[inj.side]} value={PAIN_AREA_LABELS[inj.area]}
-                  sub={(inj.since || inj.note) ? [inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(' · ') : undefined} />
+                  sub={(inj.since || inj.note) ? [inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(', ') : undefined} />
               ))}
             </div>}
       </Group>
@@ -139,12 +139,12 @@ export function Profile(_props: { params: string[] }) {
         {(logMaxes?.length ?? 0) + p.manualMaxes.length === 0
           ? <p className="quiet">No maxes yet. Best e1RMs from your log show here once you have sets in the last 90 days.</p>
           : <div className="sheetblk">
-              <div className="sheetblk-hd"><span>Lift</span><span>kg · source</span></div>
+              <div className="sheetblk-hd"><span>Lift</span><span>kg and source</span></div>
               {(logMaxes ?? []).map(m => (
-                <ValueRow key={m.ex.id} k="Log" value={m.ex.name} sub="Best e1RM · 90 days" right={kg(Math.round(m.e1rm * 2) / 2)} />
+                <ValueRow key={m.ex.id} k="Log" value={m.ex.name} sub="Best e1RM, 90 days" right={kg(Math.round(m.e1rm * 2) / 2)} />
               ))}
               {p.manualMaxes.map((m, i) => (
-                <ValueRow key={`m${i}`} k="1RM" value={names.get(m.exerciseId) ?? m.exerciseId} sub={`Manual · ${formatDate(m.date, { weekday: false })}`} right={kg(m.kg)} />
+                <ValueRow key={`m${i}`} k="1RM" value={names.get(m.exerciseId) ?? m.exerciseId} sub={`Manual, ${formatDate(m.date, { weekday: false })}`} right={kg(m.kg)} />
               ))}
             </div>}
       </Group>
@@ -228,9 +228,9 @@ function WhereForm({ p, set }: { p: ProfileT; set: (p: ProfileT) => void }) {
         options={[{ value: 'M', label: 'Male' }, { value: 'F', label: 'Female' }, { value: 'none', label: 'Not set' }]} />
       <div className="grid2">
         <NumField label="Birth year" value={p.birthYear} integer onChange={v => set({ ...p, birthYear: v })} />
-        <NumField label="Height · cm" value={p.heightCm} onChange={v => set({ ...p, heightCm: v })} />
-        <NumField label="Training age · yr" value={p.trainingAgeYears} onChange={v => set({ ...p, trainingAgeYears: v })} />
-        <NumField label="Max session · min" value={p.maxSessionMinutes} integer onChange={v => set({ ...p, maxSessionMinutes: v })} />
+        <NumField label="Height (cm)" value={p.heightCm} onChange={v => set({ ...p, heightCm: v })} />
+        <NumField label="Training age (yr)" value={p.trainingAgeYears} onChange={v => set({ ...p, trainingAgeYears: v })} />
+        <NumField label="Max session (min)" value={p.maxSessionMinutes} integer onChange={v => set({ ...p, maxSessionMinutes: v })} />
       </div>
       <div className="grid2">
         <Stepper label="Sessions a week" value={p.sessionsPerWeekTarget} min={1} max={14} onChange={v => set({ ...p, sessionsPerWeekTarget: v })} />
@@ -246,7 +246,7 @@ function NumField({ label, value, onChange, integer }: { label: string; value: n
   const [err, setErr] = useState('');
   useEffect(() => setText(value === undefined ? '' : String(value)), [value]);
   const commit = (s: string) => {
-    const r = parseNum(s, { integer, min: 0, name: label.split(' · ')[0] });
+    const r = parseNum(s, { integer, min: 0, name: label.replace(/\s*\(.*\)$/, '') });
     if (r.ok) { setErr(''); if (r.value !== value) onChange(r.value); } else setErr(r.error);
   };
   return (
@@ -316,7 +316,7 @@ function InjuriesForm({ profile, onChange }: { profile: ProfileT; onChange: (p: 
         <div className="sheetblk">
           {profile.injuries.map((inj, i) => (
             <ValueRow key={i} k={inj.side === 'na' ? '—' : SIDE_LABELS[inj.side]} value={PAIN_AREA_LABELS[inj.area]}
-              sub={(inj.since || inj.note) ? [inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(' · ') : undefined}>
+              sub={(inj.since || inj.note) ? [inj.since && `since ${formatDate(inj.since, { weekday: false })}`, inj.note].filter(Boolean).join(', ') : undefined}>
               <button type="button" className="icon-btn" aria-label={`Remove ${PAIN_AREA_LABELS[inj.area]}`} data-press="dim"
                 onClick={() => onChange({ ...profile, injuries: profile.injuries.filter((_, j) => j !== i) })}><PixelIcon name="trash" /></button>
             </ValueRow>
@@ -332,9 +332,9 @@ function InjuriesForm({ profile, onChange }: { profile: ProfileT; onChange: (p: 
       <Segmented<Side> label="Side" value={side} onChange={setSide}
         options={(['left', 'right', 'both', 'na'] as Side[]).map(s => ({ value: s, label: s === 'na' ? 'N/A' : SIDE_LABELS[s] }))} />
       <div className="grid2">
-        <DateField label="Since · optional" value={since} max={todayISO()} onChange={setSince} />
+        <DateField label="Since (optional)" value={since} max={todayISO()} onChange={setSince} />
         <label className="field-wrap">
-          <span className="label">Note · optional</span>
+          <span className="label">Note (optional)</span>
           <input className="field" value={note} onChange={e => setNote(e.target.value)} />
         </label>
       </div>
@@ -359,7 +359,7 @@ function MaxesForm({ profile, onChange, exercises }: { profile: ProfileT; onChan
       {profile.manualMaxes.length > 0 && (
         <div className="sheetblk">
           {profile.manualMaxes.map((m, i) => (
-            <ValueRow key={i} k="1RM" value={names.get(m.exerciseId) ?? m.exerciseId} sub={`${kg(m.kg)} kg · ${formatDate(m.date, { weekday: false })}`}>
+            <ValueRow key={i} k="1RM" value={names.get(m.exerciseId) ?? m.exerciseId} sub={`${kg(m.kg)} kg, ${formatDate(m.date, { weekday: false })}`}>
               <button type="button" className="icon-btn" aria-label={`Remove ${names.get(m.exerciseId) ?? m.exerciseId} max`} data-press="dim"
                 onClick={() => onChange({ ...profile, manualMaxes: profile.manualMaxes.filter((_, j) => j !== i) })}><PixelIcon name="trash" /></button>
             </ValueRow>

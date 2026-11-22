@@ -12,7 +12,7 @@ export function RestorePanel({ onRestored }: { onRestored?: () => void }) {
 
   return (
     <div className="form-group">
-      <FilePicker label="Choose backup · .json" accept=".json,application/json" onText={text => {
+      <FilePicker label="Choose backup (.json)" accept=".json,application/json" onText={text => {
         setDoc(null);
         let parsed: unknown;
         try { parsed = JSON.parse(text); } catch { setErrors(['Not valid JSON']); return; }

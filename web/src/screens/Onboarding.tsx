@@ -105,7 +105,7 @@ function StepProfile({ onNext }: { onNext: () => void }) {
       <div className="grid2">
         <label className="field-wrap"><span className="label">Birth year</span>
           <input className="field big tnum" inputMode="numeric" placeholder="1990" value={birthYear} onChange={e => setBirthYear(e.target.value)} /></label>
-        <label className="field-wrap"><span className="label">Bodyweight · kg</span>
+        <label className="field-wrap"><span className="label">Bodyweight (kg)</span>
           <input className="field big tnum" inputMode="decimal" placeholder="80" value={bw} onChange={e => setBw(e.target.value)} /></label>
       </div>
       <Segmented<EffortScale> label="Effort scale" value={scale} onChange={setScale}

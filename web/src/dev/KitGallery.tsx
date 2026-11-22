@@ -31,13 +31,13 @@ export default function KitGallery({ params }: { params: string[] }) {
 
   return (
     <section className="screen kit-gallery">
-      <NavBar title={depth ? `Kit · page ${depth}` : 'Kit'} backLabel={depth ? 'Back' : undefined} right={<span className="label">{theme}</span>} />
+      <NavBar title={depth ? `Kit: page ${depth}` : 'Kit'} backLabel={depth ? 'Back' : undefined} right={<span className="label">{theme}</span>} />
       <Lockup mid={`Training log //Session A`} />
       <BigNumber value="100" unit="kg × 2" caption="top double" />
       <div className="stack kit-types">
         <span className="label">Type roles</span>
         {TYPE_ROLES.map(r => (
-          <div key={r.role} className="kit-type"><span className="label">{r.role} · {r.job}</span><span className={`t-${r.role}`}>{r.sample}</span></div>
+          <div key={r.role} className="kit-type"><span className="label">{r.role}: {r.job}</span><span className={`t-${r.role}`}>{r.sample}</span></div>
         ))}
       </div>
       <LabelValueGrid items={[
@@ -46,7 +46,7 @@ export default function KitGallery({ params }: { params: string[] }) {
       ]} />
       <div className="stack" style={{ gap: 'var(--space-3)' }}>
         <DitherBar label="This week" valueText="2 of 3" value={2 / 3} />
-        <DitherBar label="Squat · hold 120 by 31 Dec" valueText="116.7 · 97%" value={116.7 / 120} />
+        <DitherBar label="Squat: hold 120 by 31 Dec" valueText="116.7, 97%" value={116.7 / 120} />
         <DitherBar label="Empty" valueText="0" value={0} />
       </div>
       <div className="stack">

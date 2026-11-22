@@ -60,8 +60,8 @@ export function Settings(_props: { params: string[] }) {
           const text = await exportBackupJson(getDb());
           downloadText(`gymbro-backup-${todayISO()}.json`, text, 'application/json');
           showHud({ text: 'Backup saved', icon: 'export' });
-        }}>Export backup · JSON</Button>
-        <Button block iconEnd="export" onClick={async () => downloadText(`gymbro-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>Export sets · CSV</Button>
+        }}>Export backup (JSON)</Button>
+        <Button block iconEnd="export" onClick={async () => downloadText(`gymbro-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>Export sets (CSV)</Button>
       </Group>
 
       <Group label="Restore from backup">
@@ -107,7 +107,7 @@ function Plates({ value }: { value: PlateSettings }) {
     <Group label="Bar and plates" right={!isDefault && <GroupAction onClick={() => save({ ...DEFAULT_PLATES })}>Reset</GroupAction>}>
       <Stepper label="Bar weight" unit="kg" value={value.barKg} step={2.5} min={0} max={40} onChange={v => save({ ...value, barKg: v })} />
       <div className="field-wrap">
-        <span className="label">Plates available · kg</span>
+        <span className="label">Plates available (kg)</span>
         <div className="plate-grid" role="group" aria-label="Plates available">
           {STANDARD_PLATES.map(p => {
             const on = value.platesKg.includes(p);

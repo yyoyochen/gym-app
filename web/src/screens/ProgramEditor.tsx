@@ -8,7 +8,7 @@ import { getActiveProgram, getDb, listExercises, putExercise, saveProgram, seedC
 import { exerciseIdFor, nameKey } from '../domain/catalog';
 import { useLive } from '../ui/useLive';
 import { ConfirmButton, DateField, Errors, Group, GroupAction, Segmented, Sheet, Stepper } from '../ui/common';
-import { Button, LabelValueGrid, NavBar, PixelIcon, Toggle, ValueRow, showHud } from '../ui/kit';
+import { Button, LabelValueGrid, NavBar, Parts, PixelIcon, Toggle, ValueRow, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate } from '../app/dates';
 import { PAIN_AREAS, PAIN_AREA_LABELS } from '../app/labels';
@@ -90,7 +90,7 @@ export function ProgramEditor(_props: { params: string[] }) {
             </label>
             <LabelValueGrid items={[
               { label: 'Rotation', value: prog.rotation.length ? prog.rotation.join(' → ') : 'None', accent: true },
-              { label: 'Sessions', value: `${prog.sessions.length} · ${prog.sessions.reduce((n, s) => n + s.slots.length, 0)} slots` },
+              { label: 'Sessions', value: `${prog.sessions.length} (${prog.sessions.reduce((n, s) => n + s.slots.length, 0)} slots)` },
             ]} />
           </div>
 
@@ -172,7 +172,7 @@ function SessionBlock({ s, inRotation, exById, apply, onEditSession, onAdd, onEd
             <span className="srow-k">{pad2(j + 1)}</span>
             <button type="button" className="srow-main slot-open" data-press="dim" onClick={() => onEdit(sl.id)}>
               <span className="srow-v">{ex?.name ?? sl.exerciseId}</span>
-              <span className="srow-sub">{sl.model === 'topset' ? '' : `${MODEL_SHORT[sl.model]} · `}{describeSlot(sl)}{min ? ' · min' : ''}</span>
+              <span className="srow-sub"><Parts items={[...(sl.model === 'topset' ? [] : [MODEL_SHORT[sl.model]]), describeSlot(sl), ...(min ? ['min'] : [])]} /></span>
             </button>
             <span className="reorder">
               <button type="button" className="icon-btn" aria-label={`Move ${ex?.name ?? 'slot'} up`} disabled={j === 0} data-press="dim"
@@ -224,7 +224,7 @@ function SlotForm({ slot, session, exercise, minimum, onSave, onSwap, onRemove }
   const name = exercise?.name ?? 'this exercise';
   return (
     <>
-      <div className="slot-spec"><span className="key-inv">{session.key}</span><span>{MODEL_LABELS[draft.model]} · {describeSlot(draft)}</span></div>
+      <div className="slot-spec"><span className="key-inv">{session.key}</span><Parts items={[MODEL_LABELS[draft.model], describeSlot(draft)]} /></div>
       <Segmented<ModelKind> label="Model" value={draft.model} onChange={m => setDraft(changeModel(draft, m, exercise?.slotType))}
         options={MODELS.map(m => ({ value: m, label: MODEL_SHORT[m] }))} />
       <div className="grid2 steppers">
@@ -241,7 +241,7 @@ function SlotForm({ slot, session, exercise, minimum, onSave, onSwap, onRemove }
       </div>
       {top && <p className="quiet">Back-off % is a percentage of the top-set weight: 85 = 85%.</p>}
       <label className="field-wrap">
-        <span className="label">Increment · kg · blank = exercise default{exercise ? ` (${exercise.increment})` : ''}</span>
+        <span className="label">Increment (kg, blank = exercise default{exercise ? `: ${exercise.increment}` : ''})</span>
         <input className="field tnum" inputMode="decimal" defaultValue={p.increment ?? ''} onBlur={e => {
           const r = parseNum(e.target.value, { min: 0.25, max: 20, name: 'Increment' });
           if (r.ok) { const { increment: _i, ...rest } = p; void _i; setDraft({ ...draft, params: r.value === undefined ? rest : { ...rest, increment: r.value } }); }
@@ -351,18 +351,18 @@ function NewExerciseForm({ initialName, exercises, onCancel, onCreated }: {
 function overrideLine(ph: Phase): string {
   if (!ph.overrides) return 'Marker only';
   return Object.entries(ph.overrides).map(([m, o]) =>
-    `${MODEL_SHORT[m as ModelKind]}: ${o?.sets ? `${o.sets} sets ` : ''}${o?.repMin ? `reps ${o.repMin}–${o.repMax ?? o.repMin}` : ''}`.trim()).join(' · ');
+    `${MODEL_SHORT[m as ModelKind]}: ${o?.sets ? `${o.sets} sets ` : ''}${o?.repMin ? `reps ${o.repMin}–${o.repMax ?? o.repMin}` : ''}`.trim()).join('; ');
 }
 
 function Phases({ phases, onAdd, onChange }: { phases: Phase[]; onAdd: () => void; onChange: (p: Phase[]) => void }) {
   return (
-    <Group label="Phases · optional" right={<GroupAction onClick={onAdd}>Add</GroupAction>}>
+    <Group label="Phases (optional)" right={<GroupAction onClick={onAdd}>Add</GroupAction>}>
       <p className="quiet">Dated blocks that change sets or rep ranges for one model, e.g. a 2-week re-entry at 3 × 8.</p>
       {phases.length > 0 && (
         <div className="sheetblk">
           {phases.map((ph, i) => (
             <ValueRow key={i} k={pad2(i + 1)} value={ph.name}
-              sub={`${formatDate(ph.start, { weekday: false })} – ${formatDate(ph.end, { weekday: false })} · ${overrideLine(ph)}`}>
+              sub={`${formatDate(ph.start, { weekday: false })} – ${formatDate(ph.end, { weekday: false })}, ${overrideLine(ph)}`}>
               <ConfirmButton className="icon-btn" confirmLabel={`Delete the phase “${ph.name}”?`} confirmText="Delete phase" danger
                 onConfirm={() => onChange(phases.filter((_, j) => j !== i))}><PixelIcon name="trash" title={`Delete ${ph.name}`} /></ConfirmButton>
             </ValueRow>

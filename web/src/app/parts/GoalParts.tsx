@@ -52,8 +52,8 @@ export function TargetLevelBar({ gym, ctx, ex, value }: { gym: GymStandardsData 
   if (!gym || !ctx || !ex || !(value > 0)) return null;
   const r = rateTarget(gym, ex, value, ctx);
   if (!r) return null;
-  const text = `${levelWord(r)} · ${ordinal(r.percentile)}`;
-  return <DitherBar label={r.basis === 'weighted' ? 'Level at target · added load' : 'Level at target'} valueText={text} value={r.percentile / 100}
+  const text = `${levelWord(r)}, ${ordinal(r.percentile)}`;
+  return <DitherBar label={r.basis === 'weighted' ? 'Level at target (added load)' : 'Level at target'} valueText={text} value={r.percentile / 100}
     ariaLabel={`Level at target: ${levelWord(r)}, ${ordinal(r.percentile)} percentile of gym-goers`} />;
 }
 
@@ -112,7 +112,7 @@ export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { 
           options={(['reach', 'hold', 'at_least'] as TargetType[]).map(v => ({ value: v, label: TARGET_TYPE_LABELS[v] }))} />
         <div className="grid2">
           <label className="field-wrap">
-            <span className="label">Value · {draft.subject ? subjectUnit(draft.subject) : 'kg'}</span>
+            <span className="label">Value ({draft.subject ? subjectUnit(draft.subject) : 'kg'})</span>
             <input className="field tnum" inputMode="decimal" value={draft.value} onChange={e => setDraft({ ...draft, value: e.target.value })} />
           </label>
           <DateField label="Deadline" value={draft.deadline} min={today} onChange={v => setDraft({ ...draft, deadline: v })} />

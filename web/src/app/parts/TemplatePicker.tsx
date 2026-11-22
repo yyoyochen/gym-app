@@ -15,7 +15,7 @@ export function sessionTitle(s: Pick<ProgramSession, 'key' | 'name'>): string {
 /** '3 (min 2: A + B)' → '3/WK · MIN 2'; '4–5' → '4–5/WK'. */
 function daysLabel(days: string): string {
   const min = /min (\d+)/.exec(days);
-  return `${days.split(' ')[0]}/wk${min ? ` · min ${min[1]}` : ''}`;
+  return `${days.split(' ')[0]}/wk${min ? `, min ${min[1]}` : ''}`;
 }
 
 export function TemplateSummary({ templateId, exercises }: { templateId: string; exercises: Exercise[] }) {
