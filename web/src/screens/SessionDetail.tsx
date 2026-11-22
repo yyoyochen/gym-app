@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { readable } from '../ui/readable';
 import type { EffortScale, PainArea, SetEntry, SetKind, Side } from '../domain/types';
 import {
-  changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, listExercises, updateSet,
+  changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, listExercises, updateSession, updateSet,
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { DatePickerSheet, Errors, useTrainedDates } from '../ui/common';
@@ -20,6 +20,7 @@ import { PAIN_AREAS, PAIN_AREA_LABELS, SIDE_LABELS, displayName, formatLoad } fr
 import { SecHead } from '../ui/progress/parts';
 import { anyDecimals, setCountsText } from '../ui/progress/cellRules';
 import { kindAfterWarmupToggle } from '../ui/session/setKind';
+import { SESSION_NAME_MAX, cleanSessionName } from '../ui/session/cleanName';
 import { Load } from '../ui/progress/Load';
 import { loadParts } from '../ui/progress/stats';
 
@@ -33,6 +34,7 @@ export function SessionDetail({ params }: { params: string[] }) {
   }, [id]);
   const [editing, setEditing] = useState<SetEntry | null>(null);
   const [moving, setMoving] = useState(false);
+  const [renaming, setRenaming] = useState(false);
   const trained = useTrainedDates();
 
   if (!data) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel="History" fallback="history" large={false} /></section>;
@@ -123,7 +125,9 @@ export function SessionDetail({ params }: { params: string[] }) {
 
       <section className="tk-sec" aria-label="Session">
         <SecHead title="Session" />
+        <Button block onClick={() => setRenaming(true)}>Rename</Button>
         <Button block onClick={() => setMoving(true)}>Change date</Button>
+        {renaming && <RenameSheet current={displayName(session.nameSnapshot)} onClose={() => setRenaming(false)} onSave={async name => { await updateSession(getDb(), session.id, { nameSnapshot: name }); setRenaming(false); showHud({ text: 'Renamed' }); }} />}
         {moving && (
           <DatePickerSheet open value={session.date} max={todayISO()} marked={trained} title="Change date" confirmLabel="Move session" onClose={() => setMoving(false)}
             onPick={async d => { await changeSessionDate(getDb(), session.id, d); setMoving(false); showHud({ text: 'Date changed' }); }} />
@@ -216,4 +220,21 @@ function EditSetSheet({ set, scale, bwFactor, onClose }: { set: SetEntry; scale:
 function DoneLine({ parts }: { parts: string[] }) {
   if (!parts.length) return <span className="tk-led-r none">Nothing logged</span>;
   return <Parts items={parts} className="tk-led-r" />;
+}
+
+/** Rename this session only: a text field in a sheet, Save disabled until the name is usable. */
+function RenameSheet({ current, onSave, onClose }: { current: string; onSave: (name: string) => void; onClose: () => void }) {
+  const [text, setText] = useState(current);
+  const name = cleanSessionName(text);
+  return (
+    <Sheet open title="Rename session" onClose={onClose}>
+      <label className="field-wrap">
+        <span className="label">Session name</span>
+        <input className="field" value={text} maxLength={SESSION_NAME_MAX} autoFocus onChange={e => setText(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && name) onSave(name); }} />
+      </label>
+      <p className="quiet">Renames this session only.</p>
+      <Button variant="primary" block disabled={!name || name === current} onClick={() => name && onSave(name)}>Save</Button>
+    </Sheet>
+  );
 }

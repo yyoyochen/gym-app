@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { freshDb } from './test-helpers';
 import {
   addSet, deleteSet, getSessionSets, startSession, sealSession, putCommit, CommitExistsError, getCommit,
-  getExerciseHistory, listSessions, getOpenSession, updateSet, changeSessionDate, deleteSession,
+  getExerciseHistory, listSessions, getOpenSession, updateSet, updateSession, changeSessionDate, deleteSession,
   requestPersist, getMeta, saveProfile, getProfile, defaultProfile, seedCatalog, listExercises,
   findExerciseByName, saveProgram, getActiveProgram, addBodyweight, listBodyweight, logEvent, listEvents,
   type NewSet,
@@ -81,6 +81,16 @@ describe('sets', () => {
     const y = await updateSet(db, x.id, { reps: 6, rir: 2, ...({ setOrder: 9, sessionId: 'zzz' } as object) });
     expect(y).toMatchObject({ reps: 6, rir: 2, setOrder: 1, sessionId: s.id });
     expect((await db.sessions.get(s.id))?.edited).toBe(true);
+  });
+
+  it('renaming a finished session does not mark it edited, but a note does', async () => {
+    const db = freshDb();
+    const s = await startSession(db, { programSessionKey: 'A', nameSnapshot: 'A', date: '2026-11-20' });
+    await sealSession(db, s.id);
+    const r = await updateSession(db, s.id, { nameSnapshot: 'Pull day' });
+    expect(r.nameSnapshot).toBe('Pull day');
+    expect(r.edited).toBeFalsy();
+    expect((await updateSession(db, s.id, { note: 'felt heavy' })).edited).toBe(true);
   });
 
   it('adding a set to an unknown session throws', async () => {

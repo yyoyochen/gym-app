@@ -216,7 +216,9 @@ export async function updateSession(
   return db.transaction('rw', db.sessions, async () => {
     const s = await db.sessions.get(id);
     if (!s) throw new NotFoundError('session', id);
-    const next = { ...s, ...patch, ...(s.sealed ? { edited: true } : {}) };
+    // A new name changes only the label, so it does not mark a finished session as edited.
+    const labelOnly = Object.keys(patch).every(k => k === 'nameSnapshot');
+    const next = { ...s, ...patch, ...(s.sealed && !labelOnly ? { edited: true } : {}) };
     await db.sessions.put(next);
     return next;
   });
