@@ -15,7 +15,7 @@ LUME colour, radius or shadow should appear in new work. Tokens:
    cards, no boxes around content, no shadows, no rounded corners; sections are
    separated by space and a dotted rule.
 4. **Spec labels are the voice.** Space Mono uppercase for labels, lockups and
-   notes: `[SESSION A]`, `//NOTE`, `©21.11.26`. That's the mood board, and it's
+   notes: `[SESSION A]`, `//NOTE`, `Sun 22 Nov`. That's the mood board, and it's
    wanted.
 5. **Dither is the only ornament.** 1-bit 9×9 pixel icons, glyph dither bars
    (`█▓▒░···`), a glyph heatmap (`· ░ ▒ ▓ █`), and the PR number resolving from
@@ -167,10 +167,10 @@ dot; `sessionNames` reads both forms and nothing is migrated.
 - **Y-axis:** ceiling = 120% of the best value in view, floor = 90% of the
   lowest (volume floors at 0), 3 to 6 round ticks inside, a 150 px plot.
 - **Targets:** a target at least 22 px under the ceiling is drawn at its real
-  height (dashed accent line, label on a paper backing, gap at the right). Any
-  other target is pinned in a lane above the plot with an up-arrow and its gap
-  ("Advanced 191.5 kg +35.5"), and never moves the scale. A target below the
-  floor is not drawn. A thin two-row Bayer dither band marks the ceiling edge.
+  height (dotted accent line, a diamond at its right end, a text halo behind the
+  label, the gap at the right). Any other target is pinned in a lane above the
+  plot with a diamond and its gap ("Advanced 191.5 kg +35.5"), and never moves the
+  scale. A target below the floor is not drawn.
 - **Which targets:** e1RM gets the next level (plain kg e1RM only) and the
   lifter's own goal for the lift (earliest deadline). Top set and Weekly volume
   get none. Gaps count from the best e1RM in 90 days, rounded to 0.5 kg.
@@ -182,6 +182,23 @@ a 2 ch decimal slot when the list has any fractional weight), `×`, reps in a
 2 ch slot, all right-aligned so the digits line up. Fill = top set, outline =
 work set, dotted = ramp (a set before the day's heaviest and under 80% of it,
 inferred for display only). Failed reps are struck through.
+
+### Markers, sparklines, aligned numbers
+
+- **Markers:** a PR is a filled up-triangle on the line, a target a diamond (at the
+  right end of its dotted line, or in the ceiling lane), the latest point a hollow
+  square. There is no dither band at the ceiling.
+- **Targets:** dotted accent line (the grid's `1 3` dash), label in the smallest
+  role (`micro`, not bold).
+- **Sparklines:** step lines, 72 × 22 px, 1.5 px ink with an accent square on the
+  latest value (`Sparkline`, `sparklinePath`). The lifts list shows the last 12
+  sessions of e1RM; "Best weight at reps" (the heaviest weight for at least n
+  reps, n in 1, 2, 3, 5, 8, 10, 12, rows equal to the one above dropped) shows one
+  per row.
+- **Aligned numbers (`Load`, set cells):** whole kilos in a 3 `ch` right-aligned
+  slot, then a 2 `ch` slot for a small raised fraction (`micro` role) when the list
+  has any fractional weight, then `x` and reps in a 2 `ch` right-aligned slot.
+  Tabular numerals. Inline text such as "Back Squat 105 x 2" stays plain.
 
 ### The check
 
@@ -201,19 +218,18 @@ test. It fails on any of these outside the token files:
 
 The escape hatch is a same-line `/* ds-allow: <reason> */` in CSS, or
 `// ds-allow: <reason>` in TSX. The reason is required, and the test caps
-these at 6. Today there are 5:
+these at 6. Today there are 4:
 
 - 2 page-edge push shadows
 - the runtime `--sheet-hide` padding
 - the heatmap month offset
-- the trend glyphs' spacing
 
 ## 4. Components (`ui/kit`)
 
 | Component | Notes |
 |---|---|
 | `PixelIcon name scale` | 18 icons on a 9×9 grid (`icons.ts`), crisp at integer scales |
-| `Lockup mid left? right?` | boxed header, middle cell inverted, `©dd.mm.yy` default |
+| `Lockup mid left? right?` | boxed header, middle cell inverted, a plain short date (`Sun 22 Nov`) default |
 | `BigNumber value unit? caption? size` | hero / display / lg |
 | `LabelValue`, `LabelValueGrid items columns variant` | pairs grid, or `stats` (ink label, accent value) |
 | `DitherBar value cells label valueText` | `role="meter"`; glyphs in GymBro Glyph |
@@ -227,7 +243,11 @@ these at 6. Today there are 5:
 | `Button` / `LinkButton variant icon iconEnd block` | primary ink block · outline · quiet · danger (dashed) |
 | `Stepper` | changes on touch-down, repeats while held (500 ms, then 160 → 60 ms), typeable |
 | `Segmented` | ink thumb on a spring; drag the thumb across; arrow keys |
-| `Toggle` | square knob, stretches while held |
+| `Toggle` | square knob, stretches while held; the track says ON or OFF |
+| `Select label value options onChange` | a field that opens a list sheet (48 px rows, the chosen row inverted with a pixel check, optional group headings); replaces every native `<select>` |
+| `DateField` / `DatePickerSheet` | a field that opens a calendar sheet: Monday first, today outlined, the picked day filled, trained days ticked, days outside min/max dimmed; replaces the native date input |
+| `InfoButton label` | a 20 px (i) with a 48 px hit area that opens an explanation sheet (levels, heatmap legend) |
+| `Parts items` | facts as spans with a gap, no separator glyph |
 | `Sheet open title onClose detents?` | see §5 |
 | `ActionSheet`, `ConfirmButton` | confirm before irreversible actions |
 | `showHud(text)` | "Session saved" confirmation |
