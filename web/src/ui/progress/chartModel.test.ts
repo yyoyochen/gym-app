@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chartScale, fillWeeks, gapText, stepRuns, ticksWithin } from './chartModel';
+import { chartScale, diamondPoints, fillWeeks, gapText, stepRuns, trianglePoints, ticksWithin } from './chartModel';
 
 const E1 = [126.7, 126.7, 140, 144.7, 151.7, 154, 151.7, 156];
 const names = (t: { name: string }[]) => t.map(x => x.name);
@@ -93,5 +93,12 @@ describe('gapText', () => {
     expect(gapText(165, 156)).toBe('+9');
     expect(gapText(156, 156)).toBe('reached');
     expect(gapText(140, 156)).toBe('reached');
+  });
+});
+
+describe('marker geometry', () => {
+  it('a PR is an up-pointing triangle, a target a diamond', () => {
+    expect(trianglePoints(10, 20)).toBe('5,25 15,25 10,15');
+    expect(diamondPoints(10, 20)).toBe('10,15 15,20 10,25 5,20');
   });
 });

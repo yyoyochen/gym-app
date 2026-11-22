@@ -68,19 +68,19 @@
 .tk-base { stroke: var(--ink); stroke-width: 1; }
 .tk-tick { font: var(--text-micro); letter-spacing: var(--track-micro); fill: var(--mid); text-transform: uppercase; }
 .tk-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: miter; stroke-linecap: square; }
-.tk-pr { fill: var(--ink); shape-rendering: crispEdges; }
+.tk-pr { fill: var(--ink); }
 .tk-last { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; shape-rendering: crispEdges; }
 .tk-hold { stroke-dasharray: 2 3; }
-.tk-band { fill: var(--accent); shape-rendering: crispEdges; }
-.tk-target { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 3; }
-.tk-target-tx { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; font-weight: var(--font-strong); fill: var(--accent); white-space: pre;
+.tk-target { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 1 3; }
+.tk-target-tx { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; fill: var(--accent); white-space: pre;
   paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
-.tk-arrow { fill: var(--accent); shape-rendering: crispEdges; }
+.tk-target-mark { fill: var(--accent); }
 .tk-bar { fill: var(--ink); shape-rendering: crispEdges; }
 .tk-legend { margin: 0; }
 .tk-sw { display: inline-block; flex: none; }
 .tk-sw.line { width: 14px; border-top: var(--rule-w) solid var(--ink); }
-.tk-sw.pr { width: 5px; height: 5px; background: var(--ink); margin-left: var(--space-2); }
+.tk-sw.pr { width: 9px; height: 9px; background: var(--ink); clip-path: polygon(50% 0, 100% 100%, 0 100%); margin-left: var(--space-2); }
+.tk-sw.target { width: 9px; height: 9px; background: var(--accent); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); margin-left: var(--space-2); }
 .tk-sw.last { width: 7px; height: 7px; border: var(--rule-w) solid var(--accent); margin-left: var(--space-2); }
 .tk-sw.hold { width: 14px; border-top: var(--rule-w) dotted var(--ink); margin-left: var(--space-2); }
 

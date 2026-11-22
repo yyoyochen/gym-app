@@ -98,6 +98,7 @@ export function LiftDetail({ params }: { params: string[] }) {
         {points.length > 1 && <Legend className="tk-legend">
           <i className="tk-sw line" />{metric === 'volume' ? 'kg × reps per week' : metric === 'top' ? 'heaviest set' : 'Epley e1RM'}
           {metric !== 'volume' && <><i className="tk-sw pr" />PR</>}
+          {chartTargets.length > 0 && <><i className="tk-sw target" />target</>}
           {metric !== 'volume' && <><i className="tk-sw last" />latest</>}
           {hasHold && <><i className="tk-sw hold" />no sessions</>}
         </Legend>}

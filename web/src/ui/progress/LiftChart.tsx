@@ -7,25 +7,13 @@
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
-import { PLOT_PX, chartScale, fillWeeks, gapText, stepRuns, type ChartTarget } from './chartModel';
+import { PLOT_PX, chartScale, diamondPoints, fillWeeks, gapText, stepRuns, trianglePoints, type ChartTarget } from './chartModel';
 
 export interface LinePoint { date: ISODate; value: number; pr?: boolean }
 
 const W = 342, L = 34, R = 6, BOTTOM = 22, PIN_ROW = 13;
-const B4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]].map(r => r.map(v => (v + 0.5) / 16));
-const BAND = [0.5, 0.25]; // density by row, nearest the plot first
 const ev = (v: number) => 2 * Math.round(v / 2);
 const fmtTick = (v: number) => (Math.abs(v) >= 10_000 ? `${Math.round(v / 1000)}k` : Math.abs(v) >= 1000 ? `${Math.round(v / 100) / 10}k` : String(Math.round(v * 10) / 10));
-
-/** The ceiling band as one path of 2 px Bayer cells. */
-function bandPath(plotTop: number): string {
-  let d = '';
-  BAND.forEach((density, i) => {
-    const y = plotTop - 2 * (i + 1);
-    for (let x = ev(L); x < ev(W - R); x += 2) if (density > B4[(y / 2) % 4][(x / 2) % 4]) d += `M${x},${y}h2v2h-2z`;
-  });
-  return d;
-}
 
 /** `current` is what target gaps are measured from (the lift page passes its best e1RM in 90 days); defaults to the last point. */
 export function LiftChart({ points, label, kind = 'step', targets = [], current, empty = 'Two sessions or more draw the line.' }: {
@@ -35,7 +23,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
   const bars = kind === 'bars';
   const data: LinePoint[] = bars ? fillWeeks(points) : points;
   const s = chartScale({ values: data.map(p => p.value), zeroBased: bars, targets: bars ? [] : targets });
-  const PT = ev(BAND.length * 2 + (s.pinned.length ? s.pinned.length * PIN_ROW + 6 : 0) + 8);
+  const PT = ev((s.pinned.length ? s.pinned.length * PIN_ROW + 6 : 0) + 8);
   const PB = PT + PLOT_PX, H = PB + BOTTOM;
   const d0 = data[0].date, d1 = data[data.length - 1].date;
   const span = Math.max(1, daysBetween(d0, d1));
@@ -59,13 +47,12 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
         <text className="tk-tick" x={L} y={H - 6}>{formatDate(d0, { weekday: false, year: false })}</text>
         <text className="tk-tick" x={W - R} y={H - 6} textAnchor="end">{formatDate(d1, { weekday: false, year: false })}</text>
 
-        <path className="tk-band" d={bandPath(PT)} />
         {s.pinned.map((t, k) => {
-          const by = PT - BAND.length * 2 - 7 - k * PIN_ROW, ax = W - R - 4;
+          const by = PT - 7 - k * PIN_ROW, ax = W - R - 5;
           return (
             <g key={t.name}>
               <text className="tk-target-tx" x={W - R - 14} y={by} textAnchor="end">{`${t.name} ${kg(t.value)} kg  ${gapText(t.value, now)}`}</text>
-              <polygon className="tk-arrow" points={`${ax - 4},${by} ${ax + 4},${by} ${ax},${by - 8}`} />
+              <polygon className="tk-target-mark" points={diamondPoints(ax, by - 3, 4)} />
             </g>
           );
         })}
@@ -74,9 +61,10 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
           const ty = y(t.value), name = `${t.name} ${kg(t.value)} kg`, gap = gapText(t.value, now);
           return (
             <g key={t.name}>
-              <line className="tk-target" x1={L} x2={W - R} y1={ty} y2={ty} />
+              <line className="tk-target" x1={L} x2={W - R - 8} y1={ty} y2={ty} />
+              <polygon className="tk-target-mark" points={diamondPoints(W - R - 4, ty, 4)} />
               <text className="tk-target-tx" x={L + 4} y={ty - 5}>{name}</text>
-              <text className="tk-target-tx" x={W - R} y={ty - 5} textAnchor="end">{gap}</text>
+              <text className="tk-target-tx" x={W - R - 8} y={ty - 5} textAnchor="end">{gap}</text>
             </g>
           );
         })}
@@ -94,7 +82,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
               </g>
             ))}
             {data.filter(p => p.pr).map(p => (
-              <rect key={p.date} className="tk-pr" x={x(p.date) - 2.5} y={y(p.value) - 2.5} width={5} height={5} />
+              <polygon key={p.date} className="tk-pr" points={trianglePoints(x(p.date), y(p.value) - 1, 4)} />
             ))}
             <rect className="tk-last" x={x(last.date) - 3.5} y={y(last.value) - 3.5} width={7} height={7} />
           </>
