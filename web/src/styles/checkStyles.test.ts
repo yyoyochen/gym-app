@@ -31,6 +31,39 @@ describe('style check', () => {
     expect(rules(r)).toEqual(['caps']);
   });
 
+  it('custom properties cannot smuggle raw values past the check', () => {
+    expect(rules(checkCss('.a { --space-odd: 7px; }', 'a.css'))).toEqual(['token']);
+    expect(rules(checkCss('.a { --text-mine: 900 21px/1 serif; }', 'a.css'))).toEqual(['token']);
+    expect(rules(checkCss('.a { --c: #f00; }', 'a.css'))).toEqual(['colour']);
+    expect(checkCss('.a { --sqheat-days: 30px; }', 'a.css').violations).toEqual([]);
+  });
+
+  it('border and outline accept only line tokens', () => {
+    expect(rules(checkCss('.a { border-top: var(--anything) solid var(--ink); }', 'a.css'))).toEqual(['border']);
+    expect(rules(checkCss('.a { outline: calc(var(--rule-w) * 5) solid var(--ink); }', 'a.css'))).toEqual(['border']);
+    expect(checkCss('.a { outline: var(--focus-w) solid var(--accent); border-bottom: var(--hair); }', 'a.css').violations).toEqual([]);
+  });
+
+  it('scans nested rule blocks', () => {
+    // The outer block's own declarations, before and after a nested block, must be scanned too.
+    expect(rules(checkCss('.a { padding: 3px; &:hover { color: var(--ink); } }', 'a.css'))).toEqual(['spacing']);
+    expect(rules(checkCss('.a { &:hover { color: var(--ink); } margin: 5px; }', 'a.css'))).toEqual(['spacing']);
+    expect(rules(checkCss('@media (min-width: 440px) { .a { gap: 7px; } }', 'a.css'))).toEqual(['spacing']);
+  });
+
+  it('spacing calc may only negate, not multiply or divide', () => {
+    expect(rules(checkCss('.a { padding: calc(var(--space-half) * 3); }', 'a.css'))).toEqual(['spacing']);
+    expect(rules(checkCss('.a { gap: calc(var(--space-4) / 3); }', 'a.css'))).toEqual(['spacing']);
+    expect(checkCss('.a { margin: calc(-1 * var(--gutter)) 0; }', 'a.css').violations).toEqual([]);
+  });
+
+  it('font weight and family are tokens, and a role block cannot override family', () => {
+    expect(rules(checkCss('.a { font-weight: var(--font-other); }', 'a.css'))).toEqual(['font']);
+    expect(checkCss('.a { font-weight: var(--font-strong); }', 'a.css').violations).toEqual([]);
+    expect(rules(checkCss('.a { font: var(--text-value); font-family: var(--font-mono); }', 'a.css'))).toEqual(['font']);
+    expect(checkCss('.a { font-family: var(--font-mono); }', 'a.css').violations).toEqual([]);
+  });
+
   it('ds-allow moves a line to allowed', () => {
     const r = checkCss('.p { box-shadow: -1px 0 0 var(--rule); /* ds-allow: page edge during push */ }', 'p.css');
     expect(r.violations).toEqual([]);

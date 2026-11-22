@@ -96,8 +96,10 @@ gallery renders every role from `ui/kit/typeRoles.ts`.
 
 - Roles have no weight or case variants. A bold 17px line is `value`. An
   uppercase mono line is `label`.
-- The one exception is emphasis inside running text, such as a bold number
-  in a sentence. It uses `font-weight: var(--font-strong)`, which is 700.
+- The one exception is emphasis on top of a role: a bold number in a
+  sentence, the on-state of a segment, a section title, the inverted lockup
+  cell. It uses `font-weight: var(--font-strong)` (700), the only weight the
+  check accepts besides a role. A role block can't also set `font-family`.
 - Glyph sizes come from `--text-glyph` (14px/1, bars and trends) and
   `--text-glyph-sm` (11px/1.25, glyph heatmap).
 - Use tabular figures only where columns align (`.tnum`, inputs, stats).
@@ -107,7 +109,7 @@ gallery renders every role from `ui/kit/typeRoles.ts`.
 
 | Token | px | Job |
 |---|---|---|
-| `--space-half` | 2 | dither offsets only (one pixel cell) |
+| `--space-half` | 2 | the smallest nudge: a sub-line gap, a field inset, a dither offset (one pixel cell) |
 | `--space-1` | 4 | icon to label, tight pairs |
 | `--space-2` | 8 | inside a row |
 | `--space-3` | 12 | between rows |

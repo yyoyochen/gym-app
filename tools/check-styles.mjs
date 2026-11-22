@@ -14,6 +14,10 @@ const CAPS_ROLES = /var\(--text-(label|stamp|button|micro)\)/;
 const SPACE_VARS = /var\(--(space-[a-z0-9]+|gutter|section|touch-min|touch-commit|tabbar-h)\)/g;
 const LENGTH = /-?\d*\.?\d+(px|rem|em|vh|vw|ch)\b/;
 const COLOUR = /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?)\(/i;
+// Names only tokens.css may define: a custom property with one of these can't be made up elsewhere.
+const RESERVED = /^--(text-|track-|font-|space-|touch-|tabbar-)|^--(hair|rule-w|focus-w|gutter|section|paper|ink|accent|mid|rule|grain|dim|on-ink|behind)$/;
+const LINE_VARS = /var\(--(hair|rule-w|focus-w)\)/g;
+const COLOUR_VARS = /var\(--(ink|accent|mid|rule|paper|on-ink|dim|behind)\)/g;
 
 /** `ds-allow: reason` on a line → the reason, '' when present but empty, null when absent. */
 function allowReason(line) {
@@ -31,15 +35,19 @@ function cssRule(prop, value) {
   const v = value.replace(/!important/i, '').trim();
   const out = [];
   if (COLOUR.test(v)) out.push('colour');
-  if (/^font(-size|-weight|-family)?$/.test(prop) && !/^(var\(--(text|font)-[a-z0-9-]+\)|inherit)$/.test(v)) out.push('font');
+  if (prop === 'font' && !/^(var\(--text-[a-z0-9-]+\)|inherit)$/.test(v)) out.push('font');
+  if (prop === 'font-size' && v !== 'inherit') out.push('font');
+  if (prop === 'font-weight' && !/^(var\(--font-strong\)|inherit)$/.test(v)) out.push('font');
+  if (prop === 'font-family' && !/^(var\(--font-(sans|mono|glyph)\)|inherit)$/.test(v)) out.push('font');
   if (prop === 'letter-spacing' && !/^(var\(--track-[a-z0-9-]+\)|0|inherit|normal)$/.test(v)) out.push('tracking');
   if (/^(padding|margin)(-(top|right|bottom|left|inline|block)(-(start|end))?)?$|^(row-|column-)?gap$/.test(prop)) {
     const rest = v.replace(SPACE_VARS, '').replace(/env\([^)]*\)/g, '');
-    if (LENGTH.test(rest) || /var\(/.test(rest)) out.push('spacing');
+    const scaled = [...rest.matchAll(/(-?\d*\.?\d+)\s*\*|\*\s*(-?\d*\.?\d+)|\/\s*-?\d/g)].some(m => m[0].startsWith('/') || (m[1] ?? m[2]) !== '-1');
+    if (LENGTH.test(rest) || /var\(/.test(rest) || scaled) out.push('spacing');
   }
   if (/^(border(-(top|right|bottom|left))?(-width)?|outline(-width)?)$/.test(prop)) {
-    const rest = v.replace(/var\(--(hair|rule-w)\)/g, '');
-    if (LENGTH.test(rest) || /\b(thin|medium|thick)\b/.test(rest)) out.push('border');
+    const rest = v.replace(LINE_VARS, '').replace(COLOUR_VARS, '');
+    if (LENGTH.test(rest) || /\b(thin|medium|thick)\b/.test(rest) || /var\(|calc\(/.test(rest)) out.push('border');
   }
   if (/radius$/.test(prop) && !/^0(px)?$/.test(v)) out.push('radius');
   if (/^(box|text)-shadow$/.test(prop) && v !== 'none') out.push('shadow');
@@ -57,25 +65,40 @@ export function checkCss(text, file) {
     if (reason) allowed.push({ file, line, rule, reason });
     else violations.push({ file, line, rule, text: decl.trim() });
   };
-  // Innermost blocks only: those are the rule bodies that hold declarations.
+  // Every block, innermost first: scan its own declarations, then blank it out so
+  // the block around it sees only its own (nesting, @media and @supports included).
+  let work = clean;
   const block = /\{([^{}]*)\}/g;
-  let b;
-  while ((b = block.exec(clean))) {
-    const body = b[1], start = b.index + 1;
-    let capsAt = -1, capsDecl = '', upper = false, lowerAt = -1, lowerDecl = '';
+  while (work.includes('{')) {
+    const found = [...work.matchAll(block)];
+    if (!found.length) break; // unbalanced braces: nothing more to scan
+    for (const b of found) scanBody(b[1], b.index + 1);
+    work = work.replace(block, m => ' '.repeat(m.length));
+  }
+
+  function scanBody(body, start) {
+    let capsAt = -1, capsDecl = '', upper = false, lowerAt = -1, lowerDecl = '', famAt = -1, famDecl = '', roleSeen = false;
     const decl = /([a-z-]+)\s*:\s*([^;]+)/gi;
     let d;
     while ((d = decl.exec(body))) {
       const prop = d[1].toLowerCase(), value = d[2];
-      if (prop.startsWith('--')) continue;
       const at = start + d.index;
+      if (prop.startsWith('--')) {
+        // A custom property can't use a reserved token name or carry a colour.
+        if (RESERVED.test(prop)) report(at, 'token', d[0]);
+        else if (COLOUR.test(value)) report(at, 'colour', d[0]);
+        continue;
+      }
       for (const rule of cssRule(prop, value)) report(at, rule, d[0]);
+      if (prop === 'font' && /var\(--text-/.test(value)) roleSeen = true;
+      if (prop === 'font-family') { famAt = at; famDecl = d[0]; }
       if (prop === 'font' && CAPS_ROLES.test(value)) { capsAt = at; capsDecl = d[0]; }
       if (prop === 'font' && /var\(--text-/.test(value) && !CAPS_ROLES.test(value)) { lowerAt = at; lowerDecl = d[0]; }
       if (prop === 'text-transform' && /uppercase/.test(value)) upper = true;
     }
     if (capsAt >= 0 && !upper) report(capsAt, 'caps', capsDecl);
     if (lowerAt >= 0 && upper) report(lowerAt, 'caps', lowerDecl); // roles have no case variants
+    if (roleSeen && famAt >= 0) report(famAt, 'font', famDecl); // a role already fixes the family
   }
   return { violations, allowed };
 }

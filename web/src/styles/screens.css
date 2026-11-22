@@ -18,7 +18,6 @@
 .link-row .btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: inherit; }
 .btn:disabled { opacity: 0.4; cursor: default; }
-.btn.icon { min-width: 48px; padding: 0; font: var(--text-value); font-family: var(--font-mono); }
 .btn.armed { border-color: currentColor; }
 .btn.danger.armed { background: var(--ink); color: var(--paper); }
 .btn.block + .btn.block { margin-top: 0; }
@@ -43,12 +42,6 @@ select.field { appearance: none; background-image: linear-gradient(45deg, transp
 /* ---------- History ---------- */
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); text-align: center; }
 .cal-head { padding: var(--space-1) 0; }
-.cal-day { min-height: 44px; border-radius: 0; color: var(--mid); font: var(--text-value); font-family: var(--font-mono); position: relative; }
-.cal-day:disabled { cursor: default; opacity: 1; }
-.cal-day.trained { color: var(--ink); background: var(--paper); }
-.cal-day.trained::after { content: ''; position: absolute; left: 50%; bottom: 6px; width: 6px; height: 6px; translate: -50% 0; background: var(--accent); }
-.cal-day.today { outline: var(--rule-w) solid var(--ink); outline-offset: calc(-1 * var(--rule-w)); }
-.cal-day.sel { outline: var(--rule-w) solid var(--accent); outline-offset: calc(-1 * var(--rule-w)); }
 .session-row { display: flex; flex-direction: column; gap: var(--space-2); text-decoration: none; color: inherit; }
 .top-lifts li { min-height: 24px; }
 

@@ -34,6 +34,16 @@ describe('design tokens', () => {
     }
   });
 
+  it('focus width is double the rule width, as one token', () => {
+    expect(token('--focus-w')).toBe('calc(var(--rule-w) * 2)');
+  });
+
+  it('--space-half is not documented as dither-only', () => {
+    const design = readFileSync(resolve(dir, '../../../docs/DESIGN.md'), 'utf8');
+    const row = design.split('\n').find(l => l.includes('`--space-half`')) ?? '';
+    expect(row).not.toMatch(/only/i);
+  });
+
   it('section is 28px', () => {
     expect(token('--section')).toBe('28px');
   });

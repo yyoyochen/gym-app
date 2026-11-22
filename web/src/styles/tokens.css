@@ -80,7 +80,7 @@
   --track-glyph:      0;
 
   /* ---------- space: 4px grid ---------- */
-  --space-half: 2px;   /* dither offsets only: one pixel cell */
+  --space-half: 2px;   /* the smallest nudge: sub-line gap, field inset, dither offset */
   --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
   --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px;
   --gutter: 24px;       /* screen side padding */
@@ -92,6 +92,7 @@
   /* ---------- lines: two weights ---------- */
   --hair: 1px dotted var(--rule); /* dividers, empty tracks, quiet outlines */
   --rule-w: 1.5px;                /* solid ink lines that carry meaning */
+  --focus-w: calc(var(--rule-w) * 2); /* focus rings and a focused field's underline: Chrome draws 1.5px outlines at 1px */
 
   /* ---------- motion ----------
      Springs live in ui/kit/motion/spring.ts (response + dampingFraction, as
