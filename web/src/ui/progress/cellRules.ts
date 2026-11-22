@@ -19,7 +19,7 @@ export function classifySets(sets: { weight: number; kind: string }[]): CellRole
 export function cellWeight(weight: number, bodyweightFactor: number): { int: string; dec: string } {
   if (bodyweightFactor > 0 && weight === 0) return { int: 'BW', dec: '' };
   const [i, d] = kg(weight).split('.');
-  return { int: `${bodyweightFactor > 0 ? '+' : ''}${i}`, dec: d ? `.${d}` : '' };
+  return { int: `${bodyweightFactor > 0 && weight > 0 ? '+' : ''}${i}`, dec: d ? `.${d}` : '' };
 }
 
 export function anyDecimals(sets: { weight: number }[]): boolean {

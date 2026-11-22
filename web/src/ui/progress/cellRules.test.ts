@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anyDecimals, cellWeight, classifySets } from './setCells';
+import { anyDecimals, cellWeight, classifySets } from './cellRules';
 
 const work = (...ws: number[]) => ws.map(weight => ({ weight, kind: 'working' }));
 
@@ -35,6 +35,9 @@ describe('cellWeight', () => {
     expect(cellWeight(0, 1)).toEqual({ int: 'BW', dec: '' });
     expect(cellWeight(10, 1)).toEqual({ int: '+10', dec: '' });
     expect(cellWeight(7.5, 1)).toEqual({ int: '+7', dec: '.5' });
+  });
+  it('assisted sets (negative load) keep their minus sign', () => {
+    expect(cellWeight(-20, 1)).toEqual({ int: '-20', dec: '' });
   });
 });
 

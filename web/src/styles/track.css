@@ -116,6 +116,23 @@
 .tk-hrow-v { font: var(--text-body-strong); letter-spacing: var(--track-body-strong); }
 .tk-hrow .px, .tk-srow-link .px { color: var(--mid); }
 
+/* ---------- lift history set cells: equal size, digits aligned ---------- */
+.tk-hrow.cells { grid-template-columns: 8ch 1fr 9px; gap: var(--space-3); }
+.tk-hrow.cells .tk-hrow-k { min-width: 0; }
+.tk-hrow.cells .tk-hrow-k span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-cells { --cell-w: calc(6.5ch + var(--space-2)); display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--cell-w), 1fr)); gap: var(--space-1); font: var(--text-mono); letter-spacing: var(--track-mono); }
+.tk-cells.dec { --cell-w: calc(8.5ch + var(--space-2)); }
+.tk-cell { display: grid; grid-template-columns: 3ch 1.5ch 2ch; justify-content: center; padding: var(--space-2) 0; border: var(--rule-w) solid var(--ink); white-space: nowrap; }
+.tk-cells.dec .tk-cell { grid-template-columns: 3ch 2ch 1.5ch 2ch; }
+.tk-cell .w, .tk-cell .r { text-align: right; }
+.tk-cell .x { text-align: center; color: var(--mid); }
+.tk-cell.top, .tk-key.top { background: var(--ink); color: var(--paper); border-color: var(--ink); font-weight: var(--font-strong); }
+.tk-cell.top .x { color: inherit; }
+.tk-cell.ramp, .tk-key.ramp { border-style: dotted; border-color: var(--mid); color: var(--mid); }
+.tk-cell.failed .r { text-decoration: line-through; }
+.tk-key { display: inline-block; padding: var(--space-half) var(--space-1); border: var(--rule-w) solid var(--ink); margin-left: var(--space-2); }
+.tk-key:first-child { margin-left: 0; }
+
 /* ---------- History ---------- */
 .tk-block > .tk-legend { margin-top: var(--space-3); }
 

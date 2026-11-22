@@ -3,10 +3,9 @@
 // verdicts, PRs, the gym-goer level, the optional powerlifter comparison and
 // the lift's history as spec-sheet rows.
 import { useState } from 'react';
-import type { EffortScale } from '../domain/types';
 import { getExercise, getProfile } from '../db';
 import { addDays, bestRecentE1rm } from '../engine';
-import { kg, setsLine } from '../app/coach';
+import { kg } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
 import { useLive } from '../ui/useLive';
 import { BigNumber, DitherBar, LabelValueGrid, Legend, NavBar, PixelIcon, Segmented } from '../ui/kit';
@@ -14,6 +13,8 @@ import { latestBodyweight, liftPRs, liftStats, liftVerdicts, trendOf } from '../
 import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
 import { LiftChart, type LinePoint } from '../ui/progress/LiftChart';
 import { liftChartTargets } from '../ui/progress/chartTargets';
+import { SetCells, SetCellsKey } from '../ui/progress/SetCells';
+import { anyDecimals } from '../ui/progress/cellRules';
 import { stepRuns } from '../ui/progress/chartModel';
 import { useScrollTop } from '../ui/session/useNow';
 import { rateExercise } from '../benchmarks/liftRating';
@@ -40,7 +41,7 @@ export function LiftDetail({ params }: { params: string[] }) {
     const [profile, bw] = await Promise.all([getProfile(db), latestBodyweight(db, today)]);
     const st = await liftStats(db, ex, today, bw);
     const verdicts = await liftVerdicts(db, st);
-    return { today, ex, profile, bw, st, verdicts, prs: liftPRs(st), scale: (profile?.effortScale ?? 'rir') as EffortScale };
+    return { today, ex, profile, bw, st, verdicts, prs: liftPRs(st) };
   }, [id]);
 
   if (data === undefined) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel="Progress" fallback="progress" large={false} /></section>;
@@ -50,7 +51,7 @@ export function LiftDetail({ params }: { params: string[] }) {
       <p className="tk-quiet">This lift doesn’t exist any more.</p>
     </section>
   );
-  const { today, ex, profile, bw, st, verdicts, prs, scale } = data;
+  const { today, ex, profile, bw, st, verdicts, prs } = data;
   const prE = prFlags(st.series.map(p => p.e1rm));
   const prT = prFlags(st.series.map(p => p.top_weight));
   const points: LinePoint[] = metric === 'e1rm' ? st.series.map((p, i) => ({ date: p.date, value: p.e1rm, pr: prE[i] }))
@@ -68,6 +69,8 @@ export function LiftDetail({ params }: { params: string[] }) {
   const pop = profile?.benchmarkPopulation ?? 'gym';
   const vCount = { beat: 0, hit: 0, missed: 0, new: 0 };
   for (const v of verdicts) vCount[v.verdict]++;
+  const shown = st.days.slice(0, 30);
+  const decimals = anyDecimals(shown.flatMap(d => d.sets));
   const chartTargets = liftChartTargets({ metric, next: standing?.kind === 'rated' ? standing.next : null, loadType: standing?.kind === 'rated' ? standing.loadType : undefined, goals: profile?.targets ?? [], subject: ex.id });
   const hasHold = metric !== 'volume' && stepRuns(points).some(r => r.dotted);
   const chartLabel = `${ex.name} ${METRICS.find(m => m.value === metric)!.label} over ${points.length} ${metric === 'volume' ? 'weeks' : 'sessions'}`;
@@ -174,23 +177,18 @@ export function LiftDetail({ params }: { params: string[] }) {
       <section className="tk-sec" aria-label="History">
         <SecHead title="History" meta={st.days.length > 30 ? `latest 30 of ${st.days.length}` : `${st.days.length} session${st.days.length === 1 ? '' : 's'}`} />
         <ul className="tk-rows">
-          {st.days.slice(0, 30).map(d => (
+          {shown.map(d => (
             <li key={d.sessionId}>
-              <a className="tk-hrow" data-press="row" href={`#/history/${encodeURIComponent(d.sessionId)}`}>
-                <span className="tk-hrow-k"><span>{formatDate(d.date, { weekday: false })}</span><span className="mid">{d.name}</span></span>
-                <span className="tk-hrow-v"><Parts text={setsLine(d.sets, scale)} /></span>
+              <a className="tk-hrow cells" data-press="row" href={`#/history/${encodeURIComponent(d.sessionId)}`}>
+                <span className="tk-hrow-k"><span>{formatDate(d.date, { weekday: false, year: false })}</span><span className="mid">{d.name}</span></span>
+                <SetCells sets={d.sets} bodyweightFactor={ex.bodyweightFactor} decimals={decimals} />
                 <PixelIcon name="chevron" scale={1} />
               </a>
             </li>
           ))}
         </ul>
+        {shown.length > 0 && <Legend className="tk-legend"><SetCellsKey /></Legend>}
       </section>
     </section>
   );
-}
-
-/** "a · b · c" with each part kept on one line. */
-function Parts({ text }: { text: string }) {
-  const parts = text.split(' · ');
-  return <>{parts.map((p, i) => <span key={i} className="tk-part">{p}{i < parts.length - 1 ? ' · ' : ''}</span>)}</>;
 }
