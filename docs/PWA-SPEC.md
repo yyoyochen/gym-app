@@ -425,7 +425,7 @@ Ideas taken from the competitor teardown (not code):
   - a banner explains it's a demo
   - "Start my log" wipes the sample and starts onboarding
 - **Setup (expert, about 90 seconds;** `docs/superpowers/specs/2026-11-23-first-five-minutes-design.md`**):**
-  1. About you: effort scale (RIR default), bodyweight, and optional sex and birth year for strength levels. A link opens Import Notion CSV / Restore a backup / Explore with demo data.
+  1. About you: effort scale (RIR default), bodyweight, and optional sex and birth year for strength levels. A link opens Import a CSV (the GymBro template, a Hevy export or a Strong export; `docs/superpowers/specs/2026-11-23-csv-import-design.md`) / Restore a backup / Explore with demo data.
   2. Program: pick a template (§3.8), adjust in the editor or later
   3. Your numbers: the best set in the last month for each main lift (squat, bench, deadlift, overhead press) the program holds and the log doesn't. A starting set seeds that lift's first target (rule `start_seed`); it is never stored as a set. Skipped lifts start with a baseline session.
   4. How GymBro works: three lines, then Start the first session or Look around first

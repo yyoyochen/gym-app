@@ -13,7 +13,7 @@ import { DemoBanner, useDemoMode } from '../app/DemoBanner';
 import { resetTips } from '../app/tips';
 import { formatDate, todayISO } from '../app/dates';
 import { DEFAULT_PLATES, STANDARD_PLATES, getPlateSettings, savePlateSettings, type PlateSettings } from '../app/prefs';
-import { ImportNotionPanel } from '../app/parts/ImportNotionPanel';
+import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import pkg from '../../../package.json';
 
@@ -66,8 +66,8 @@ export function Settings(_props: { params: string[] }) {
         <RestorePanel />
       </Group>
 
-      <Group label="Import Notion CSV">
-        {demo ? <p className="quiet">You’re looking at demo data. Tap “Start my log” first so the import doesn’t mix with it.</p> : <ImportNotionPanel />}
+      <Group label="Import a CSV">
+        {demo ? <p className="quiet">You’re looking at demo data. Tap “Start my log” first so the import doesn’t mix with it.</p> : <ImportCsvPanel />}
       </Group>
 
       <Storage />

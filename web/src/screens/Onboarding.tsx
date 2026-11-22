@@ -19,7 +19,7 @@ import { initTips } from '../app/tips';
 import { SETUP_STEPS, START_REPS, hasLoggedWork, mainLifts, startingSetsFromRows, startingSetsOf, type NumberRow } from '../app/setup';
 import { parseNum, validateBirthYear, validateBodyweight } from '../app/validate';
 import { sessionNames } from '../ui/session/text';
-import { ImportNotionPanel } from '../app/parts/ImportNotionPanel';
+import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import { TemplateList } from '../app/parts/TemplatePicker';
 
@@ -134,17 +134,17 @@ function StepAbout({ onNext }: { onNext: () => void }) {
 
 /** Today's "Your history" step, moved behind a link: import, restore or the demo. */
 function HistorySheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [mode, setMode] = useState<'' | 'notion' | 'restore'>('');
+  const [mode, setMode] = useState<'' | 'csv' | 'restore'>('');
   const [imported, setImported] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
   const [error, setError] = useState('');
-  const pick = (m: 'notion' | 'restore') => setMode(mode === m ? '' : m);
+  const pick = (m: 'csv' | 'restore') => setMode(mode === m ? '' : m);
   return (
     <Sheet open={open} title="Bring your log" onClose={onClose}>
       <div className="choice-list">
-        <Choice k="01" title="Import a Notion CSV" sub="Your training log export" open={mode === 'notion'} onClick={() => pick('notion')} />
-        {mode === 'notion' && <div className="choice-body">
-          <ImportNotionPanel onDone={r => setImported(r.sessionsAdded > 0 || r.sessionsUnchanged > 0)} />
+        <Choice k="01" title="Import a CSV" sub="GymBro template, Hevy or Strong" open={mode === 'csv'} onClick={() => pick('csv')} />
+        {mode === 'csv' && <div className="choice-body">
+          <ImportCsvPanel onDone={r => setImported(r.sessionsAdded > 0 || r.sessionsUnchanged > 0)} />
           {imported && <Button variant="primary" block iconEnd="chevron" onClick={onClose}>Continue setup</Button>}
         </div>}
         <Choice k="02" title="Restore a backup" sub="A GymBro .json export" open={mode === 'restore'} onClick={() => pick('restore')} />
