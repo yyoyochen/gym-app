@@ -13,6 +13,8 @@ import { BigNumber, DitherBar, LabelValueGrid, Legend, NavBar, PixelIcon, Segmen
 import { latestBodyweight, liftPRs, liftStats, liftVerdicts, trendOf } from '../ui/progress/data';
 import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
 import { LiftChart, type LinePoint } from '../ui/progress/LiftChart';
+import { liftChartTargets } from '../ui/progress/chartTargets';
+import { stepRuns } from '../ui/progress/chartModel';
 import { useScrollTop } from '../ui/session/useNow';
 import { rateExercise } from '../benchmarks/liftRating';
 import { STANDARDS_CAVEAT, confidenceWord, sourceMeta, levelTableText, missingForStandards, nextText, ratedValueText, standardsContext, useGymStandards } from '../ui/progress/standards';
@@ -66,6 +68,8 @@ export function LiftDetail({ params }: { params: string[] }) {
   const pop = profile?.benchmarkPopulation ?? 'gym';
   const vCount = { beat: 0, hit: 0, missed: 0, new: 0 };
   for (const v of verdicts) vCount[v.verdict]++;
+  const chartTargets = liftChartTargets({ metric, next: standing?.kind === 'rated' ? standing.next : null, loadType: standing?.kind === 'rated' ? standing.loadType : undefined, goals: profile?.targets ?? [], subject: ex.id });
+  const hasHold = metric !== 'volume' && stepRuns(points).some(r => r.dotted);
   const chartLabel = `${ex.name} ${METRICS.find(m => m.value === metric)!.label} over ${points.length} ${metric === 'volume' ? 'weeks' : 'sessions'}`;
 
   return (
@@ -86,11 +90,12 @@ export function LiftDetail({ params }: { params: string[] }) {
 
       <section className="tk-sec" aria-label="Chart">
         <Segmented<Metric> label="Chart" options={METRICS} value={metric} onChange={setMetric} />
-        <LiftChart points={points} label={chartLabel} />
+        <LiftChart points={points} label={chartLabel} kind={metric === 'volume' ? 'bars' : 'step'} targets={chartTargets} current={st.best90 === null ? null : Math.round(st.best90 * 2) / 2} />
         {points.length > 1 && <Legend className="tk-legend">
           <i className="tk-sw line" />{metric === 'volume' ? 'kg × reps per week' : metric === 'top' ? 'heaviest set' : 'Epley e1RM'}
           {metric !== 'volume' && <><i className="tk-sw pr" />PR</>}
-          <i className="tk-sw last" />latest
+          {metric !== 'volume' && <><i className="tk-sw last" />latest</>}
+          {hasHold && <><i className="tk-sw hold" />no sessions</>}
         </Legend>}
       </section>
 
