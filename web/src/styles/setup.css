@@ -60,13 +60,6 @@ button.srow:disabled { opacity: 0.4; cursor: default; }
 .field-wrap { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 input.field.big { min-height: 56px; font: var(--text-num-lg); letter-spacing: var(--track-num-lg); }
 input.field.big::placeholder { color: var(--rule); opacity: 0.7; }
-input.field.date-field { font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); }
-input.field.date-field::-webkit-calendar-picker-indicator { filter: none; opacity: 0.7; }
-:root[data-theme='dark'] input.field.date-field::-webkit-calendar-picker-indicator,
-:root:not([data-theme]) input.field.date-field::-webkit-calendar-picker-indicator { filter: invert(1); }
-@media (prefers-color-scheme: dark) { :root[data-theme='system'] input.field.date-field::-webkit-calendar-picker-indicator { filter: invert(1); } }
-select.field { font: var(--text-body); background-color: transparent; }
-select.field option { background: var(--paper); color: var(--ink); }
 .field-error { font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--ink); padding-left: 0; border-left: 0; }
 .field-error::before { content: '//'; margin-right: var(--space-2); }
 .errors { list-style: none; margin: 0; padding: var(--space-3) 0; border: 0; border-top: var(--rule-w) dashed var(--ink); border-bottom: var(--rule-w) dashed var(--ink);

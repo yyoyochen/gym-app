@@ -9,7 +9,7 @@ import {
   changeSessionDate, deleteSession, deleteSet, getCommit, getDb, getProfile, getSession, getSessionSets, listExercises, updateSet,
 } from '../db';
 import { useLive } from '../ui/useLive';
-import { DateField, Errors } from '../ui/common';
+import { DatePickerSheet, Errors, useTrainedDates } from '../ui/common';
 import { BigNumber, Button, ConfirmButton, NavBar, Parts, PixelIcon, Segmented, Select, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { gradeCommit } from '../app/coach';
@@ -31,6 +31,7 @@ export function SessionDetail({ params }: { params: string[] }) {
   }, [id]);
   const [editing, setEditing] = useState<SetEntry | null>(null);
   const [moving, setMoving] = useState(false);
+  const trained = useTrainedDates();
 
   if (!data) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel="History" fallback="history" large={false} /></section>;
   const { session, sets, commit, scale, bwFactor, grade } = data;
@@ -120,11 +121,11 @@ export function SessionDetail({ params }: { params: string[] }) {
 
       <section className="tk-sec" aria-label="Session">
         <SecHead title="Session" />
-        {moving
-          ? <MoveDate current={session.date} onCancel={() => setMoving(false)} onMove={async d => {
-              await changeSessionDate(getDb(), session.id, d); setMoving(false); showHud({ text: 'Date changed' });
-            }} />
-          : <Button block onClick={() => setMoving(true)}>Change date</Button>}
+        <Button block onClick={() => setMoving(true)}>Change date</Button>
+        {moving && (
+          <DatePickerSheet open value={session.date} max={todayISO()} marked={trained} title="Change date" confirmLabel="Move session" onClose={() => setMoving(false)}
+            onPick={async d => { await changeSessionDate(getDb(), session.id, d); setMoving(false); showHud({ text: 'Date changed' }); }} />
+        )}
         <ConfirmButton danger className="block" confirmLabel="Delete this session and its sets?" confirmText="Delete session"
           message="This can’t be undone." onConfirm={async () => {
             await deleteSession(getDb(), session.id);
@@ -138,18 +139,6 @@ export function SessionDetail({ params }: { params: string[] }) {
   );
 }
 
-function MoveDate({ current, onMove, onCancel }: { current: string; onMove: (d: string) => void; onCancel: () => void }) {
-  const [d, setD] = useState(current);
-  return (
-    <div className="tk-move">
-      <DateField label="New date" value={d} max={todayISO()} onChange={setD} />
-      <div className="tk-btnrow">
-        <Button onClick={onCancel}>Cancel</Button>
-        <Button variant="primary" className="grow" disabled={!d || d === current} onClick={() => onMove(d)}>Move session</Button>
-      </div>
-    </div>
-  );
-}
 
 const KINDS: SetKind[] = ['warmup', 'working', 'top', 'backoff', 'drop'];
 /** Spec-sheet row keys: 1, 2 for working sets; B1 back-off; D1 drop. */

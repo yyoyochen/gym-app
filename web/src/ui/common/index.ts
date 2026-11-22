@@ -3,6 +3,8 @@
 // their imports and get the new motion.
 export { Sheet, Stepper, Segmented, ConfirmButton, type SegOption } from '../kit';
 export { DateField } from './DateField';
+export { DatePickerSheet } from './DatePickerSheet';
+export { useTrainedDates } from './useTrainedDates';
 export { FilePicker } from './FilePicker';
 export { Field, Errors } from './Field';
 export { Group, GroupAction } from './Group';

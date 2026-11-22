@@ -87,7 +87,7 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 .banner { border-top: var(--hair); border-bottom: var(--hair); padding: var(--space-3) 0; }
 
 /* ---------- fields: an underline, not a box ---------- */
-input.field, select.field, textarea.field { width: 100%; min-height: var(--touch-min); background: transparent; border: 0;
+input.field, textarea.field { width: 100%; min-height: var(--touch-min); background: transparent; border: 0;
   border-bottom: var(--rule-w) solid var(--ink); padding: 0 var(--space-half); color: var(--ink); }
 textarea.field { padding: var(--space-3) var(--space-half); min-height: 96px; resize: vertical; }
 input.field::placeholder, textarea.field::placeholder { color: var(--mid); }

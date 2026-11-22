@@ -1,13 +1,27 @@
+import { useState } from 'react';
 import type { ISODate } from '../../domain/types';
+import { formatDate } from '../../app/dates';
+import { PixelIcon } from '../kit';
+import { DatePickerSheet } from './DatePickerSheet';
+import { useTrainedDates } from './useTrainedDates';
 
-/** Native date input under a mono label; value is ISO YYYY-MM-DD or '' for none. */
-export function DateField({ label, value, onChange, min, max }: {
-  label: string; value: ISODate | ''; onChange: (v: ISODate | '') => void; min?: ISODate; max?: ISODate;
+/** A date under a mono label; tapping it opens the calendar sheet. Value is ISO YYYY-MM-DD or '' for none. */
+export function DateField({ label, value, onChange, min, max, confirmLabel = 'Use this date' }: {
+  label: string; value: ISODate | ''; onChange: (v: ISODate | '') => void; min?: ISODate; max?: ISODate; confirmLabel?: string;
 }) {
+  const [open, setOpen] = useState(false);
+  const marked = useTrainedDates();
   return (
-    <label className="field-wrap">
+    <div className="field-wrap">
       <span className="label">{label}</span>
-      <input type="date" className="field date-field" value={value} min={min} max={max} onChange={e => onChange(e.target.value)} />
-    </label>
+      <button type="button" className="select-field" aria-haspopup="dialog" onClick={() => setOpen(true)}>
+        <span className={value ? '' : 'mid'}>{value ? formatDate(value) : 'Pick a date'}</span>
+        <PixelIcon name="down" scale={1} />
+      </button>
+      {open && (
+        <DatePickerSheet open value={value} {...(min ? { min } : {})} {...(max ? { max } : {})} marked={marked} title={label} confirmLabel={confirmLabel}
+          onPick={d => { onChange(d); setOpen(false); }} onClose={() => setOpen(false)} />
+      )}
+    </div>
   );
 }

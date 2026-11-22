@@ -111,7 +111,7 @@ export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { 
             <span className="label">Value ({draft.subject ? subjectUnit(draft.subject) : 'kg'})</span>
             <input className="field tnum" inputMode="decimal" value={draft.value} onChange={e => setDraft({ ...draft, value: e.target.value })} />
           </label>
-          <DateField label="Deadline" value={draft.deadline} min={today} onChange={v => setDraft({ ...draft, deadline: v })} />
+          <DateField label="Deadline" value={draft.deadline} min={today} confirmLabel="Set date" onChange={v => setDraft({ ...draft, deadline: v })} />
         </div>
         <TargetLevelBar gym={gym} ctx={ctx} ex={byId.get(draft.subject)} value={Number(draft.value)} />
         <Errors errors={errors} />
@@ -137,7 +137,7 @@ export function CheckpointsEditor({ profile, onChange }: { profile: Profile; onC
         </div>
       )}
       <div className="row end-row">
-        <div className="grow"><DateField label="Add checkpoint" value={d} onChange={setD} /></div>
+        <div className="grow"><DateField label="Add checkpoint" value={d} confirmLabel="Set date" onChange={setD} /></div>
         <button type="button" className="btn" disabled={!d || profile.checkpoints.includes(d)} onClick={() => {
           if (!d) return;
           onChange({ ...profile, checkpoints: [...profile.checkpoints, d].sort() });
