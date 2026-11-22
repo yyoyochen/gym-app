@@ -151,7 +151,7 @@ function About() {
         { label: 'Code:', value: 'MIT licence' },
       ]} />
       <span className="label">Data credits</span>
-      <p className="quiet">Strength levels: modeled gym-goer standards. Squat, bench and deadlift anchors from Symmetric Strength self-reported gym logs, via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source’s licence has not been verified. Method: docs/STANDARDS-METHODOLOGY.md.</p>
+      <p className="quiet">Strength benchmarks: modeled gym-goer standards. Squat, bench and deadlift anchors from Symmetric Strength self-reported gym logs, via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source’s licence has not been verified. Method: docs/STANDARDS-METHODOLOGY.md.</p>
     </Group>
   );
 }
