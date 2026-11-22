@@ -9,6 +9,7 @@ import {
   ActionSheet, BigNumber, Button, ConfirmButton, DitherBar, GlyphHeatmap, ICONS, LabelValueGrid, Lockup, NavBar, PixelIcon,
   Segmented, Sheet, Stepper, Toggle, Verdict, go, showHud, showPrMoment, useTheme, type IconName, type ThemePref,
 } from '../ui/kit';
+import { TYPE_ROLES } from '../ui/kit/typeRoles';
 
 export default function KitGallery({ params }: { params: string[] }) {
   const depth = Number(params[0] ?? 0) || 0;
@@ -33,6 +34,12 @@ export default function KitGallery({ params }: { params: string[] }) {
       <NavBar title={depth ? `Kit · page ${depth}` : 'Kit'} backLabel={depth ? 'Back' : undefined} right={<span className="label">{theme}</span>} />
       <Lockup mid={`Training log //Session A`} />
       <BigNumber value="100" unit="kg × 2" caption="top double" />
+      <div className="stack kit-types">
+        <span className="label">Type roles</span>
+        {TYPE_ROLES.map(r => (
+          <div key={r.role} className="kit-type"><span className="label">{r.role} · {r.job}</span><span className={`t-${r.role}`}>{r.sample}</span></div>
+        ))}
+      </div>
       <LabelValueGrid items={[
         { label: 'Effort floor', value: '2 in reserve' }, { label: 'Back-offs', value: '3 × 8 at 75' },
         { label: 'Last time', value: '105 × 2' }, { label: 'This week', value: '2 of 3', accent: true },

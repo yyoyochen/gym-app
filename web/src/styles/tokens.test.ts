@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { TYPE_ROLES } from '../ui/kit/typeRoles';
@@ -44,5 +44,15 @@ describe('glyph font', () => {
     expect(tokens).toContain("font-family: 'GymBro Glyph'");
     expect(tokens).toContain('unicode-range: U+2588, U+2591-2593');
     expect(tokens).toMatch(/--font-glyph: 'GymBro Glyph',/);
+  });
+});
+
+describe('docs and gallery', () => {
+  it('docs and gallery cover every role', () => {
+    const root = resolve(__dirname, '../../..');
+    const design = readFileSync(resolve(root, 'docs/DESIGN.md'), 'utf8');
+    for (const { role } of TYPE_ROLES) expect(design, role).toContain(`\`${role}\``);
+    expect(readFileSync(resolve(root, 'web/src/dev/KitGallery.tsx'), 'utf8')).toMatch(/import \{[^}]*TYPE_ROLES[^}]*\}/);
+    expect(existsSync(resolve(root, 'docs/design-tokens.css'))).toBe(false);
   });
 });

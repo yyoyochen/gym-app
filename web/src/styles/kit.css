@@ -201,3 +201,6 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .rweeks-wk { align-self: stretch; }
 .rweeks-wk.met { background: var(--accent); }
 .rweeks-wk.part { background: linear-gradient(to bottom, transparent 50%, var(--rule) 50%); }
+
+/* kit gallery: type roles */
+.kit-type { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) 0; border-bottom: var(--hair); overflow: hidden; white-space: nowrap; }
