@@ -17,7 +17,7 @@ import { SetSheet, type SetDraft } from '../ui/session/SetSheet';
 import { PlateSheet } from '../ui/session/PlateSheet';
 import { ExercisePicker } from '../ui/session/ExercisePicker';
 import { useNow, useScrollTop } from '../ui/session/useNow';
-import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, type SheetRow } from '../ui/session/logger';
+import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, undoable, type SheetRow } from '../ui/session/logger';
 import { priorFromHistory, prMomentFor } from '../ui/session/prs';
 import { effortWords, sessionNames } from '../ui/session/text';
 import { formatDate } from '../app/dates';
@@ -148,7 +148,7 @@ export function Session({ params }: { params: string[] }) {
   return (
     <section className="screen logger">
       <header className="lhead">
-        <button type="button" className="lhead-close" data-press="dim" onClick={() => back('today')}><PixelIcon name="back" />Close</button>
+        <button type="button" className="lhead-close" data-press="dim" onClick={() => back('today')}><PixelIcon name="back" />Back</button>
         <span className="lhead-mid">[{names.short}]{focus ? ` //${focus.exercise.name}` : ''}</span>
         {session.programSessionKey === 'adhoc'
           ? <span className="lhead-t tnum">{formatDate(session.date, { weekday: false })}</span>
@@ -201,7 +201,14 @@ export function Session({ params }: { params: string[] }) {
 
       {(rest || note) && (
         <div className="stack">
-          {rest && <p className="rested tnum" aria-live="off">{rest}</p>}
+          {rest && (
+            <p className="rested tnum" aria-live="off">
+              {rest}
+              {last && undoable(last, now) && (
+                <button type="button" className="undo" data-press="dim" onClick={() => deleteSet(getDb(), last.id)}>Undo last set</button>
+              )}
+            </p>
+          )}
           {note && <p className={`note nudge ${note.kind}`} role="status">//{note.kind === 'stop' ? 'Stop' : 'Note'} — {note.text}</p>}
         </div>
       )}

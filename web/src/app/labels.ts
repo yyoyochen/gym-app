@@ -54,3 +54,8 @@ export const LEGACY_DOT = '\u00B7';
 export function displayName(name: string): string {
   return name.replace(new RegExp(`\\s+${LEGACY_DOT}\\s+`, 'g'), ': ');
 }
+
+/** Goal status in one scale for every screen (Progress, Profile, Review). */
+export function feasibilityWord(f: 'comfortable' | 'ambitious' | 'unlikely'): string {
+  return { comfortable: 'on pace', ambitious: 'behind', unlikely: 'unlikely' }[f];
+}

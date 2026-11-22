@@ -18,7 +18,7 @@ import {
 } from '../ui/kit';
 import { goalRows, loadConsistency, loadWeekBodyParts } from '../ui/progress/data';
 import { ReadinessCheck } from '../ui/session/Readiness';
-import { MonoNums, sessionNames, topWord } from '../ui/session/text';
+import { MonoNums, sessionNames, stripUnit, topWord } from '../ui/session/text';
 import { useNow, useScrollTop } from '../ui/session/useNow';
 
 /** The number a lift is about: its top set, else its working weight (reps for bodyweight). */
@@ -139,7 +139,7 @@ export function Today(_props: { params: string[] }) {
               {plan.slots.map(s => (
                 <button key={s.target.slotId + s.slotOrder} type="button" role="tab" aria-selected={s === sp} data-press="dim"
                   className={`lift-cell${s === sp ? ' on' : ''}`} onClick={() => setSel(s.slotOrder)}>
-                  <span className="label">{stripName(s.exercise.name)}</span><b>{heroOf(s).value}</b>
+                  <span className="label">{stripName(s.exercise.name)}</span><b>{heroOf(s).value}</b><small>{stripUnit(heroOf(s).unit)}</small>
                 </button>
               ))}
             </div>
@@ -228,7 +228,7 @@ export function Today(_props: { params: string[] }) {
           {open ? (
             <LinkButton variant="primary" block iconEnd="chevron" href={`#/session/${open.session.id}`}>Resume {names.short}</LinkButton>
           ) : (
-            <Button variant="primary" block iconEnd="plus" disabled={busy} onClick={start}>Start {names.short}</Button>
+            <Button variant="primary" block iconEnd="chevron" disabled={busy} onClick={start}>Start {names.short}</Button>
           )}
         </div>
       )}

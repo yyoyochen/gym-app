@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import type { SetEntry, Target } from '../../domain/types';
 import type { LiveSlot, SlotPlan } from '../../app/coach';
-import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount } from './logger';
+import { UNDO_MS, focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, undoable } from './logger';
+
+describe('undoable', () => {
+  it('the last logged set can be undone for a short while only', () => {
+    expect(undoable({ loggedAt: 1000 }, 1000 + UNDO_MS)).toBe(true);
+    expect(undoable({ loggedAt: 1000 }, 1000 + UNDO_MS + 1)).toBe(false);
+    expect(undoable(null, 1000)).toBe(false);
+  });
+});
 
 const target = (o: Partial<Target> = {}): Target => ({
   slotId: 'a1', exerciseId: 'squat', exerciseName: 'Back squat', model: 'topset', weight: 70, targetReps: 6, targetSets: 3, rirFloor: 2,

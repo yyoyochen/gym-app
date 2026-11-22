@@ -4,7 +4,12 @@ import type { Readiness as R } from '../../domain/types';
 import type { Answer, ReadinessAnswers } from '../../engine';
 import { Segmented } from '../kit';
 
-const OPTS: { value: Answer; label: string }[] = [{ value: 'good', label: 'Good' }, { value: 'ok', label: 'OK' }, { value: 'poor', label: 'Poor' }];
+const LABELS = { sleep: ['Good', 'OK', 'Poor'], soreness: ['Low', 'Some', 'High'], stress: ['Low', 'Some', 'High'] } as const;
+const VALUES: Answer[] = ['good', 'ok', 'poor'];
+/** Sleep reads Good / OK / Poor; soreness and stress read Low / Some / High. Stored answers stay good / ok / poor, best first. */
+export function readinessOptions(key: keyof ReadinessAnswers): { value: Answer; label: string }[] {
+  return VALUES.map((value, i) => ({ value, label: LABELS[key][i] }));
+}
 const ROWS: { key: keyof ReadinessAnswers; label: string }[] = [
   { key: 'sleep', label: 'Sleep' }, { key: 'soreness', label: 'Soreness' }, { key: 'stress', label: 'Stress' },
 ];
@@ -25,7 +30,7 @@ export function ReadinessCheck({ answers, onChange, readiness }: {
         <span className={`ready-mark ${readiness}`}>{readiness}</span>
       </div>
       {ROWS.map(r => (
-        <Segmented key={r.key} label={r.label} options={OPTS} value={answers[r.key]} onChange={v => onChange({ ...answers, [r.key]: v })} />
+        <Segmented key={r.key} label={r.label} options={readinessOptions(r.key)} value={answers[r.key]} onChange={v => onChange({ ...answers, [r.key]: v })} />
       ))}
       <p className="quiet">{NOTE[readiness]}{answered < 3 ? ' Unanswered counts as good.' : ''}</p>
     </section>

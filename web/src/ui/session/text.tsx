@@ -31,6 +31,11 @@ export function sessionNames(name: string): { short: string; title: string } {
   return { short: `Session ${m[1]}`, title: `Session ${m[1]}, ${m[2]}` };
 }
 
+/** "kg × 2" → "kg", "reps" → "reps", "× 8" → "": the unit shown under a number in the lift strip. */
+export function stripUnit(unit: string): string {
+  return unit.startsWith('×') ? '' : unit.split(' ×')[0].trim();
+}
+
 /** "2 in reserve" (RIR) or "RPE 8": the effort a set is planned at, in words. */
 export function effortWords(rir: number, scale: EffortScale): string {
   return scale === 'rpe' ? formatEffort(rir, scale) : `${formatEffort(rir, scale).replace(' RIR', '')} in reserve`;

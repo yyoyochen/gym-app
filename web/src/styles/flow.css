@@ -34,6 +34,7 @@
 .lift-cell { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2) 0 var(--space-2); min-height: 48px; text-align: left; border-top: var(--hair); min-width: 0; }
 .lift-cell .label { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; min-height: 2.5em; }
 .lift-cell b { font: var(--text-value); letter-spacing: var(--track-value); }
+.lift-cell small { font: var(--text-quiet); color: var(--mid); margin-top: calc(-1 * var(--space-1)); }
 .lift-cell.on { border-top: var(--rule-w) solid var(--ink); }
 .lift-cell.on .label { color: var(--ink); }
 .promise { display: flex; flex-direction: column; gap: var(--space-2); }
@@ -49,7 +50,6 @@
 .ready { display: flex; flex-direction: column; gap: var(--space-3); }
 .ready > [role='radiogroup'] { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; gap: var(--space-2); }
 .ready > [role='radiogroup'] > .label { color: var(--ink); }
-.ready .seg { min-height: 44px; }
 .ready-mark { font: var(--text-stamp); letter-spacing: var(--track-stamp); text-transform: uppercase; padding: var(--space-2) var(--space-2); min-width: 70px; text-align: center;
   border: var(--rule-w) solid var(--ink); color: var(--ink); }
 .ready-mark.amber { border-style: dashed; }
@@ -74,7 +74,8 @@
 .next-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-6); }
 .btn.log-btn { min-height: 64px; }
 .btn.adjust-btn { min-height: 48px; }
-.rested { margin: 0; font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--mid); }
+.undo { margin-left: var(--space-3); min-height: var(--touch-min); padding: 0 var(--space-2); color: var(--accent); font: inherit; letter-spacing: inherit; text-transform: inherit; text-decoration: underline; }
+.rested { display: flex; flex-wrap: wrap; align-items: center; margin: 0; font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); color: var(--mid); }
 .finish { margin-top: var(--space-1); }
 
 /* the spec sheet: one per lift */

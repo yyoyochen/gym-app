@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { formatLoad, isUnloaded } from './labels';
+import { feasibilityWord, formatLoad, isUnloaded } from './labels';
+
+describe('feasibilityWord', () => {
+  it('one scale for goal status on every screen', () => {
+    expect(feasibilityWord('comfortable')).toBe('on pace');
+    expect(feasibilityWord('ambitious')).toBe('behind');
+    expect(feasibilityWord('unlikely')).toBe('unlikely');
+  });
+});
 
 describe('formatLoad', () => {
   it('shows kg for a loaded lift', () => {

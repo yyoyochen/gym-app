@@ -7,7 +7,7 @@ import { addDays } from '../engine';
 import { kg } from '../app/coach';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
-import { SUBJECT_BODYWEIGHT } from '../app/labels';
+import { SUBJECT_BODYWEIGHT, feasibilityWord } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { DitherBar, LabelValueGrid, Lockup, Verdict, type VerdictKind } from '../ui/kit';
 import { useScrollTop } from '../ui/session/useNow';
@@ -103,7 +103,7 @@ export function Progress(_props: { params: string[] }) {
                   <h3 className="heading">{g.name}</h3>
                   <p className="tk-goal-sub">{verb} <b className="tnum">{kg(g.target.value)}{unit}</b> by {formatDate(g.target.deadline, { weekday: false })}</p>
                 </div>
-                {g.pace && <Verdict kind={FEAS_KIND[g.pace.feasibility] ?? 'new'}>{g.pace.feasibility}</Verdict>}
+                {g.pace && <Verdict kind={FEAS_KIND[g.pace.feasibility] ?? 'new'}>{feasibilityWord(g.pace.feasibility)}</Verdict>}
               </div>
               {frac !== null
                 ? <DitherBar value={frac} label={`Now ${g.evidence}`} valueText={`${Math.round(frac * 100)}%`} />

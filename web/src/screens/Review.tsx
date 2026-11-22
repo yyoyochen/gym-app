@@ -10,7 +10,7 @@ import { getExerciseHistory, getProfile, getSession, getSessionSets } from '../d
 import { addDays, formatEffort } from '../engine';
 import { gradeSession, kg, planToday, setsParts, type SessionGrade } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
-import { TARGET_TYPE_LABELS } from '../app/labels';
+import { TARGET_TYPE_LABELS, feasibilityWord } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { goalRows } from '../ui/progress/data';
 import { BigNumber, DitherBar, DitherNumber, LinkButton, Lockup, Parts, Verdict, prefersReducedMotion } from '../ui/kit';
@@ -155,7 +155,7 @@ export function Review({ params }: { params: string[] }) {
               <DitherBar label={`${p.name}: ${TARGET_TYPE_LABELS[p.target.type].toLowerCase()} ${kg(p.target.value)} by ${formatDate(p.target.deadline, { weekday: false, year: false })}`}
                 valueText={p.current !== null && p.target.value > 0 ? `${kg(Math.round(p.current * 10) / 10)}, ${Math.round((p.current / p.target.value) * 100)}%` : p.evidence}
                 value={p.current !== null && p.target.value > 0 ? p.current / p.target.value : 0} />
-              <p className="quiet">{p.paceLine}{p.pace ? `, ${p.pace.feasibility}` : ''}</p>
+              <p className="quiet">{p.paceLine}{p.pace ? `, ${feasibilityWord(p.pace.feasibility)}` : ''}</p>
             </div>
           ))}
         </section>

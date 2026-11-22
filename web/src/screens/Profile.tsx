@@ -12,7 +12,7 @@ import { DateField, Errors, Group, GroupAction, Segmented, Sheet, Stepper } from
 import { BigNumber, Button, DitherBar, LabelValueGrid, Lockup, NavBar, PixelIcon, ValueRow, showHud, type LabelValueItem } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
-import { GOAL_LABELS, PAIN_AREAS, PAIN_AREA_LABELS, SIDE_LABELS } from '../app/labels';
+import { GOAL_LABELS, PAIN_AREAS, PAIN_AREA_LABELS, SIDE_LABELS, feasibilityWord } from '../app/labels';
 import { parseNum, validateBodyweight, validateProfile } from '../app/validate';
 import { CheckpointsEditor, GOAL_SHORT, GoalsEditor, TargetLevelBar, TargetsEditor, targetLine } from '../app/parts/GoalParts';
 import { goalRows, liftStats, type GoalRow } from '../ui/progress/data';
@@ -29,7 +29,6 @@ type SheetKey = 'where' | 'bodyweight' | 'goals' | 'targets' | 'injuries' | 'max
 const SEX_WORD: Record<Sex, string> = { M: 'Male', F: 'Female' };
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const isMainLift = (e: Exercise) => !!e.benchmarkKey || e.id === 'overhead-press';
-const FEAS_WORD = { comfortable: 'on pace', ambitious: 'ambitious', unlikely: 'off pace' } as const;
 
 export function Profile(_props: { params: string[] }) {
   const stored = useLive(db => getProfile(db).then(r => r ?? null), []);
@@ -180,7 +179,7 @@ function PaceBar({ row }: { row: GoalRow }) {
   if (row.current === null) return <DitherBar label="Pace" valueText="No recent sets" value={0} />;
   const lo = Math.min(row.current, t.value), hi = Math.max(row.current, t.value);
   const frac = hi > 0 ? lo / hi : 0;
-  const word = row.pace ? FEAS_WORD[row.pace.feasibility] : row.current >= t.value ? 'at target' : '';
+  const word = row.pace ? feasibilityWord(row.pace.feasibility) : row.current >= t.value ? 'at target' : '';
   return (
     <>
       <DitherBar label={`Now ${kg(Math.round(row.current * 10) / 10)} of ${t.value}`} valueText={word || `${Math.round(frac * 100)}%`} value={frac}

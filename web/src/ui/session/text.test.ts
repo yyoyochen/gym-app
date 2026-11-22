@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { displayName, loadText, sessionNames } from './text';
+import { displayName, loadText, sessionNames, stripUnit } from './text';
 
 describe('loadText (logger rows and hero)', () => {
   it('reads "—" for 0 kg on a lift that is not a bodyweight lift', () => {
@@ -12,6 +12,14 @@ describe('loadText (logger rows and hero)', () => {
     expect(loadText(100, 0)).toBe('100');
     expect(loadText(62.5, 0)).toBe('62.5');
     expect(loadText(10, 1)).toBe('10');
+  });
+});
+
+describe('stripUnit', () => {
+  it('the lift strip shows just the unit under each number', () => {
+    expect(stripUnit('kg × 2')).toBe('kg');
+    expect(stripUnit('reps')).toBe('reps');
+    expect(stripUnit('× 8')).toBe('');
   });
 });
 

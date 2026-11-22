@@ -93,6 +93,10 @@ export function sessionCount(slots: readonly LiveSlot[]): { done: number; planne
   return { done, planned };
 }
 
+/** How long the last logged set can be undone from the logger. */
+export const UNDO_MS = 10_000;
+export const undoable = (last: { loggedAt: number } | null, now: number): boolean => !!last && now - last.loggedAt <= UNDO_MS;
+
 const KIND_WORD: Partial<Record<SetKind, string>> = { top: 'top set', backoff: 'back-off', drop: 'drop set' };
 
 /** "Next: set 2 of 4, back-off", "Next: warm-up 1 of 3". */
