@@ -245,7 +245,7 @@ these at 6. Today there are 4:
 | `Segmented` | ink thumb on a spring; drag the thumb across; arrow keys |
 | `Toggle` | square knob, stretches while held; the track says ON or OFF |
 | `Select label value options onChange` | a field that opens a list sheet (48 px rows, the chosen row inverted with a pixel check, optional group headings); replaces every native `<select>` |
-| `DateField` / `DatePickerSheet` | a field that opens a calendar sheet: Monday first, today outlined, the picked day filled, trained days ticked, days outside min/max dimmed; replaces the native date input |
+| `DateField` / `DatePickerSheet` | a field that opens a calendar sheet: Monday first, today outlined, the picked day filled, days outside min/max dimmed; trained days carry a 24 x 8 strip in three steps (dots, checker, solid = light, moderate, heavy, in thirds of your busiest day) with a Less/More legend and an (i); replaces the native date input |
 | `InfoButton label` | a 20 px (i) with a 48 px hit area that opens an explanation sheet (levels, heatmap legend) |
 | `Parts items` | facts as spans with a gap, no separator glyph |
 | `Sheet open title onClose detents?` | see §5 |
