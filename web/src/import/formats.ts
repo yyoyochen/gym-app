@@ -19,7 +19,7 @@ export function detectFormat(header: string[]): CsvFormat | null {
   const h = header.map(norm);
   if (h.includes('exercise_title') && h.includes('set_type')) return 'hevy';
   if (h.includes('exercise name') && h.includes('set order')) return 'strong';
-  if (h.includes('date') && (h.includes('exercise') || h.includes('exercise name') || h.includes('lift'))) return 'gymbro';
+  if ((h.includes('date') || h.includes('day')) && (h.includes('exercise') || h.includes('exercise name') || h.includes('lift'))) return 'gymbro';
   return null;
 }
 
@@ -98,7 +98,15 @@ export function parseHevyDateTime(input: string, order: NumericOrder = 'dmy'): {
     const time = clock(Number(numeric[4]), Number(numeric[5]), numeric[6]);
     return date && time ? { date, time } : null;
   }
-  return parseNamedDateTime(input);
+  // Chinese / Japanese: "2026年11月18日 18:22", "2026年11月18日 下午6:22".
+  const cjk = /^(\d{4})年(\d{1,2})月(\d{1,2})日\s*(上午|下午|午前|午後)?\s*(\d{1,2}):(\d{2})/.exec(input.trim());
+  if (cjk) {
+    const date = isoOf(Number(cjk[1]), Number(cjk[2]), Number(cjk[3]));
+    const time = clock(Number(cjk[5]), Number(cjk[6]), cjk[4] ? (/下午|午後/.test(cjk[4]) ? 'p' : 'a') : undefined);
+    return date && time ? { date, time } : null;
+  }
+  // Portuguese / Spanish: "14 de out. de 2026, 20:39".
+  return parseNamedDateTime(input.replace(/\s+de\s+/gi, ' '));
 }
 
 function parseNamedDateTime(input: string): { date: ISODate; time: string } | null {
@@ -159,7 +167,8 @@ function toRows(format: CsvFormat, drafts: Draft[]): NotionRow[] {
     sets.set(k, n);
     const notes = d.notes && !noted.has(k) ? d.notes : '';
     if (d.notes) noted.add(k);
-    const set = d.setIndex !== null && format === 'hevy' ? d.setIndex + 1 : n;
+    // Running count per lift: Hevy restarts set_index when a lift comes back later in the workout.
+    const set = n;
     const weight = d.weight !== null && assisted(d.exercise) && d.weight > 0 ? -d.weight : d.weight;
     return {
       line: d.line, date: d.date, label: d.label, exercise: d.exercise, order: o, set, reps: d.reps, weight, notes,
@@ -208,7 +217,8 @@ export function parseHevy(table: string[][]): ParsedNotion {
     const rir = kind === 'warmup' ? undefined : rirOf(rpe) ?? (type === 'failure' ? 0 : undefined);
     const idx = num(get(c.index));
     drafts.push({
-      line, group: `${get(c.title)}|${get(c.start)}`, date: when.date, label: get(c.title), exercise,
+      // Keyed on the parsed time, so a phone-language change between exports doesn't re-import everything.
+      line, group: `${get(c.title)}|${when.date} ${when.time}`, date: when.date, label: get(c.title), exercise,
       setIndex: idx !== null && Number.isInteger(idx) ? idx : null, reps: Math.round(reps), weight, kind, rir,
       notes: get(c.notes).replace(/\\n/g, '\n'),
     });
@@ -254,7 +264,8 @@ export function parseStrong(table: string[][], unit: WeightUnit): ParsedNotion {
     const kind: SetKind = letter === 'W' ? 'warmup' : letter === 'D' ? 'drop' : 'working';
     const rir = kind === 'warmup' ? undefined : rirOf(num(get(c.rpe))) ?? (letter === 'F' ? 0 : undefined);
     drafts.push({
-      line, group: get(c.no) || `${get(c.name)}|${get(c.date)}`, date, label: get(c.name), exercise,
+      // Name + timestamp, not "Workout #", which Strong may renumber when a past workout is added or deleted.
+      line, group: `${get(c.name)}|${get(c.date)}`, date, label: get(c.name), exercise,
       setIndex: null, reps: Math.round(reps), weight, kind, rir, notes: get(c.notes),
     });
   }

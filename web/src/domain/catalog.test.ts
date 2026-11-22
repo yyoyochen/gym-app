@@ -144,3 +144,16 @@ describe('Hevy and Strong names', () => {
   });
 });
 
+describe('equipment never crosses over', () => {
+  it('a barbell, cable or machine name never lands on a dumbbell lift, nor the reverse', () => {
+    const id = (n: string) => findInCatalog(n)?.id;
+    expect(id('Bicep Curl (Barbell)')).not.toBe('db-curl');
+    expect(id('Bicep Curl (Cable)')).not.toBe('db-curl');
+    expect(id('Lunge (Barbell)')).toBeUndefined();
+    expect(id('Shrug (Dumbbell)')).toBeUndefined();
+    expect(id('Skullcrusher (Dumbbell)')).toBeUndefined();
+    expect(id('Lateral Raise (Machine)')).toBeUndefined();
+    expect(id('Leg Press (Machine)')).toBe(findInCatalog('Leg Press')?.id);
+  });
+});
+

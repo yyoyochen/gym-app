@@ -153,15 +153,35 @@ const findExact = (name: string, catalog: Exercise[]): Exercise | undefined => {
   return catalog.find(e => nameKey(e.name) === k || e.aliases.some(a => nameKey(a) === k));
 };
 
-/** Barbell lifts a dumbbell, bodyweight or other variant must never be filed under. */
-const BARBELL_ONLY = new Set<string>([EX.squat, EX.bench, EX.deadlift, EX.ohp, EX.frontSquat, 'romanian-deadlift', 'sumo-deadlift', 'barbell-row']);
-/** Equipment whose plain name is the catalogue lift itself ("Leg Press (Machine)" is Leg Press). */
-const SAME_AS_PLAIN = /^(barbell|machine|cable.*|assisted|band|weighted|smith machine)$/i;
+type Kit = 'barbell' | 'dumbbell' | 'cable' | 'machine' | 'body' | 'any';
+
+/** Barbell lifts whose catalogue name doesn't say so. */
+const BARBELL_IDS = new Set<string>([EX.squat, EX.bench, EX.deadlift, EX.ohp, EX.frontSquat, 'romanian-deadlift', 'sumo-deadlift', 'skull-crusher']);
+
+/** The kit a catalogue lift implies ('any': its name doesn't tie it to one, e.g. Leg Press, Pull-Up). */
+function kitOf(e: Exercise): Kit {
+  if (BARBELL_IDS.has(e.id) || /^(barbell|bb|ez)\b/i.test(e.name)) return 'barbell';
+  if (/^(db|dumbbell)\b/i.test(e.name)) return 'dumbbell';
+  if (/^cable\b/i.test(e.name)) return 'cable';
+  if (/\bmachine\b/i.test(e.name)) return 'machine';
+  return 'any';
+}
+
+/** The kit a Hevy/Strong "(Equipment)" suffix names. */
+function kitNamed(equipment: string): Kit {
+  const q = equipment.toLowerCase();
+  if (/^(barbell|ez bar)/.test(q)) return 'barbell';
+  if (/^dumbbells?$/.test(q)) return 'dumbbell';
+  if (/^cable/.test(q)) return 'cable';
+  if (/machine/.test(q)) return 'machine';
+  return 'body'; // assisted, band, weighted, bodyweight…
+}
 
 /**
  * Find a catalog entry by name or alias (case/punctuation-insensitive). Hevy and
  * Strong name lifts "Name (Equipment)": try "Equipment Name", "DB Name", then the
- * plain name, but never file a non-barbell variant under a barbell lift.
+ * plain name, but only when its kit matches (or the plain lift names no kit):
+ * a dumbbell curl never takes barbell curls, a barbell squat never takes goblet squats.
  */
 export function findInCatalog(name: string, catalog: Exercise[] = defaultCatalog()): Exercise | undefined {
   const exact = findExact(name, catalog);
@@ -176,9 +196,8 @@ export function findInCatalog(name: string, catalog: Exercise[] = defaultCatalog
   }
   const plain = findExact(base, catalog);
   if (!plain) return undefined;
-  if (/^barbell$/i.test(equipment)) return plain;
-  if (BARBELL_ONLY.has(plain.id)) return undefined;
-  return SAME_AS_PLAIN.test(equipment) || /^dumbbells?$/i.test(equipment) ? plain : undefined;
+  const kit = kitOf(plain);
+  return kit === 'any' || kit === kitNamed(equipment) ? plain : undefined;
 }
 
 // ---------------------------------------------------------------- keyword matcher

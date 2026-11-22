@@ -64,4 +64,11 @@ describe('one CSV import for the template, Hevy and Strong', () => {
     const d = await db();
     await expect(importCsv(d, 'a,b\n1,2\n')).rejects.toThrow(/GymBro template.*Hevy.*Strong/);
   });
+  it('a template re-saved by a spreadsheet with semicolons still imports', async () => {
+    const d = await db();
+    const r = await importCsv(d, 'Date;Session;Exercise;Order;Set;Reps;Weight (kg);Notes\n2000-01-03;A;Back Squat;1;1;5;100,5;\n');
+    expect(r).toMatchObject({ format: 'gymbro', setsAdded: 1 });
+    expect((await d.sets.toArray())[0].weight).toBe(100.5);
+  });
 });
+

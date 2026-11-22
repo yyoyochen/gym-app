@@ -89,7 +89,7 @@ describe('Strong rows', () => {
       ['Incline Bench Press (Dumbbell)', 2, 1, 22.5, 12, 'working', undefined],
       ['Incline Bench Press (Dumbbell)', 2, 2, 15, 10, 'drop', undefined],
     ]);
-    expect(p.rows[0]).toMatchObject({ label: 'Full body, B', date: '2026-02-17', group: '201' });
+    expect(p.rows[0]).toMatchObject({ label: 'Full body, B', date: '2026-02-17' });
     expect(p.skipped.map(s => s.reason)).toEqual(['rest timer', 'note']);
   });
   it('old Android: a unit per row and decimal commas', () => {
@@ -112,6 +112,32 @@ describe('older exports', () => {
     const t = parseTable(fixture('strong-2018.csv'));
     expect(unitOfStrong(t[0])).toBe('lb');
     expect(parseStrong(t, 'kg').rows.map(r => [r.exercise, r.weight, r.reps])).toEqual([['Squat', 6.8, 5], ['Squat', 7.94, 5]]);
+  });
+});
+
+describe('review fixes', () => {
+  it('Chinese/Japanese and Portuguese Hevy dates read', () => {
+    expect(parseHevyDateTime('2026年11月18日 18:22')).toEqual({ date: '2026-11-18', time: '18:22' });
+    expect(parseHevyDateTime('2026年11月18日 下午6:22')).toEqual({ date: '2026-11-18', time: '18:22' });
+    expect(parseHevyDateTime('2026年11月18日 上午12:05')).toEqual({ date: '2026-11-18', time: '00:05' });
+    expect(parseHevyDateTime('14 de out. de 2026, 20:39')).toEqual({ date: '2026-10-14', time: '20:39' });
+  });
+  it('a Hevy lift in two blocks of one workout numbers its sets 1…n, not 1, 1, 2, 2', () => {
+    const t = parseCsv('title,start_time,exercise_title,set_index,set_type,weight_kg,reps\nA,18 Nov 2026 18:22,x,0,normal,1,1\nA,"18 Nov 2026, 18:22",Squat (Barbell),0,normal,100,5\nA,"18 Nov 2026, 18:22",Squat (Barbell),1,normal,100,5\nA,"18 Nov 2026, 18:22",Plank Row,0,normal,10,5\nA,"18 Nov 2026, 18:22",Squat (Barbell),0,normal,90,8\n');
+    expect(parseHevy(t).rows.filter(r => r.exercise === 'Squat (Barbell)').map(r => r.set)).toEqual([1, 2, 3]);
+  });
+  it('the same Hevy workout keys the same whatever the phone language', () => {
+    const en = parseHevy(parseCsv('title,start_time,exercise_title,set_index,set_type,weight_kg,reps\nA,"14 Oct 2026, 20:39",Squat (Barbell),0,normal,100,5\n'));
+    const it = parseHevy(parseCsv('title,start_time,exercise_title,set_index,set_type,weight_kg,reps\nA,"14 ott 2026, 20:39",Squat (Barbell),0,normal,100,5\n'));
+    expect(en.rows[0].group).toBe(it.rows[0].group);
+    expect(en.rows[0].raw).toBe(it.rows[0].raw);
+  });
+  it('a Strong workout is keyed by name and time, not the renumberable Workout #', () => {
+    const p = parseStrong(table('strong-android.csv'), 'kg');
+    expect(p.rows[0].group).toBe('Full body, B|2026-02-17 19:25:59');
+  });
+  it('an old template with a Day column is still the GymBro template', () => {
+    expect(detectFormat(['Day', 'Session', 'Exercise', 'Reps'])).toBe('gymbro');
   });
 });
 

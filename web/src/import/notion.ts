@@ -82,8 +82,8 @@ function parseNum(s: string): number | null | 'bad' {
   return Number.isFinite(n) ? n : 'bad';
 }
 
-export function parseNotionCsv(text: string): ParsedNotion {
-  const table = parseCsv(text);
+/** `table`: an already parsed table (importCsv passes one that handles semicolons). */
+export function parseNotionCsv(text: string, table: string[][] = parseCsv(text)): ParsedNotion {
   if (!table.length) throw new Error('Empty CSV');
   const header = table[0].map(normHeader);
   const col = {} as Record<keyof typeof HEADERS, number>;
@@ -238,7 +238,7 @@ export async function importCsv(
   if (format === 'strong' && unitOfStrong(table[0]) === null && !opts.unit) {
     throw new Error('This Strong file does not say whether weights are in kg or lb. Choose one, then import.');
   }
-  const parsed = format === 'hevy' ? parseHevy(table) : format === 'strong' ? parseStrong(table, opts.unit ?? 'kg') : parseNotionCsv(text);
+  const parsed = format === 'hevy' ? parseHevy(table) : format === 'strong' ? parseStrong(table, opts.unit ?? 'kg') : parseNotionCsv(text, table);
   return { ...(await importParsed(db, parsed, opts)), format };
 }
 
