@@ -1,0 +1,8 @@
+export function A() {
+  return <div>
+    <span style={{ gap: 8 }} />
+    <span style={{ fontSize: '12px' }} />
+    <span style={{ height: 40 + p * 70, left: '10%' }} />
+    <span style={{ gap: 8 }} /> {/* ds-allow: test */}
+  </div>;
+}
