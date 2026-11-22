@@ -53,8 +53,10 @@ describe('gym-standards.json', () => {
   it('stays small and carries the population, attribution and licence caveat', () => {
     expect(JSON.stringify(data).length).toBeLessThan(25_000);
     expect(data.meta.population).toMatch(/gym-goers/);
-    expect(data.meta.attribution).toMatch(/Symmetric Strength.*FitnessVolt.*CC BY 4\.0/);
-    expect(data.meta.licenceNote).toMatch(/not been verified/);
+    expect(data.meta.attribution).toBe('Strength Standards data by FitnessVolt (CC BY 4.0)');
+    expect(data.meta.attributionUrl).toBe('https://fitnessvolt.com/strength-standards/');
+    expect(data.meta.licenceNote).toMatch(/Symmetric Strength/);
+    expect(data.meta.licenceNote).not.toMatch(/not been verified/);
     expect(data.meta.levels.map(l => l[1])).toEqual([5, 20, 50, 80, 95]);
   });
 });

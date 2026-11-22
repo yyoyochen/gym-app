@@ -48,6 +48,8 @@ export interface GymStandardsData {
     confidence: Record<Confidence, string>;
     source: string;
     attribution: string;
+    /** Shown as a visible link wherever levels appear (FitnessVolt's CC BY 4.0 condition). */
+    attributionUrl: string;
     licenceNote: string;
     loadTypes: string;
   };

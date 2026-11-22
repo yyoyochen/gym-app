@@ -19,6 +19,7 @@ import { Load } from '../ui/progress/Load';
 import { stepRuns } from '../ui/progress/chartModel';
 import { useScrollTop } from '../ui/session/useNow';
 import { rateExercise } from '../benchmarks/liftRating';
+import { DataCredit } from '../ui/progress/DataCredit';
 import { STANDARDS_CAVEAT, confidenceWord, sourceMeta, levelTableText, missingForStandards, nextText, ratedValueText, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { ConfidenceBadge, LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
@@ -132,7 +133,7 @@ export function LiftDetail({ params }: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Level">
-        <SecHead title="Level" meta={standing?.kind === 'rated' ? sourceMeta([standing]) : 'vs gym-goers'} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p></InfoButton>} />
+        <SecHead title="Level" meta={standing?.kind === 'rated' ? sourceMeta([standing]) : 'vs gym-goers'} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <><p>{gym.meta.licenceNote}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
         {gym === undefined ? <p className="tk-quiet">Loading…</p>
           : gym === null ? <p className="tk-quiet">Strength standards could not be loaded.</p>
           : !ctx ? <p className="tk-quiet">Add {missingForStandards(benchIn).join(' and ')} on <a className="tk-link" href="#/profile">Profile</a> to see your level.</p>
@@ -148,6 +149,7 @@ export function LiftDetail({ params }: { params: string[] }) {
               ]} />
               <p className="tk-quiet"><ValueText text={levelTableText(standing, ctx.bodyweightKg)} /></p>
               {standing.note && <p className="tk-quiet">Note: {standing.note}.</p>}
+              <DataCredit meta={gym.meta} />
             </>
           )}
       </section>

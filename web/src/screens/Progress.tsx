@@ -15,6 +15,7 @@ import { DitherBar, InfoButton, LabelValueGrid, Lockup, Verdict, type VerdictKin
 import { useScrollTop } from '../ui/session/useNow';
 import { goalRows, latestBodyweight, liftStats, trendOf, type LiftStats } from '../ui/progress/data';
 import { rateExercise, type LiftRating } from '../benchmarks/liftRating';
+import { DataCredit } from '../ui/progress/DataCredit';
 import { STANDARDS_CAVEAT, contextText, missingForStandards, sourceMeta, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
@@ -111,7 +112,7 @@ export function Progress(_props: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Benchmarks">
-        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))}, 90 days`} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <p>Data: {gym.meta.attribution} {gym.meta.licenceNote}</p>}</InfoButton>} />
+        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))}, 90 days`} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <><p>{gym.meta.licenceNote}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
         {gym === undefined && <p className="tk-quiet">Loading…</p>}
         {gym === null && <p className="tk-quiet">Strength standards could not be loaded.</p>}
         {gym && !ctx && (
@@ -132,6 +133,7 @@ export function Progress(_props: { params: string[] }) {
             {!rated.length && <p className="tk-quiet">No lift with a standard logged in the last 90 days.</p>}
             {notRated.length > 0 && <p className="tk-quiet">Not rated (no qualifying sets in 90 days): {notRated.join(', ')}.</p>}
             {noStandard.length > 0 && <p className="tk-quiet">No standard: {noStandard.join(', ')}.</p>}
+            <DataCredit meta={gym.meta} />
           </>
         )}
       </section>

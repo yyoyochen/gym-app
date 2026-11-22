@@ -151,7 +151,7 @@ function About() {
         { label: 'Code:', value: 'MIT licence' },
       ]} />
       <span className="label">Data credits</span>
-      <p className="quiet">Strength benchmarks: modeled gym-goer standards. Squat, bench and deadlift anchors from Symmetric Strength self-reported gym logs, via FitnessVolt aggregates (CC BY 4.0, attribution); the anchor source’s licence has not been verified. Method: docs/STANDARDS-METHODOLOGY.md.</p>
+      <p className="quiet">Strength benchmarks: modeled gym-goer standards. Squat, bench and deadlift anchors are self-reported gym percentiles from the Symmetric Strength dataset, as published by <a className="link" href="https://fitnessvolt.com/strength-standards/" target="_blank" rel="noopener">Strength Standards data by FitnessVolt</a> (CC BY 4.0). Everything else is modeled by GymBro; neither site endorses these figures.</p>
     </Group>
   );
 }

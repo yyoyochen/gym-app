@@ -34,7 +34,16 @@ Population: self-reported gym lifters, not meet competitors. Levels: beginner ~5
 - No measured gym-goer dataset exists for most of these lifts. Replace ratios with logged user data when you have it.
 
 ## Licensing
-The anchor source terms are unverified. FitnessVolt publishes its aggregates under CC BY 4.0 with attribution, but confirm Symmetric Strength's terms before commercial use. Do not mix in Strength Level data without a licence.
+Checked 2026-11-22. FitnessVolt publishes its strength-standards data under CC BY 4.0 ("free to use, adapt, and redistribute with attribution"), covering both its competition (OpenPowerlifting) and self-reported gym (Symmetric Strength) percentiles: https://fitnessvolt.com/strength-standards/strength-data/. Its one condition is a visible attribution link back to FitnessVolt on any page or product that displays the data; it also asks that the underlying source be cited.
+
+GymBro's anchors were read from these pages (men 20-29 p50/p75/p90; under-20 ratios from the under-20 medians):
+- Squat: https://fitnessvolt.com/strength-standards/squat/
+- Bench press: https://fitnessvolt.com/strength-standards/bench-press/
+- Deadlift: https://fitnessvolt.com/strength-standards/deadlift/
+
+How the app complies: every place that shows a level (Progress benchmarks, each lift's Level section, the levels (i) sheet) and Settings' data credits carries the link "Strength Standards data by FitnessVolt" (CC BY 4.0) and names the Symmetric Strength dataset as the underlying source. The anchors are third-party-derived figures, not covered by GymBro's MIT licence. Symmetric Strength's own terms grant no licence and forbid scraping its service; GymBro does not use its service, only FitnessVolt's published aggregates.
+
+Never mix in Strength Level data: its terms require permission even for free, open-source apps. It stays in local preview builds only (testdata/private/, checked by tools/check-bundle.mjs).
 
 ## Files
 - `strength_standards_wide.csv`: one row per exercise, sex, bodyweight. Open in a spreadsheet.
