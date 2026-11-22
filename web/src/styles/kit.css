@@ -82,7 +82,8 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .tabbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, 1fr);
   height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
   background: var(--paper); border-top: var(--rule-w) solid var(--ink); }
-.tabbar a { display: flex; flex-direction: column; align-items: stretch; justify-content: stretch; min-width: 0; color: var(--mid);
+/* The active box's dither shadow sits 2px right and below; the padding keeps it on screen for the last tab too. */
+.tabbar a { display: flex; flex-direction: column; align-items: stretch; justify-content: stretch; min-width: 0; padding: 0 var(--space-half) var(--space-half) 0; color: var(--mid);
   font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
 .tabbar a.on { color: var(--accent); }
 /* Active tab: a box that fills the tab's whole quarter of the bar, accent outline;
