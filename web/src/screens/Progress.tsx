@@ -18,7 +18,8 @@ import { rateExercise, type LiftRating } from '../benchmarks/liftRating';
 import { STANDARDS_CAVEAT, contextText, missingForStandards, sourceMeta, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
-import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats, trendGlyphs } from '../ui/progress/stats';
+import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats } from '../ui/progress/stats';
+import { Sparkline } from '../ui/progress/Sparkline';
 
 const BENCH_LIFTS: BenchLift[] = ['squat', 'bench', 'deadlift'];
 const FEAS_KIND: Record<string, VerdictKind> = { comfortable: 'beat', ambitious: 'hit', unlikely: 'missed' };
@@ -174,13 +175,13 @@ export function Progress(_props: { params: string[] }) {
         <ul className="tk-rows">
           {lifts.map(l => {
             const tr = trendOf(l.rate);
-            const glyphs = trendGlyphs(l.series.map(p => p.e1rm));
+            const trail = l.series.slice(-12).map(p => p.e1rm);
             return (
               <li key={l.exercise.id}>
                 <a className="tk-lift" data-press="row" href={`#/lift/${encodeURIComponent(l.exercise.id)}`}>
                   <span className="tk-lift-name">{l.exercise.name}</span>
                   <span className="tk-lift-v">{l.best90 !== null ? <>{kg(Math.round(l.best90 * 2) / 2)}<small> kg{l.exercise.bodyweightFactor > 0 ? ' incl. BW' : ''}</small></> : '—'}</span>
-                  <span className="tk-trend" role="img" aria-label={`trend ${tr === 'unknown' ? 'not enough data' : tr}`}>{glyphs || '·'}</span>
+                  <span className="tk-trend">{trail.length > 1 ? <Sparkline values={trail} label={`trend ${tr === 'unknown' ? 'not enough data' : tr}`} /> : <span aria-hidden="true" className="mid">·</span>}</span>
                 </a>
               </li>
             );

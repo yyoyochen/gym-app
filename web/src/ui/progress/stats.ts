@@ -2,7 +2,6 @@
 // trend glyph, the lift chart's weekly volume and the History calendar.
 // No db, no React: everything here is unit-tested with synthetic fixtures.
 import type { ISODate } from '../../domain/types';
-import { SHADES } from '../kit/dither';
 import { addDays, daysBetween, weekday } from '../../app/dates';
 
 export interface StatSession { id: string; date: ISODate }
@@ -93,18 +92,6 @@ export function funLine(liftPlural: string, since: string, c: FunComparison): st
 export function pluralLift(name: string): string {
   const n = name.trim().toLowerCase();
   return /s$/.test(n) ? n : `${n}s`;
-}
-
-/**
- * The lift list's trend: the last `n` values as dither glyphs scaled between
- * their own min and max (░ low … █ high). Flat history reads all ▒.
- */
-export function trendGlyphs(values: number[], n = 6): string {
-  const v = values.filter(Number.isFinite).slice(-n);
-  if (!v.length) return '';
-  const lo = Math.min(...v), hi = Math.max(...v);
-  if (hi - lo < 1e-9) return SHADES[1].repeat(v.length);
-  return v.map(x => SHADES[Math.min(3, Math.floor(((x - lo) / (hi - lo)) * 4))]).join('');
 }
 
 /** Monday of the ISO week containing `iso`. */

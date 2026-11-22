@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  countWord, funComparison, funLine, loadParts, mondayOf, prFlags, niceTicks, pluralLift, tonnage, trainingStats, trendGlyphs, weeklyVolume, weeksSince,
+  countWord, funComparison, funLine, loadParts, mondayOf, prFlags, niceTicks, pluralLift, tonnage, trainingStats, weeklyVolume, weeksSince,
 } from './stats';
 
 // Synthetic fixture: three sessions over two weeks.
@@ -58,15 +58,6 @@ describe('tonnage + fun comparison', () => {
     expect(countWord(14)).toBe('14');
     expect(pluralLift('Back Squat')).toBe('back squats');
     expect(pluralLift('Pull-ups')).toBe('pull-ups');
-  });
-});
-
-describe('trendGlyphs', () => {
-  it('scales the last n values between their own min and max', () => {
-    expect(trendGlyphs([1, 2, 3, 4, 5, 6, 7], 4)).toBe('░▒▓█');
-    expect(trendGlyphs([10, 10, 10])).toBe('▒▒▒');
-    expect(trendGlyphs([])).toBe('');
-    expect(trendGlyphs([5, 1])).toBe('█░');
   });
 });
 

@@ -54,12 +54,15 @@
 .tk-goal-sub b { color: var(--ink); font-weight: var(--font-strong); }
 
 /* ---------- lift list: name · e1RM · dither trend ---------- */
-.tk-lift { display: grid; grid-template-columns: 1fr auto 7ch; gap: var(--space-4); align-items: center; min-height: 54px; padding: var(--space-2) 0;
+.tk-lift { display: grid; grid-template-columns: 1fr auto 72px; gap: var(--space-4); align-items: center; min-height: 54px; padding: var(--space-2) 0;
   border-bottom: var(--hair); color: inherit; }
 .tk-lift-name { font: var(--text-value); letter-spacing: var(--track-value); min-width: 0; overflow-wrap: anywhere; }
 .tk-lift-v { font: var(--text-value); letter-spacing: var(--track-value); font-variant-numeric: tabular-nums; text-align: right; }
 .tk-lift-v small { font: var(--text-quiet); color: var(--mid); }
-.tk-trend { font: var(--text-glyph); letter-spacing: 2px; /* ds-allow: trend glyphs read as separate marks, not a bar */ color: var(--accent); text-align: right; white-space: pre; }
+.tk-trend { display: flex; justify-content: flex-end; align-items: center; width: 72px; }
+.spark { display: block; }
+.spark-line { fill: none; stroke: var(--ink); stroke-width: 1.5; shape-rendering: crispEdges; }
+.spark-end { fill: var(--accent); shape-rendering: crispEdges; }
 
 /* ---------- ink chart: step line or bars, ceiling band, target lane ---------- */
 .tk-chart { margin: var(--space-1) 0 0; }
