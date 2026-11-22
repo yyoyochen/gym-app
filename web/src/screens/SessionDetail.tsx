@@ -10,7 +10,7 @@ import {
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { DateField, Errors } from '../ui/common';
-import { BigNumber, Button, ConfirmButton, NavBar, Parts, PixelIcon, Segmented, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
+import { BigNumber, Button, ConfirmButton, NavBar, Parts, PixelIcon, Segmented, Select, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { gradeCommit } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
@@ -201,11 +201,8 @@ function EditSetSheet({ set, scale, bwFactor, onClose }: { set: SetEntry; scale:
         : <Stepper label="RIR" value={effort} step={0.5} min={0} max={5} onChange={setEffort} />)}
       <Segmented<SetKind> label="Kind" value={kind} onChange={setKind} options={KINDS.map(k => ({ value: k, label: SET_KIND_LABELS[k] }))} />
       <Toggle label="Failed rep" checked={failed} onChange={setFailed} />
-      <label className="stack"><span className="label">Pain</span>
-        <select className="field" value={painArea} onChange={e => setPainArea(e.target.value as PainArea | '')}>
-          <option value="">None</option>
-          {PAIN_AREAS.map(a => <option key={a} value={a}>{PAIN_AREA_LABELS[a]}</option>)}
-        </select></label>
+      <Select<PainArea | ''> label="Pain" value={painArea} onChange={setPainArea}
+        options={[{ value: '', label: 'None' }, ...PAIN_AREAS.map(a => ({ value: a, label: PAIN_AREA_LABELS[a] }))]} />
       {painArea && <>
         <Segmented<Side> label="Side" value={painSide} onChange={setPainSide}
           options={(['left', 'right', 'both', 'na'] as Side[]).map(s => ({ value: s, label: s === 'na' ? 'N/A' : SIDE_LABELS[s] }))} />

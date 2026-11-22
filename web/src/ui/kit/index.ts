@@ -23,3 +23,4 @@ export { animateSpring, springAt, springCurve, rubberband, projectFling, nearest
 export { installPressFeedback, cancelPress } from './motion/press';
 export { prefersReducedMotion } from './motion/reduced';
 export { Parts } from './Parts';
+export { Select, type SelectOption } from './Select';

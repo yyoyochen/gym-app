@@ -9,7 +9,7 @@ import {
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { DateField, Errors, Group, GroupAction, Segmented, Sheet, Stepper } from '../ui/common';
-import { BigNumber, Button, DitherBar, LabelValueGrid, Lockup, NavBar, PixelIcon, ValueRow, showHud, type LabelValueItem } from '../ui/kit';
+import { BigNumber, Button, DitherBar, LabelValueGrid, Lockup, NavBar, PixelIcon, Select, ValueRow, showHud, type LabelValueItem } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { GOAL_LABELS, PAIN_AREAS, PAIN_AREA_LABELS, SIDE_LABELS, feasibilityWord } from '../app/labels';
@@ -322,12 +322,8 @@ function InjuriesForm({ profile, onChange }: { profile: ProfileT; onChange: (p: 
           ))}
         </div>
       )}
-      <label className="field-wrap">
-        <span className="label">{profile.injuries.length ? 'Another area' : 'Area'}</span>
-        <select className="field" value={area} onChange={e => setArea(e.target.value as PainArea)}>
-          {PAIN_AREAS.map(a => <option key={a} value={a}>{PAIN_AREA_LABELS[a]}</option>)}
-        </select>
-      </label>
+      <Select<PainArea> label={profile.injuries.length ? 'Another area' : 'Area'} value={area} onChange={setArea}
+        options={PAIN_AREAS.map(a => ({ value: a, label: PAIN_AREA_LABELS[a] }))} />
       <Segmented<Side> label="Side" value={side} onChange={setSide}
         options={(['left', 'right', 'both', 'na'] as Side[]).map(s => ({ value: s, label: s === 'na' ? 'N/A' : SIDE_LABELS[s] }))} />
       <div className="grid2">
@@ -365,14 +361,8 @@ function MaxesForm({ profile, onChange, exercises }: { profile: ProfileT; onChan
           ))}
         </div>
       )}
-      <label className="field-wrap">
-        <span className="label">Lift</span>
-        <select className="field" value={exId} onChange={e => setExId(e.target.value)}>
-          <option value="">Choose…</option>
-          {main.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-          <optgroup label="All exercises">{exercises.filter(e => !main.includes(e)).map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</optgroup>
-        </select>
-      </label>
+      <Select<string> label="Lift" value={exId} onChange={setExId}
+        options={[...main.map(e => ({ value: e.id, label: e.name, group: 'Main lifts' })), ...exercises.filter(e => !main.includes(e)).map(e => ({ value: e.id, label: e.name, group: 'All exercises' }))]} />
       <div className="grid2">
         <Stepper label="1RM" unit="kg" value={kgv} step={2.5} min={1} max={500} onChange={setKg} />
         <DateField label="Date" value={date} max={todayISO()} onChange={v => setDate(v || todayISO())} />

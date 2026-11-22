@@ -100,6 +100,14 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .stepper-unit { color: var(--mid); }
 
 /* ---------- segmented ---------- */
+.select-field { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; min-height: var(--touch-min); padding: 0 var(--space-half);
+  border-bottom: var(--rule-w) solid var(--ink); text-align: left; color: var(--ink); font: var(--text-body); letter-spacing: var(--track-body); }
+.select-list { display: flex; flex-direction: column; border-top: var(--hair); }
+.select-group { display: block; padding: var(--space-4) 0 var(--space-2); color: var(--mid); }
+.select-opt { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--touch-min); padding: 0 var(--space-3); border-bottom: var(--hair); text-align: left; color: var(--ink);
+  font: var(--text-body); letter-spacing: var(--track-body); }
+.select-opt.on { background: var(--ink); color: var(--paper); font-weight: var(--font-strong); }
+.select-check { display: inline-grid; place-items: center; width: 18px; flex: none; }
 .seg { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); min-height: var(--touch-min);
   border: var(--rule-w) solid var(--ink); touch-action: none; user-select: none; -webkit-user-select: none; }
 .seg-thumb { position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% / var(--n, 2)); background: var(--ink); opacity: 0;

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { Exercise, GoalKind, GoalTarget, ISODate, Profile, TargetType } from '../../domain/types';
 import { newId } from '../../db';
 import { DateField, Errors, Segmented } from '../../ui/common';
+import { Select } from '../../ui/kit';
 import { DitherBar, PixelIcon, Toggle, ValueRow } from '../../ui/kit';
 import { formatDate, todayISO } from '../dates';
 import {
@@ -96,18 +97,13 @@ export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { 
         </div>
       )}
       <div className="form-group">
-        <label className="field-wrap">
-          <span className="label">{profile.targets.length ? 'Another target for' : 'Target for'}</span>
-          <select className="field" value={draft.subject} onChange={e => setDraft({ ...draft, subject: e.target.value })}>
-            <option value="">Choose…</option>
-            <optgroup label="Main lifts">{main.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</optgroup>
-            <optgroup label="Other">
-              <option value={SUBJECT_BODYWEIGHT}>Bodyweight</option>
-              <option value={SUBJECT_SESSIONS}>Sessions per week</option>
-            </optgroup>
-            <optgroup label="All exercises">{rest.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</optgroup>
-          </select>
-        </label>
+        <Select<string> label={profile.targets.length ? 'Another target for' : 'Target for'} value={draft.subject} onChange={v => setDraft({ ...draft, subject: v })}
+          options={[
+            ...main.map(e => ({ value: e.id, label: e.name, group: 'Main lifts' })),
+            { value: SUBJECT_BODYWEIGHT, label: 'Bodyweight', group: 'Other' },
+            { value: SUBJECT_SESSIONS, label: 'Sessions per week', group: 'Other' },
+            ...rest.map(e => ({ value: e.id, label: e.name, group: 'All exercises' })),
+          ]} />
         <Segmented<TargetType> label="Type" value={draft.type} onChange={v => setDraft({ ...draft, type: v })}
           options={(['reach', 'hold', 'at_least'] as TargetType[]).map(v => ({ value: v, label: TARGET_TYPE_LABELS[v] }))} />
         <div className="grid2">

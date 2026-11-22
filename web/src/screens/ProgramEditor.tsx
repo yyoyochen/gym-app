@@ -8,7 +8,7 @@ import { getActiveProgram, getDb, listExercises, putExercise, saveProgram, seedC
 import { exerciseIdFor, nameKey } from '../domain/catalog';
 import { useLive } from '../ui/useLive';
 import { ConfirmButton, DateField, Errors, Group, GroupAction, Segmented, Sheet, Stepper } from '../ui/common';
-import { Button, LabelValueGrid, NavBar, Parts, PixelIcon, Toggle, ValueRow, showHud } from '../ui/kit';
+import { Button, LabelValueGrid, NavBar, Parts, PixelIcon, Select, Toggle, ValueRow, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate } from '../app/dates';
 import { PAIN_AREAS, PAIN_AREA_LABELS } from '../app/labels';
@@ -391,10 +391,8 @@ function PhaseForm({ phases, onAdd }: { phases: Phase[]; onAdd: (ph: Phase) => v
         <DateField label="Start" value={start} onChange={setStart} />
         <DateField label="End" value={end} min={start || undefined} onChange={setEnd} />
       </div>
-      <label className="field-wrap"><span className="label">Applies to model</span>
-        <select className="field" value={model} onChange={e => setModel(e.target.value as ModelKind | '')}>
-          {MODEL_OPTS.map(m => <option key={m} value={m}>{m ? MODEL_LABELS[m] : 'No override (marker only)'}</option>)}
-        </select></label>
+      <Select<ModelKind | ''> label="Applies to model" value={model} onChange={setModel}
+        options={MODEL_OPTS.map(m => ({ value: m, label: m ? MODEL_LABELS[m] : 'No override (marker only)' }))} />
       {model && (
         <div className="grid3">
           <label className="field-wrap"><span className="label">Sets</span><input className="field tnum" inputMode="numeric" value={sets} onChange={e => setSets(e.target.value)} /></label>
