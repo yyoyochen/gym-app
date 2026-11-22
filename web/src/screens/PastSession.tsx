@@ -29,7 +29,7 @@ export function PastSession(_props: { params: string[] }) {
       <DateField label="Day trained" value={date} max={today} onChange={setDate} />
       <p className="note">//Note — Past sessions are logged ungraded: add each lift and its sets. No promise is made for them.</p>
       <Button variant="primary" block iconEnd="chevron" disabled={!valid || busy} onClick={start}>
-        {valid ? `Start logging · ${formatDate(date as ISODate)}` : 'Pick a day'}
+        {valid ? `Start logging: ${formatDate(date as ISODate)}` : 'Pick a day'}
       </Button>
     </section>
   );

@@ -31,20 +31,20 @@ describe('plain-language strings', () => {
   it('describe what was rated, and the next step', () => {
     const sq = rateValue(data, 'back_squat', 121.3, ctx, 'e1rm')!;
     expect(ratedValueText(sq)).toBe('e1RM 121.5 kg');
-    expect(standingText(sq)).toMatch(/^(Novice|Intermediate|Advanced) · \d+(st|nd|rd|th) percentile of gym-goers$/);
+    expect(standingText(sq)).toMatch(/^(Novice|Intermediate|Advanced), \d+(st|nd|rd|th) percentile of gym-goers$/);
     expect(nextText({ level: 'advanced', value: 140.5, unit: 'kg', added: false })).toBe('Advanced at 140.5 kg e1RM');
     expect(nextText({ level: 'elite', value: 42.5, unit: 'kg', added: true })).toBe('Elite at +42.5 kg added');
     expect(nextText({ level: 'novice', value: 5, unit: 'reps', added: false })).toBe('Novice at 5 reps');
     expect(ratedValueText(rateValue(data, 'db_bench', 40, ctx, 'e1rm')!)).toBe('e1RM 40 kg per dumbbell');
-    expect(ratedValueText(rateValue(data, 'pull_up', 12, ctx)!)).toBe('12 reps · best set, not a max test');
-    expect(ratedValueText(rateValue(data, 'plank', 95, ctx)!)).toBe('95 s · best set (reps read as seconds)');
+    expect(ratedValueText(rateValue(data, 'pull_up', 12, ctx)!)).toBe('12 reps, best set, not a max test');
+    expect(ratedValueText(rateValue(data, 'plank', 95, ctx)!)).toBe('95 s, best set (reps read as seconds)');
     expect(ratedValueText(rateValue(data, 'weighted_dip', 0.3, ctx, 'weighted', 24)!)).toBe('+24 kg added e1RM');
   });
 
   it('level tables in the lift’s own unit', () => {
-    expect(levelTableText(rateValue(data, 'pull_up', 12, ctx)!, 80)).toBe('Beginner 1 · Novice 5 · Intermediate 10 · Advanced 16 · Elite 22 reps');
-    expect(levelTableText(rateValue(data, 'weighted_pull_up', 0.2, ctx)!, 80)).toBe('Beginner +0 · Novice +8 · Intermediate +24 · Advanced +44 · Elite +68 kg added (1RM)');
-    expect(levelTableText(rateValue(data, 'back_squat', 100, { sex: 'male', bodyweightKg: 55 })!, 55)).toBe('Beginner 59.5 · Novice 74 · Intermediate 93 · Advanced 116.5 · Elite 145 kg e1RM');
+    expect(levelTableText(rateValue(data, 'pull_up', 12, ctx)!, 80)).toBe('Beginner 1, Novice 5, Intermediate 10, Advanced 16, Elite 22 reps');
+    expect(levelTableText(rateValue(data, 'weighted_pull_up', 0.2, ctx)!, 80)).toBe('Beginner +0, Novice +8, Intermediate +24, Advanced +44, Elite +68 kg added (1RM)');
+    expect(levelTableText(rateValue(data, 'back_squat', 100, { sex: 'male', bodyweightKg: 55 })!, 55)).toBe('Beginner 59.5, Novice 74, Intermediate 93, Advanced 116.5, Elite 145 kg e1RM');
   });
 
   it('the caveat names the population and the level percentiles', () => {

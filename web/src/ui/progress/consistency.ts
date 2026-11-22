@@ -94,5 +94,5 @@ export function yearSummary(sessions: { date: ISODate }[], today: ISODate, targe
 }
 
 export function summaryLine(s: YearSummary): string {
-  return `This year: ${s.sessions} session${s.sessions === 1 ? '' : 's'} · ${s.weeksAtTarget} of ${s.weeks} weeks at target · longest run ${s.longestRun} week${s.longestRun === 1 ? '' : 's'}`;
+  return `This year: ${s.sessions} session${s.sessions === 1 ? '' : 's'}, ${s.weeksAtTarget} of ${s.weeks} weeks at target, longest run ${s.longestRun} week${s.longestRun === 1 ? '' : 's'}`;
 }

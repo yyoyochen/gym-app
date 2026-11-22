@@ -80,13 +80,13 @@ export function LiftDetail({ params }: { params: string[] }) {
       <NavBar title={ex.name} backLabel="Progress" fallback="progress" />
 
       <section className="tk-block" aria-label="Best e1RM">
-        <span className="label tk-herolabel">Best e1RM · 90 days</span>
+        <span className="label tk-herolabel">Best e1RM (90 days)</span>
         {st.best90 !== null
           ? <BigNumber size="display" value={half(st.best90)} unit="kg" caption={`${st.days.length} session${st.days.length === 1 ? '' : 's'}`}
               label={`Best e1RM in 90 days: ${half(st.best90)} kg`} />
           : <p className="tk-quiet">No sets in the last 90 days{st.days.length ? '' : ', or ever'}.</p>}
         <LabelValueGrid variant="stats" items={[
-          { label: 'Trend:', value: st.rate === null ? 'not enough data' : `${st.rate >= 0 ? '+' : '−'}${kg(Math.abs(Math.round(st.rate * 10) / 10))} kg/wk${tr === 'flat' ? ' · flat' : ''}` },
+          { label: 'Trend:', value: st.rate === null ? 'not enough data' : `${st.rate >= 0 ? '+' : '−'}${kg(Math.abs(Math.round(st.rate * 10) / 10))} kg/wk${tr === 'flat' ? ', flat' : ''}` },
           ...(st.days.length ? [{ label: 'Last:', value: formatDate(st.days[0].date, { weekday: false }) }] : []),
         ]} />
       </section>
@@ -109,7 +109,7 @@ export function LiftDetail({ params }: { params: string[] }) {
             <div className="tk-vstrip" role="img" aria-label={`Beat ${vCount.beat}, hit ${vCount.hit}, missed ${vCount.missed}`}>
               {verdicts.map(v => <i key={v.sessionId} className={v.verdict} title={`${v.date}: ${v.verdict} — ${v.detail}`} />)}
             </div>
-            <p className="tk-mono mid">{(['beat', 'hit', 'missed', 'new'] as const).filter(k => vCount[k]).map(k => `${VERDICT_WORD[k]} ${vCount[k]}`).join(' · ')}</p>
+            <p className="tk-mono mid">{(['beat', 'hit', 'missed', 'new'] as const).filter(k => vCount[k]).map(k => `${VERDICT_WORD[k]} ${vCount[k]}`).join(', ')}</p>
           </>
         ) : <p className="tk-quiet">No graded sessions yet.</p>}
       </section>

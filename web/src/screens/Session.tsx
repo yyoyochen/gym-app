@@ -185,7 +185,7 @@ export function Session({ params }: { params: string[] }) {
             ) : (
               <>
                 <Button variant="primary" block icon="check" className="log-btn" onClick={() => { void logPlanned(focus, next.planned!); }}>{act!.primaryLabel}</Button>
-                <Button block className="adjust-btn" onClick={() => handlers.adjust(focus, next)}>Adjust weight · reps · effort</Button>
+                <Button block className="adjust-btn" onClick={() => handlers.adjust(focus, next)}>Adjust weight, reps, effort</Button>
               </>
             )}
           </div>
@@ -217,7 +217,7 @@ export function Session({ params }: { params: string[] }) {
       {((next && !session.sealed) || !graded.length) && <div className="finish">{finishButton}</div>}
 
       {sheet && (
-        <SetSheet open title={sheet.set ? `Edit set · ${sheet.slot.exercise.name}` : `Log set · ${sheet.slot.exercise.name}`}
+        <SetSheet open title={sheet.set ? `Edit set: ${sheet.slot.exercise.name}` : `Log set: ${sheet.slot.exercise.name}`}
           initial={sheet.draft} step={sheet.slot.exercise.increment || 2.5} scale={scale} kinds={kindsFor(sheet.slot)}
           saveLabel={sheet.set ? 'Save' : 'Log set'} onSave={save} onClose={() => setSheet(null)}
           onDelete={sheet.set ? async () => { await deleteSet(getDb(), sheet.set!.id); setSheet(null); } : undefined} />

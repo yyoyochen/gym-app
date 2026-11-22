@@ -91,7 +91,7 @@ export interface GoalRow {
   evidence: string;
   current: number | null;
   pace: Pace | null;
-  /** Plain line: "needs +0.4 kg/wk · actual +0.2 kg/wk". */
+  /** Plain line: "needs +0.4 kg/wk, actual +0.2 kg/wk". */
   paceLine: string;
 }
 
@@ -125,7 +125,7 @@ export async function goalRows(db: GymDb, profile: Profile, today: ISODate, only
       target: t, name: ex.name, current, pace: p,
       evidence: current !== null ? `e1RM ~${kg(Math.round(current * 2) / 2)} kg` : 'no sets in 90 days',
       paceLine: p
-        ? `${t.type === 'hold' && (current ?? 0) >= t.value ? 'hold' : `needs ${signed(p.neededPerWeek)} kg/wk`} · actual ${p.actualPerWeek === null ? 'not enough data' : `${signed(p.actualPerWeek)} kg/wk`}`
+        ? `${t.type === 'hold' && (current ?? 0) >= t.value ? 'hold' : `needs ${signed(p.neededPerWeek)} kg/wk`}, actual ${p.actualPerWeek === null ? 'not enough data' : `${signed(p.actualPerWeek)} kg/wk`}`
         : '',
     });
   }

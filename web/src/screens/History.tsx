@@ -8,7 +8,7 @@ import { DemoBanner } from '../app/DemoBanner';
 import { formatLoad } from '../app/labels';
 import { formatDate, monthLabel, todayISO } from '../app/dates';
 import { groupBySession, summarizeSession, type SessionSummary } from '../app/history';
-import { LinkButton, Lockup, PixelIcon, SquareHeatmap, go } from '../ui/kit';
+import { LinkButton, Lockup, Parts, PixelIcon, SquareHeatmap, go } from '../ui/kit';
 import { SecHead } from '../ui/progress/parts';
 import { loadConsistency } from '../ui/progress/data';
 
@@ -57,7 +57,7 @@ export function History(_props: { params: string[] }) {
       {data && total === 0 && <p className="tk-quiet">No sessions yet. Logged and imported sessions show up here.</p>}
       {months.map(m => (
         <section key={m.key} className="tk-sec" aria-label={m.label}>
-          <SecHead title={m.label} meta={`${m.rows.length} session${m.rows.length === 1 ? '' : 's'} · ${m.rows.reduce((n, d) => n + d.setCount, 0)} sets`} />
+          <SecHead title={m.label} meta={`${m.rows.length} session${m.rows.length === 1 ? '' : 's'}, ${m.rows.reduce((n, d) => n + d.setCount, 0)} sets`} />
           <ul className="tk-rows">
             {m.rows.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data?.bwFactor} /></li>)}
           </ul>
@@ -80,7 +80,7 @@ function SessionRow({ d, bwFactor }: { d: SessionSummary; bwFactor?: Map<string,
           {s.edited && <span className="chip tk-chip">edited</span>}
         </span>
         {d.top.length > 0 && (
-          <span className="tk-stop">{d.top.map(t => `${t.name} ${formatLoad(t.weight, bwFactor?.get(t.exerciseId))} × ${t.reps}`).join(' · ')}</span>
+          <Parts className="tk-stop" items={d.top.map(t => `${t.name} ${formatLoad(t.weight, bwFactor?.get(t.exerciseId))} × ${t.reps}`)} />
         )}
       </span>
       <span className="tk-scount">{d.setCount}<small>sets</small></span>

@@ -8,7 +8,7 @@ import { confidenceWord, levelWord, nextText, ordinal, ratedValueText } from './
 
 /** "Intermediate · 55th" — the bar's value text. */
 export function levelValueText(r: Pick<LiftRating, 'level' | 'percentile'>): string {
-  return `${levelWord(r)} · ${ordinal(r.percentile)}`;
+  return `${levelWord(r)}, ${ordinal(r.percentile)}`;
 }
 
 /** One lift's level as a dither bar: label left, "Intermediate · 55th" right, percentile as the fill. */

@@ -119,7 +119,7 @@ export function Today(_props: { params: string[] }) {
       <div className="place">
         <div>
           <h1 className="title">{done && !showNext ? sessionNames(done.session.nameSnapshot).title : showPlan ? names.title : 'Today'}</h1>
-          <p className="quiet">{formatDate(today)}{open ? ' · in progress' : ''}</p>
+          <p className="quiet">{formatDate(today)}{open ? ', in progress' : ''}</p>
         </div>
         <PixelIcon name="today" scale={3} />
       </div>
@@ -145,7 +145,7 @@ export function Today(_props: { params: string[] }) {
             </div>
           )}
           <div className="promise">
-            <span className="label">{plan.status === 'committed' ? 'Committed' : 'The promise'} · {sp.exercise.name}{sp.inMinimum && minimum ? ' · minimum' : ''}</span>
+            <span className="label">{plan.status === 'committed' ? 'Committed' : 'The promise'}: {sp.exercise.name}{sp.inMinimum && minimum ? ', minimum' : ''}</span>
             <p className="promise-text"><MonoNums text={sp.target.criterion} /></p>
             <p className="quiet">Why: {readable(sp.target.why)}</p>
             {sp.lastNote && <p className="quiet">Last note: {sp.lastNote}</p>}
@@ -174,8 +174,8 @@ export function Today(_props: { params: string[] }) {
       <div className="bars">
         <DitherBar label="This week" valueText={`${heat.thisWeek} of ${target}`} value={heat.thisWeek / Math.max(1, target)} />
         {paceBars.map(g => (
-          <DitherBar key={g.target.id} label={`${g.name} · ${TARGET_TYPE_LABELS[g.target.type].toLowerCase()} ${kg(g.target.value)} by ${formatDate(g.target.deadline, { weekday: false, year: false })}`}
-            valueText={`${kg(Math.round(g.current! * 10) / 10)} · ${Math.round((g.current! / g.target.value) * 100)}%`} value={g.current! / g.target.value} />
+          <DitherBar key={g.target.id} label={`${g.name}: ${TARGET_TYPE_LABELS[g.target.type].toLowerCase()} ${kg(g.target.value)} by ${formatDate(g.target.deadline, { weekday: false, year: false })}`}
+            valueText={`${kg(Math.round(g.current! * 10) / 10)}, ${Math.round((g.current! / g.target.value) * 100)}%`} value={g.current! / g.target.value} />
         ))}
       </div>
 
@@ -200,11 +200,11 @@ export function Today(_props: { params: string[] }) {
 
       {parts.length > 0 && (
         <div className="stack today-parts" aria-label="This week's sets by body part">
-          <span className="label">This week · sets</span>
+          <span className="label">This week (sets)</span>
           {parts.map(r => (
             <DitherBar key={r.part} label={r.part}
               value={r.planned > 0 ? Math.min(r.done, r.planned) / r.planned : 1}
-              valueText={r.planned > 0 ? `${r.done}/${r.planned}` : `${r.done} · unplanned`} />
+              valueText={r.planned > 0 ? `${r.done}/${r.planned}` : `${r.done}, unplanned`} />
           ))}
         </div>
       )}

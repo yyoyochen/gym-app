@@ -108,14 +108,14 @@ export function Progress(_props: { params: string[] }) {
               {frac !== null
                 ? <DitherBar value={frac} label={`Now ${g.evidence}`} valueText={`${Math.round(frac * 100)}%`} />
                 : <p className="tk-mono">Now {g.evidence}</p>}
-              {g.paceLine && <p className="tk-mono mid">{g.paceLine}{g.pace?.assumedFlat ? ' · no trend yet, assumed flat' : ''}</p>}
+              {g.paceLine && <p className="tk-mono mid">{g.paceLine}{g.pace?.assumedFlat ? ', no trend yet, assumed flat' : ''}</p>}
             </article>
           );
         })}
       </section>
 
       <section className="tk-sec" aria-label="Benchmarks">
-        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))} · 90 days`} />
+        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))}, 90 days`} />
         {gym === undefined && <p className="tk-quiet">Loading…</p>}
         {gym === null && <p className="tk-quiet">Strength standards could not be loaded.</p>}
         {gym && !ctx && (
@@ -156,7 +156,7 @@ export function Progress(_props: { params: string[] }) {
               if (!r) return <p key={b.lift} className="tk-quiet">{LIFT_WORD[b.lift]}: no bucket for your profile.</p>;
               return (
                 <div key={b.lift} className="tk-opl">
-                  <DitherBar value={pctNumber(r.percentile) / 100} label={`${LIFT_WORD[b.lift]} · ${kg(Math.round(b.e1rm * 2) / 2)} kg`} valueText={pctText(r.percentile).replace(' percentile', '')} />
+                  <DitherBar value={pctNumber(r.percentile) / 100} label={`${LIFT_WORD[b.lift]}, ${kg(Math.round(b.e1rm * 2) / 2)} kg`} valueText={pctText(r.percentile).replace(' percentile', '')} />
                   <p className="tk-quiet">{benchLine(b.lift, b.e1rm, r)}</p>
                 </div>
               );
@@ -169,7 +169,7 @@ export function Progress(_props: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Lifts">
-        <SecHead title="Lifts · 90 days" meta="e1RM · trend" />
+        <SecHead title="Lifts (90 days)" meta="e1RM and trend" />
         {!lifts.length && <p className="tk-quiet">Nothing logged in the last 90 days.</p>}
         <ul className="tk-rows">
           {lifts.map(l => {

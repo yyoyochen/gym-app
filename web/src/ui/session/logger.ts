@@ -95,11 +95,11 @@ export function sessionCount(slots: readonly LiveSlot[]): { done: number; planne
 
 const KIND_WORD: Partial<Record<SetKind, string>> = { top: 'top set', backoff: 'back-off', drop: 'drop set' };
 
-/** "Next · set 2 of 4 · back-off", "Next · warm-up 1 of 3". */
+/** "Next: set 2 of 4, back-off", "Next: warm-up 1 of 3". */
 export function nextLabel(r: SheetRow): string {
-  if (r.warm) return `Next · warm-up ${r.n} of ${r.of}`;
+  if (r.warm) return `Next: warm-up ${r.n} of ${r.of}`;
   const k = KIND_WORD[r.kind];
-  return `Next · set ${r.n} of ${r.of}${k ? ` · ${k}` : ''}`;
+  return `Next: set ${r.n} of ${r.of}${k ? `, ${k}` : ''}`;
 }
 
 /** The row label of a logged set, for "rested … since set 2". */

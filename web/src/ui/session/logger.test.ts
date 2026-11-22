@@ -26,7 +26,7 @@ describe('logger rows', () => {
     const { rows, next } = liftRows(slot([]));
     expect(rows.map(r => r.label)).toEqual(['W1', 'W2', 'Top', '1', '2', '3']);
     expect(next).toMatchObject({ label: 'W1', state: 'next', warm: true });
-    expect(nextLabel(next!)).toBe('Next · warm-up 1 of 2');
+    expect(nextLabel(next!)).toBe('Next: warm-up 1 of 2');
     expect(rows.filter(r => r.state === 'next')).toHaveLength(1);
   });
 
@@ -35,7 +35,7 @@ describe('logger rows', () => {
     const { rows, next } = liftRows(s);
     expect(rows.map(r => `${r.label}:${r.state}`)).toEqual(['W1:logged', 'Top:logged', '1:next', '2:todo', '3:todo']);
     expect(rows[1].met).toBe(true);
-    expect(nextLabel(next!)).toBe('Next · set 2 of 4 · back-off');
+    expect(nextLabel(next!)).toBe('Next: set 2 of 4, back-off');
     expect(rowLabelOf([s], s.sets[1].id)).toEqual({ lift: 'Back squat', label: 'the top set' });
   });
 

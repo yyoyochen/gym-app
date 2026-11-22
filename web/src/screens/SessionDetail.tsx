@@ -83,7 +83,7 @@ export function SessionDetail({ params }: { params: string[] }) {
       )}
 
       <section className="tk-sec" aria-label="Sets">
-        <SecHead title="Sets" meta={`${sets.length} logged · tap to edit`} />
+        <SecHead title="Sets" meta={`${sets.length} logged, tap to edit`} />
         {sets.length === 0 && <p className="tk-quiet">No sets logged.</p>}
         {groupBlocks(sets).map(b => {
           let w = 0, n = 0;
@@ -107,7 +107,7 @@ export function SessionDetail({ params }: { params: string[] }) {
                       <PixelIcon name="edit" scale={1} />
                     </button>
                     {tags.length > 0 && <p className="tk-tags">{tags.map(t => <span key={t} className="chip tk-chip">{t}</span>)}</p>}
-                    {s.pain && <p className="tk-mono tk-indent">Pain: {PAIN_AREA_LABELS[s.pain.area]}{s.pain.side !== 'na' ? ` (${SIDE_LABELS[s.pain.side].toLowerCase()})` : ''} · severity {s.pain.severity}{s.pain.note ? ` · ${s.pain.note}` : ''}</p>}
+                    {s.pain && <p className="tk-mono tk-indent">Pain: {PAIN_AREA_LABELS[s.pain.area]}{s.pain.side !== 'na' ? ` (${SIDE_LABELS[s.pain.side].toLowerCase()})` : ''}, severity {s.pain.severity}{s.pain.note ? `; ${s.pain.note}` : ''}</p>}
                     {s.note && <p className="tk-quiet tk-indent">{s.note}</p>}
                   </div>
                 );
@@ -188,8 +188,8 @@ function EditSetSheet({ set, scale, bwFactor, onClose }: { set: SetEntry; scale:
   };
 
   return (
-    <Sheet open title={`Edit set · ${set.exerciseNameSnapshot}`} onClose={onClose}>
-      <p className="tk-mono mid">{formatLoad(weight, bwFactor)} × {reps}{hasEffort ? ` · ${formatRir(scaleToRir(effort, scale), scale)}` : ''}</p>
+    <Sheet open title={`Edit set: ${set.exerciseNameSnapshot}`} onClose={onClose}>
+      <p className="tk-mono mid">{formatLoad(weight, bwFactor)} × {reps}{hasEffort ? `, ${formatRir(scaleToRir(effort, scale), scale)}` : ''}</p>
       <div className="grid2 steppers">
         <Stepper label={bwFactor > 0 ? 'Added weight' : 'Weight'} unit="kg" value={weight} step={2.5} min={-200} max={500} onChange={setWeight} />
         <Stepper label="Reps" value={reps} min={0} max={100} onChange={setReps} />

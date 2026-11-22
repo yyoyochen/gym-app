@@ -89,8 +89,8 @@ export function ratedValueText(r: LiftRating): string {
   switch (r.basis) {
     case 'e1rm': return `e1RM ${half(r.value)} kg${r.loadType === 'dumbbell_each' ? ' per dumbbell' : ''}`;
     case 'weighted': return `+${half(r.addedKg ?? 0)} kg added e1RM`;
-    case 'reps': return `${kg(r.value)} reps · best set, not a max test`;
-    case 'seconds': return `${kg(r.value)} s · best set (reps read as seconds)`;
+    case 'reps': return `${kg(r.value)} reps, best set, not a max test`;
+    case 'seconds': return `${kg(r.value)} s, best set (reps read as seconds)`;
   }
 }
 
@@ -103,7 +103,7 @@ export function nextText(n: NextStep, perDumbbell = false): string {
 
 /** "Intermediate · 54th percentile of gym-goers". */
 export function standingText(r: LiftRating): string {
-  return `${levelWord(r)} · ${ordinal(r.percentile)} percentile of gym-goers`;
+  return `${levelWord(r)}, ${ordinal(r.percentile)} percentile of gym-goers`;
 }
 
 export function contextText(ctx: RateContext): string {
@@ -124,5 +124,5 @@ export function levelTableText(r: LiftRating, bodyweightKg: number): string {
     .filter(k => k !== 'below beginner')
     .map(k => `${LEVEL_LABEL[k]} ${fmt(values[k as Exclude<typeof k, 'below beginner'>])}`);
   const tail = unit === 'kg' ? `kg e1RM${r.loadType === 'dumbbell_each' ? ' per dumbbell' : ''}` : unit === 'bw_fraction' ? 'kg added (1RM)' : unit === 'reps' ? 'reps' : 's';
-  return `${parts.join(' · ')} ${tail}`;
+  return `${parts.join(', ')} ${tail}`;
 }

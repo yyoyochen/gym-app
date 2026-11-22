@@ -24,8 +24,8 @@ export function kindsFor(slot: LiveSlot): SetKind[] {
 
 function painText(s: SetEntry): string {
   const p = s.pain;
-  const pain = p ? `Pain · ${p.side !== 'na' ? `${p.side} ` : ''}${p.area.replace('_', ' ')} · ${p.severity}` : '';
-  return [pain, s.note ?? ''].filter(Boolean).join(' · ');
+  const pain = p ? `Pain: ${p.side !== 'na' ? `${p.side} ` : ''}${p.area.replace('_', ' ')}, ${p.severity}` : '';
+  return [pain, s.note ?? ''].filter(Boolean).join('; ');
 }
 
 export function LiftBlock({ slot, scale, h, focused, index, count }: {
@@ -34,7 +34,7 @@ export function LiftBlock({ slot, scale, h, focused, index, count }: {
   const plan = slot.plan;
   const t = plan?.target;
   const { rows } = liftRows(slot);
-  const right = !plan ? 'Added · ungraded' : slot.swapped ? 'Swapped · ungraded' : `Lift ${index} of ${count}`;
+  const right = !plan ? 'Added, ungraded' : slot.swapped ? 'Swapped, ungraded' : `Lift ${index} of ${count}`;
   return (
     <section className={`lg-spec${focused ? ' focused' : ''}`} aria-label={slot.exercise.name}>
       <div className="lg-spec-hd">

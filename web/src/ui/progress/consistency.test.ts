@@ -31,7 +31,7 @@ describe('consistency', () => {
     const s = yearSummary(sessions, '2026-01-21', 3);
     // Counting starts at the first session's week (5 Jan): 5 Jan (3), 12 Jan (3); 19 Jan is current with 1 → not counted.
     expect(s).toEqual({ sessions: 7, weeksAtTarget: 2, weeks: 2, longestRun: 2 });
-    expect(summaryLine(s)).toBe('This year: 7 sessions · 2 of 2 weeks at target · longest run 2 weeks');
+    expect(summaryLine(s)).toBe('This year: 7 sessions, 2 of 2 weeks at target, longest run 2 weeks');
   });
 });
 

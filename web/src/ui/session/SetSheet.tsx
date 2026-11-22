@@ -31,7 +31,7 @@ export function EffortPicker({ rir, scale, onChange }: { rir?: number; scale: Ef
     ? RPE_OPTS.map(v => ({ value: String(10 - v), label: String(v) }))
     : RIR_OPTS.map(v => ({ value: String(v), label: v === 5 ? '5+' : String(v) }));
   return (
-    <Segmented label={scale === 'rpe' ? 'Effort · RPE' : 'Effort · reps in reserve'} options={opts}
+    <Segmented label={scale === 'rpe' ? 'Effort (RPE)' : 'Effort (reps in reserve)'} options={opts}
       value={rir === undefined ? undefined : String(rir)} allowDeselect onChange={v => onChange(v === undefined ? undefined : Number(v))} />
   );
 }
@@ -60,7 +60,7 @@ export function SetSheet({ open, title, initial, step, scale, kinds, onSave, onD
       </div>
       {d.pain && (
         <div className="pain-box" aria-label="Pain flag">
-          <span className="label">Pain · area</span>
+          <span className="label">Pain (area)</span>
           <div className="chips">
             {PAIN_AREAS.map(a => (
               <button key={a} type="button" className={`chip${pain.area === a ? ' on' : ''}`} aria-pressed={pain.area === a}

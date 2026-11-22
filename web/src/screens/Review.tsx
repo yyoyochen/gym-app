@@ -90,7 +90,7 @@ export function Review({ params }: { params: string[] }) {
       <div className="place">
         <div>
           <h1 className="title">{names.title}</h1>
-          <p className="quiet">{formatDate(session.date)}{session.edited ? ' · edited' : ''}</p>
+          <p className="quiet">{formatDate(session.date)}{session.edited ? ', edited' : ''}</p>
         </div>
       </div>
       {!session.sealed && (
@@ -137,7 +137,7 @@ export function Review({ params }: { params: string[] }) {
             ? <DitherNumber text={top.moment.value} height={110} className="accent" />
             : <BigNumber value={top.moment.value} size="display" accent />}
           <p className="pr-inline-sub"><b>{top.moment.unit}</b> {top.moment.caption}</p>
-          {prs.length > 1 && <p className="quiet">Also: {prs.slice(1).map(p => `${p.lift} ${p.moment.value} ${p.moment.unit}`).join(' · ')}</p>}
+          {prs.length > 1 && <p className="quiet">Also: {prs.slice(1).map(p => `${p.lift} ${p.moment.value} ${p.moment.unit}`).join(', ')}</p>}
         </section>
       )}
 
@@ -152,10 +152,10 @@ export function Review({ params }: { params: string[] }) {
         <section className="bars" aria-label="Targets touched">
           {pace.filter(p => p.paceLine).map(p => (
             <div key={p.target.id} className="stack tight">
-              <DitherBar label={`${p.name} · ${TARGET_TYPE_LABELS[p.target.type].toLowerCase()} ${kg(p.target.value)} by ${formatDate(p.target.deadline, { weekday: false, year: false })}`}
-                valueText={p.current !== null && p.target.value > 0 ? `${kg(Math.round(p.current * 10) / 10)} · ${Math.round((p.current / p.target.value) * 100)}%` : p.evidence}
+              <DitherBar label={`${p.name}: ${TARGET_TYPE_LABELS[p.target.type].toLowerCase()} ${kg(p.target.value)} by ${formatDate(p.target.deadline, { weekday: false, year: false })}`}
+                valueText={p.current !== null && p.target.value > 0 ? `${kg(Math.round(p.current * 10) / 10)}, ${Math.round((p.current / p.target.value) * 100)}%` : p.evidence}
                 value={p.current !== null && p.target.value > 0 ? p.current / p.target.value : 0} />
-              <p className="quiet">{p.paceLine}{p.pace ? ` · ${p.pace.feasibility}` : ''}</p>
+              <p className="quiet">{p.paceLine}{p.pace ? `, ${p.pace.feasibility}` : ''}</p>
             </div>
           ))}
         </section>

@@ -40,7 +40,7 @@ export function Heatmap({ data, today, cell = 12, selected, onSelect, label }: P
                 const sessionId = data.sessionByDate[c.date];
                 return (
                   <g key={c.date} className={sessionId && onSelect ? 'cell-hit' : undefined} onClick={onSelect ? () => onSelect(c.date) : undefined}>
-                    <title>{`${c.date}: ${c.count} working set${c.count === 1 ? '' : 's'}${skip ? ' · skipped' : ''}`}</title>
+                    <title>{`${c.date}: ${c.count} working set${c.count === 1 ? '' : 's'}${skip ? ', skipped' : ''}`}</title>
                     {skip
                       ? <rect className="skip" x={x + 0.5} y={y + 0.5} width={cell - 1} height={cell - 1} />
                       : <rect className={`c${c.bucket}`} x={x} y={y} width={cell} height={cell} />}

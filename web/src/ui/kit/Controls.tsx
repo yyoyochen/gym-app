@@ -86,7 +86,7 @@ export function Stepper({ label, value, onChange, step = 1, min, max, unit, deci
   };
   return (
     <div className="stepper" data-no-drag>
-      <span className="label">{label}{unit && <span className="stepper-unit"> · {unit}</span>}</span>
+      <span className="label">{label}{unit && <span className="stepper-unit"> ({unit})</span>}</span>
       <div className="stepper-row">
         <RepeatButton label={`${label} minus ${step}`} icon="minus" disabled={min !== undefined && value <= min} onStep={() => bump(-1)} />
         <input className="field stepper-input" inputMode="decimal" aria-label={unit ? `${label} (${unit})` : label} value={text}
