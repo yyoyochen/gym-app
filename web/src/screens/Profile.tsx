@@ -3,7 +3,7 @@
 // rows; every edit happens in a kit Sheet whose Save writes one dated
 // profile version (earlier versions are kept).
 import { useEffect, useState, type ReactNode } from 'react';
-import type { BodyweightEntry, Exercise, PainArea, Profile as ProfileT, Sex, Side } from '../domain/types';
+import type { BodyweightEntry, Exercise, PainArea, Profile as ProfileT, Sex, Side, StartingSet } from '../domain/types';
 import {
   addBodyweight, defaultProfile, deleteBodyweight, getDb, getProfile, listBodyweight, listExercises, saveProfile,
 } from '../db';
@@ -18,6 +18,7 @@ import { CheckpointsEditor, GOAL_SHORT, GoalsEditor, TargetLevelBar, TargetsEdit
 import { goalRows, liftStats, type GoalRow } from '../ui/progress/data';
 import { standardsContext, useGymStandards } from '../ui/progress/standards';
 import { kg } from '../app/coach';
+import { START_REPS, editStartingSet, pendingStartingSets, removeStartingSet, startingSetsOf } from '../app/setup';
 
 const strip = (p: ProfileT & { id?: string; history?: unknown }): ProfileT => {
   const { id: _i, history: _h, ...rest } = p;
@@ -25,7 +26,7 @@ const strip = (p: ProfileT & { id?: string; history?: unknown }): ProfileT => {
   return rest;
 };
 
-type SheetKey = 'where' | 'bodyweight' | 'goals' | 'targets' | 'injuries' | 'maxes' | 'checkpoints';
+type SheetKey = 'where' | 'bodyweight' | 'goals' | 'targets' | 'injuries' | 'maxes' | 'checkpoints' | 'starting';
 const SEX_WORD: Record<Sex, string> = { M: 'Male', F: 'Female' };
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const isMainLift = (e: Exercise) => !!e.benchmarkKey || e.id === 'overhead-press';
@@ -46,6 +47,8 @@ export function Profile(_props: { params: string[] }) {
     }
     return out;
   }, []);
+  // Starting numbers matter only until each lift's first logged session.
+  const pending = useLive(db => (stored ? pendingStartingSets(db, strip(stored)) : Promise.resolve([] as StartingSet[])), [stored]) ?? [];
   const gym = useGymStandards();
   const [open, setOpen] = useState<SheetKey | null>(null);
 
@@ -134,6 +137,17 @@ export function Profile(_props: { params: string[] }) {
             </div>}
       </Group>
 
+      {pending.length > 0 && (
+        <Group label="Starting numbers" right={edit('starting')}>
+          <p className="quiet">Your best sets from setup. Each lift's first target comes from its number until you log that lift.</p>
+          <div className="sheetblk">
+            {pending.map(s => (
+              <ValueRow key={s.exerciseId} k="Best" value={names.get(s.exerciseId) ?? s.exerciseId} right={`${kg(s.weight)} × ${s.reps}`} />
+            ))}
+          </div>
+        </Group>
+      )}
+
       <Group label="Current maxes" right={edit('maxes', 'Add')}>
         {(logMaxes?.length ?? 0) + p.manualMaxes.length === 0
           ? <p className="quiet">No maxes yet. Best e1RMs from your log show here once you have sets in the last 90 days.</p>
@@ -168,6 +182,9 @@ export function Profile(_props: { params: string[] }) {
       </EditSheet>
       <EditSheet open={open === 'injuries'} title="Areas to protect" base={p} onClose={close}>{(d, set) => <InjuriesForm profile={d} onChange={set} />}</EditSheet>
       <EditSheet open={open === 'maxes'} title="Manual maxes" base={p} onClose={close}>{(d, set) => <MaxesForm profile={d} onChange={set} exercises={exercises} />}</EditSheet>
+      <EditSheet open={open === 'starting'} title="Starting numbers" base={p} onClose={close}>
+        {(d, set) => <StartingForm profile={d} onChange={set} pending={pending.map(x => x.exerciseId)} names={names} />}
+      </EditSheet>
       <EditSheet open={open === 'checkpoints'} title="Checkpoints" base={p} onClose={close}>{(d, set) => <CheckpointsEditor profile={d} onChange={set} />}</EditSheet>
     </section>
   );
@@ -337,6 +354,37 @@ function InjuriesForm({ profile, onChange }: { profile: ProfileT; onChange: (p: 
         onChange({ ...profile, injuries: [...profile.injuries, { area, side, ...(since ? { since } : {}), ...(note.trim() ? { note: note.trim() } : {}) }] });
         setSince(''); setNote('');
       }}>Add area</Button>
+    </>
+  );
+}
+
+function StartingForm({ profile, onChange, pending, names }: {
+  profile: ProfileT; onChange: (p: ProfileT) => void; pending: string[]; names: Map<string, string>;
+}) {
+  const list = startingSetsOf(profile).filter(s => pending.includes(s.exerciseId));
+  const all = profile.startingSets ?? [];
+  if (!list.length) return <p className="quiet">No starting numbers left.</p>;
+  return (
+    <>
+      <p className="quiet">Fix a number, or remove it to make that lift's first session a baseline.</p>
+      {list.map(s => {
+        const name = names.get(s.exerciseId) ?? s.exerciseId;
+        return (
+          <div key={s.exerciseId} className="num-row">
+            <div className="num-row-hd">
+              <span className="label">{name}</span>
+              <button type="button" className="icon-btn" aria-label={`Remove ${name} starting number`} data-press="dim"
+                onClick={() => onChange({ ...profile, startingSets: removeStartingSet(all, s.exerciseId) })}><PixelIcon name="trash" /></button>
+            </div>
+            <div className="grid2">
+              <Stepper label="Weight" unit="kg" value={s.weight} step={2.5} min={1} max={500}
+                onChange={v => onChange({ ...profile, startingSets: editStartingSet(all, s.exerciseId, v, s.reps) })} />
+              <Stepper label="Reps" value={s.reps} min={START_REPS.min} max={START_REPS.max}
+                onChange={v => onChange({ ...profile, startingSets: editStartingSet(all, s.exerciseId, s.weight, v) })} />
+            </div>
+          </div>
+        );
+      })}
     </>
   );
 }

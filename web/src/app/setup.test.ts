@@ -4,7 +4,7 @@ import { addSet, defaultProfile, seedCatalog, sealSession, startSession } from '
 import { EX } from '../domain/catalog';
 import { programFromTemplate } from '../domain/templates';
 import type { Profile, Program } from '../domain/types';
-import { SETUP_STEPS, mainLifts, pendingStartingSets, startingSetFor, startingSetsFromRows } from './setup';
+import { SETUP_STEPS, editStartingSet, mainLifts, removeStartingSet, pendingStartingSets, startingSetFor, startingSetsFromRows } from './setup';
 
 describe('main lifts asked for in setup', () => {
   it('main lifts per template, program order, first occurrence', () => {
@@ -58,6 +58,9 @@ describe('starting sets', () => {
     ] };
     expect((await pendingStartingSets(db, p)).map(s => s.exerciseId)).toEqual([EX.squat, EX.bench]);
     const s = await startSession(db, { programSessionKey: 'A', nameSnapshot: 'A', date: '2026-11-21', now: 1 });
+    await addSet(db, { sessionId: s.id, exerciseId: EX.squat, exerciseNameSnapshot: 'Back Squat', slotOrder: 1, kind: 'warmup', weight: 60, reps: 5, loggedAt: 2 });
+    // A warm-up alone is not a logged session for the lift: the planner still seeds from the starting set.
+    expect((await pendingStartingSets(db, p)).map(s => s.exerciseId)).toEqual([EX.squat, EX.bench]);
     await addSet(db, { sessionId: s.id, exerciseId: EX.squat, exerciseNameSnapshot: 'Back Squat', slotOrder: 1, kind: 'working', weight: 130, reps: 3, loggedAt: 2 });
     await sealSession(db, s.id, 3);
     expect((await pendingStartingSets(db, p)).map(s => s.exerciseId)).toEqual([EX.bench]);
@@ -67,5 +70,15 @@ describe('starting sets', () => {
 describe('setup steps', () => {
   it('setup has four steps in order', () => {
     expect(SETUP_STEPS).toEqual(['About you', 'Program', 'Your numbers', 'How GymBro works']);
+  });
+});
+
+describe('editing starting numbers', () => {
+  it('editing a starting set keeps its date and clamps reps', () => {
+    const l = [{ exerciseId: 'a', weight: 100, reps: 3, date: '2026-11-23' }, { exerciseId: 'b', weight: 50, reps: 5, date: '2026-11-23' }];
+    expect(editStartingSet(l, 'a', 102.5, 15)).toEqual([{ exerciseId: 'a', weight: 102.5, reps: 12, date: '2026-11-23' }, l[1]]);
+  });
+  it('removing a starting set', () => {
+    expect(removeStartingSet([{ exerciseId: 'a', weight: 1, reps: 1, date: '2026-11-23' }], 'a')).toEqual([]);
   });
 });

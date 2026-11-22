@@ -48,14 +48,28 @@ export function startingSetFor(profile: Profile | undefined, exerciseId: string)
   return s ? { weight: s.weight, reps: s.reps } : undefined;
 }
 
+/** Whether a lift has any logged non-warm-up set: what ends its starting set (as in the planner). */
+export async function hasLoggedWork(db: GymDb, exerciseId: string): Promise<boolean> {
+  return (await getExerciseHistory(db, exerciseId)).some(d => d.sets.some(x => x.kind !== 'warmup' && x.reps > 0));
+}
+
 /** Starting sets whose lift has no logged session yet: the ones that still matter. */
 export async function pendingStartingSets(db: GymDb, profile: Profile | undefined): Promise<StartingSet[]> {
   const out: StartingSet[] = [];
   for (const s of startingSetsOf(profile)) {
-    if (!(await getExerciseHistory(db, s.exerciseId, { limit: 1 })).length) out.push(s);
+    if (!(await hasLoggedWork(db, s.exerciseId))) out.push(s);
   }
   return out;
 }
 
 /** The setup screens, in order (screens/Onboarding.tsx routes onboarding/1…4). */
 export const SETUP_STEPS = ['About you', 'Program', 'Your numbers', 'How GymBro works'] as const;
+
+/** Fix a typo in a starting set: new weight and reps (1–12), same date. */
+export function editStartingSet(list: StartingSet[], exerciseId: string, weight: number, reps: number): StartingSet[] {
+  return list.map(s => (s.exerciseId === exerciseId ? { ...s, weight, reps: clampReps(reps) } : s));
+}
+
+export function removeStartingSet(list: StartingSet[], exerciseId: string): StartingSet[] {
+  return list.filter(s => s.exerciseId !== exerciseId);
+}

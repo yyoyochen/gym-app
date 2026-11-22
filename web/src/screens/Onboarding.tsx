@@ -6,7 +6,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { EffortScale, Exercise, Profile, Sex } from '../domain/types';
 import {
-  addBodyweight, defaultProfile, getActiveProgram, getDb, getExerciseHistory, getProfile, listExercises, saveProfile, saveProgram, seedCatalog,
+  addBodyweight, defaultProfile, getActiveProgram, getDb, getProfile, listExercises, saveProfile, saveProgram, seedCatalog,
 } from '../db';
 import { DEFAULT_TEMPLATE_ID, TEMPLATES, programFromTemplate } from '../domain/templates';
 import { useLive } from '../ui/useLive';
@@ -16,7 +16,7 @@ import { loadDemo } from '../app/demo';
 import { todayISO } from '../app/dates';
 import { commitSession, planToday } from '../app/coach';
 import { initTips } from '../app/tips';
-import { SETUP_STEPS, START_REPS, mainLifts, startingSetsFromRows, startingSetsOf, type NumberRow } from '../app/setup';
+import { SETUP_STEPS, START_REPS, hasLoggedWork, mainLifts, startingSetsFromRows, startingSetsOf, type NumberRow } from '../app/setup';
 import { parseNum, validateBirthYear, validateBodyweight } from '../app/validate';
 import { sessionNames } from '../ui/session/text';
 import { ImportNotionPanel } from '../app/parts/ImportNotionPanel';
@@ -210,7 +210,7 @@ async function loadRows(): Promise<Row[]> {
   const rows: Row[] = [];
   for (const id of mainLifts(program)) {
     // A lift already in the log plans from it; only new lifts are asked about.
-    if ((await getExerciseHistory(db, id, { limit: 1 })).length) continue;
+    if (await hasLoggedWork(db, id)) continue;
     const s = saved.find(x => x.exerciseId === id);
     const ex = byId.get(id);
     rows.push({ exerciseId: id, name: ex?.name ?? id, step: ex?.increment ?? 2.5,
