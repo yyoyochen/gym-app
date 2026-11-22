@@ -1,26 +1,30 @@
-// Onboarding (spec §7): four skippable steps, under two minutes.
-// 01 about you · 02 bring history · 03 goals · 04 program → Today.
-// Each step is a full-screen page (#/onboarding/1…4). Steps replace each
-// other in history (wizard), so the slide plays without piling up entries.
+// Setup (docs/superpowers/specs/2026-11-23-first-five-minutes-design.md):
+// 01 about you, 02 program, 03 your numbers, 04 how GymBro works, then the
+// first session (or Today). About 90 seconds. Each step is a full-screen page
+// (#/onboarding/1…4); steps replace each other in history (wizard), so the
+// slide plays without piling up entries.
 import { useEffect, useState, type ReactNode } from 'react';
-import type { EffortScale, Profile, Sex } from '../domain/types';
+import type { EffortScale, Exercise, Profile, Sex } from '../domain/types';
 import {
-  addBodyweight, defaultProfile, getActiveProgram, getDb, getProfile, listBodyweight, listExercises, saveProfile, saveProgram, seedCatalog,
+  addBodyweight, defaultProfile, getActiveProgram, getDb, getExerciseHistory, getProfile, listExercises, saveProfile, saveProgram, seedCatalog,
 } from '../db';
 import { DEFAULT_TEMPLATE_ID, TEMPLATES, programFromTemplate } from '../domain/templates';
 import { useLive } from '../ui/useLive';
 import { Errors, Group, Segmented } from '../ui/common';
-import { Button, DitherBar, Lockup, PixelIcon, go } from '../ui/kit';
+import { Button, DitherBar, Lockup, PixelIcon, Sheet, Stepper, go } from '../ui/kit';
 import { loadDemo } from '../app/demo';
 import { todayISO } from '../app/dates';
+import { commitSession, planToday } from '../app/coach';
+import { initTips } from '../app/tips';
+import { SETUP_STEPS, START_REPS, mainLifts, startingSetsFromRows, startingSetsOf, type NumberRow } from '../app/setup';
 import { parseNum, validateBirthYear, validateBodyweight } from '../app/validate';
+import { sessionNames } from '../ui/session/text';
 import { ImportNotionPanel } from '../app/parts/ImportNotionPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
-import { CheckpointsEditor, GoalsEditor, TargetsEditor } from '../app/parts/GoalParts';
 import { TemplateList } from '../app/parts/TemplatePicker';
 
-const STEPS = ['About you', 'Your history', 'Goals', 'Program'];
 const pad2 = (n: number) => String(n).padStart(2, '0');
+const COUNT = SETUP_STEPS.length;
 
 async function currentProfile(): Promise<Profile> {
   const p = await getProfile(getDb());
@@ -36,24 +40,25 @@ async function ensureProfile(): Promise<void> {
 }
 
 const toStep = (i: number, dir: 'push' | 'pop') => go(`onboarding/${i + 1}`, { replace: true, transition: dir });
-/** Leave onboarding for good: Today replaces it, so back doesn't return here. */
+/** Leave setup for good: Today replaces it, so back doesn't return here. */
 const finish = () => go('today', { replace: true, transition: 'push' });
 
 export function Onboarding({ params }: { params: string[] }) {
   const n = Number(params[0]);
-  const step = Number.isInteger(n) && n >= 1 && n <= STEPS.length ? n - 1 : 0;
-  useEffect(() => { seedCatalog(getDb()).catch(e => console.error(e)); }, []);
-  const next = async () => { await ensureProfile(); toStep(Math.min(step + 1, STEPS.length - 1), 'push'); };
+  const step = Number.isInteger(n) && n >= 1 && n <= COUNT ? n - 1 : 0;
+  // A wipe (demo exit, Settings) clears meta: decide the tips list again.
+  useEffect(() => { seedCatalog(getDb()).then(() => initTips(getDb())).catch(e => console.error(e)); }, []);
+  const next = async () => { await ensureProfile(); toStep(Math.min(step + 1, COUNT - 1), 'push'); };
   const prev = step > 0 ? () => toStep(step - 1, 'pop') : undefined;
 
   return (
     <section className="screen onb">
-      <Lockup left={<span className="tnum">{pad2(step + 1)}/{pad2(STEPS.length)}</span>} mid={`Setup //${STEPS[step]}`} />
-      <DitherBar cells={40} value={(step + 1) / STEPS.length} label="Setup" valueText={`Step ${step + 1} of ${STEPS.length}`} />
-      {step === 0 && <StepProfile onNext={next} />}
-      {step === 1 && <StepHistory onNext={next} onBack={prev} />}
-      {step === 2 && <StepGoals onNext={next} onBack={prev} />}
-      {step === 3 && <StepProgram onBack={prev} />}
+      <Lockup left={<span className="tnum">{pad2(step + 1)}/{pad2(COUNT)}</span>} mid={`Setup //${SETUP_STEPS[step]}`} />
+      <DitherBar cells={40} value={(step + 1) / COUNT} label="Setup" valueText={`Step ${step + 1} of ${COUNT}`} />
+      {step === 0 && <StepAbout onNext={next} />}
+      {step === 1 && <StepProgram onNext={next} onBack={prev} />}
+      {step === 2 && <StepNumbers onNext={next} onBack={prev} />}
+      {step === 3 && <StepHow onBack={prev} />}
     </section>
   );
 }
@@ -77,12 +82,15 @@ function Foot({ children, onBack }: { children: ReactNode; onBack?: () => void }
   );
 }
 
-function StepProfile({ onNext }: { onNext: () => void }) {
+// ---------------------------------------------------------------- 01 about you
+
+function StepAbout({ onNext }: { onNext: () => void }) {
   const [sex, setSex] = useState<Sex | 'none'>('none');
   const [birthYear, setBirthYear] = useState('');
   const [bw, setBw] = useState('');
   const [scale, setScale] = useState<EffortScale>('rir');
   const [errors, setErrors] = useState<string[]>([]);
+  const [history, setHistory] = useState(false);
   const save = async () => {
     const y = parseNum(birthYear, { integer: true, name: 'Birth year' });
     const w = parseNum(bw, { name: 'Bodyweight' });
@@ -99,39 +107,46 @@ function StepProfile({ onNext }: { onNext: () => void }) {
   };
   return (
     <>
-      <Question sub="Used for strength levels and the effort scale. All optional.">About you</Question>
-      <Segmented<Sex | 'none'> label="Sex" value={sex} onChange={setSex}
-        options={[{ value: 'M', label: 'Male' }, { value: 'F', label: 'Female' }, { value: 'none', label: 'Not set' }]} />
-      <div className="grid2">
+      <Question sub="How you rate effort, and what you weigh.">About you</Question>
+      <div className="stack">
+        <Segmented<EffortScale> label="Effort scale" value={scale} onChange={setScale}
+          options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
+        <p className="quiet">RIR: reps left in the tank. RPE: 10 minus that.</p>
+      </div>
+      <label className="field-wrap"><span className="label">Bodyweight (kg)</span>
+        <input className="field big tnum" inputMode="decimal" placeholder="80" value={bw} onChange={e => setBw(e.target.value)} /></label>
+      <Group label="For strength levels (optional)">
+        <Segmented<Sex | 'none'> label="Sex" value={sex} onChange={setSex}
+          options={[{ value: 'M', label: 'Male' }, { value: 'F', label: 'Female' }, { value: 'none', label: 'Not set' }]} />
         <label className="field-wrap"><span className="label">Birth year</span>
           <input className="field big tnum" inputMode="numeric" placeholder="1990" value={birthYear} onChange={e => setBirthYear(e.target.value)} /></label>
-        <label className="field-wrap"><span className="label">Bodyweight (kg)</span>
-          <input className="field big tnum" inputMode="decimal" placeholder="80" value={bw} onChange={e => setBw(e.target.value)} /></label>
-      </div>
-      <Segmented<EffortScale> label="Effort scale" value={scale} onChange={setScale}
-        options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
-      <p className="quiet">RIR = reps in reserve (default). RPE = 10 − RIR.</p>
+      </Group>
+      <button type="button" className="link onb-link" onClick={() => setHistory(true)}>Have a log already? Import or restore</button>
       <Errors errors={errors} />
       <Foot>
         <Button variant="quiet" onClick={onNext}>Skip</Button>
         <Button variant="primary" className="grow" iconEnd="chevron" onClick={save}>Next</Button>
       </Foot>
+      <HistorySheet open={history} onClose={() => setHistory(false)} />
     </>
   );
 }
 
-function StepHistory({ onNext, onBack }: { onNext: () => void; onBack?: () => void }) {
+/** Today's "Your history" step, moved behind a link: import, restore or the demo. */
+function HistorySheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [mode, setMode] = useState<'' | 'notion' | 'restore'>('');
   const [imported, setImported] = useState(false);
   const [demoBusy, setDemoBusy] = useState(false);
   const [error, setError] = useState('');
   const pick = (m: 'notion' | 'restore') => setMode(mode === m ? '' : m);
   return (
-    <>
-      <Question sub="Past sessions give the coach starting weights. Without history, the first session of each lift sets the baseline.">Your history</Question>
+    <Sheet open={open} title="Bring your log" onClose={onClose}>
       <div className="choice-list">
         <Choice k="01" title="Import a Notion CSV" sub="Your training log export" open={mode === 'notion'} onClick={() => pick('notion')} />
-        {mode === 'notion' && <div className="choice-body"><ImportNotionPanel onDone={r => setImported(r.sessionsAdded > 0 || r.sessionsUnchanged > 0)} /></div>}
+        {mode === 'notion' && <div className="choice-body">
+          <ImportNotionPanel onDone={r => setImported(r.sessionsAdded > 0 || r.sessionsUnchanged > 0)} />
+          {imported && <Button variant="primary" block iconEnd="chevron" onClick={onClose}>Continue setup</Button>}
+        </div>}
         <Choice k="02" title="Restore a backup" sub="A GymBro .json export" open={mode === 'restore'} onClick={() => pick('restore')} />
         {mode === 'restore' && <div className="choice-body">
           <RestorePanel onRestored={finish} />
@@ -144,10 +159,7 @@ function StepHistory({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
         }} />
       </div>
       {error && <span className="field-error" role="alert">{error}</span>}
-      <Foot onBack={onBack}>
-        <Button variant="primary" className="grow" iconEnd="chevron" onClick={onNext}>{imported ? 'Next' : 'Start empty'}</Button>
-      </Foot>
-    </>
+    </Sheet>
   );
 }
 
@@ -161,44 +173,143 @@ function Choice({ k, title, sub, open, disabled, onClick }: { k: string; title: 
   );
 }
 
-function StepGoals({ onNext, onBack }: { onNext: () => void; onBack?: () => void }) {
+// ---------------------------------------------------------------- 02 program
+
+function StepProgram({ onNext, onBack }: { onNext: () => void; onBack?: () => void }) {
   const exercises = useLive(db => listExercises(db), []) ?? [];
-  const bodyweightKg = useLive(db => listBodyweight(db), [])?.at(-1)?.kg;
-  const [p, setP] = useState<Profile | null>(null);
-  useEffect(() => { currentProfile().then(setP); }, []);
+  const active = useLive(db => getActiveProgram(db), []);
+  const [sel, setSel] = useState(DEFAULT_TEMPLATE_ID);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (active?.templateId && TEMPLATES.some(t => t.id === active.templateId)) setSel(active.templateId); }, [active?.templateId]);
   return (
     <>
-      <Question sub="Pick what you train for. Targets and dates are optional.">Goals</Question>
-      {p && <>
-        <GoalsEditor profile={p} onChange={setP} />
-        <Group label="Targets and timeline"><TargetsEditor profile={p} onChange={setP} exercises={exercises} bodyweightKg={bodyweightKg} /></Group>
-        <Group label="Checkpoints"><CheckpointsEditor profile={p} onChange={setP} /></Group>
-      </>}
-      {/* TODO(engine): show "from my log" maxes here when history was imported. */}
+      <Question sub="Pick a template. Everything in it can be edited later under You, Program.">Program</Question>
+      <TemplateList exercises={exercises} selected={sel} onSelect={setSel} />
       <Foot onBack={onBack}>
-        <Button variant="quiet" onClick={onNext}>Skip</Button>
-        <Button variant="primary" className="grow" iconEnd="chevron" disabled={!p} onClick={async () => { if (p) await saveProfile(getDb(), p); onNext(); }}>Next</Button>
+        <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={async () => {
+          setBusy(true);
+          const existing = await getActiveProgram(getDb());
+          if (!existing || existing.templateId !== sel) await saveProgram(getDb(), programFromTemplate(sel));
+          onNext();
+        }}>Next</Button>
       </Foot>
     </>
   );
 }
 
-function StepProgram({ onBack }: { onBack?: () => void }) {
-  const exercises = useLive(db => listExercises(db), []) ?? [];
-  const [sel, setSel] = useState(DEFAULT_TEMPLATE_ID);
-  const [busy, setBusy] = useState(false);
-  const name = TEMPLATES.find(t => t.id === sel)?.name ?? '';
+// ---------------------------------------------------------------- 03 your numbers
+
+interface Row extends NumberRow { name: string; text: string; step: number }
+
+async function loadRows(): Promise<Row[]> {
+  const db = getDb();
+  const [program, profile, exercises] = await Promise.all([getActiveProgram(db), getProfile(db), listExercises(db)]);
+  if (!program) return [];
+  const byId = new Map(exercises.map((e: Exercise) => [e.id, e]));
+  const saved = startingSetsOf(profile);
+  const rows: Row[] = [];
+  for (const id of mainLifts(program)) {
+    // A lift already in the log plans from it; only new lifts are asked about.
+    if ((await getExerciseHistory(db, id, { limit: 1 })).length) continue;
+    const s = saved.find(x => x.exerciseId === id);
+    const ex = byId.get(id);
+    rows.push({ exerciseId: id, name: ex?.name ?? id, step: ex?.increment ?? 2.5,
+      weight: s?.weight ?? null, text: s ? String(s.weight) : '', reps: s?.reps ?? 5, skipped: false });
+  }
+  return rows;
+}
+
+function StepNumbers({ onNext, onBack }: { onNext: () => void; onBack?: () => void }) {
+  const [rows, setRows] = useState<Row[] | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+  useEffect(() => { loadRows().then(setRows).catch(e => { console.error(e); setRows([]); }); }, []);
+  const patch = (i: number, p: Partial<Row>) => setRows(rs => rs && rs.map((r, j) => (j === i ? { ...r, ...p } : r)));
+  const save = async () => {
+    if (!rows) return;
+    const errs: string[] = [];
+    const parsed = rows.map(r => {
+      if (r.skipped) return r;
+      const w = parseNum(r.text, { name: `${r.name} weight`, min: 0, max: 500 });
+      if (!w.ok) { errs.push(w.error); return r; }
+      return { ...r, weight: w.value ?? null };
+    });
+    setErrors(errs);
+    if (errs.length) return;
+    const p = await currentProfile();
+    const asked = new Set(rows.map(r => r.exerciseId));
+    const kept = startingSetsOf(p).filter(s => !asked.has(s.exerciseId));
+    await saveProfile(getDb(), { ...p, startingSets: [...kept, ...startingSetsFromRows(parsed, todayISO())] });
+    onNext();
+  };
   return (
     <>
-      <Question sub="Pick a template. Everything in it can be edited later under You → Program.">Program</Question>
-      <TemplateList exercises={exercises} selected={sel} onSelect={setSel} />
+      <Question sub="Your best set in the last month for each lift. GymBro sets your first targets from these.">Your numbers</Question>
+      {rows && !rows.length && <p className="quiet">Your log already covers these lifts. GymBro plans from it.</p>}
+      {rows && rows.length > 0 && (
+        <div className="num-rows">
+          {rows.map((r, i) => (
+            <div key={r.exerciseId} className={`num-row${r.skipped ? ' skipped' : ''}`}>
+              <div className="num-row-hd">
+                <span className="label">{r.name}</span>
+                <button type="button" className="link num-skip" aria-pressed={r.skipped} onClick={() => patch(i, { skipped: !r.skipped })}>
+                  {r.skipped ? 'Add it back' : 'Skip'}
+                </button>
+              </div>
+              {r.skipped ? <p className="quiet">Skipped: the first session sets the baseline.</p> : (
+                <div className="grid2">
+                  <label className="field-wrap"><span className="label">Weight (kg)</span>
+                    <input className="field big tnum" inputMode="decimal" placeholder="100" value={r.text}
+                      aria-label={`${r.name} weight in kilograms`} onChange={e => patch(i, { text: e.target.value })} /></label>
+                  <Stepper label="Reps" value={r.reps} min={START_REPS.min} max={START_REPS.max} onChange={v => patch(i, { reps: v })} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      {rows && rows.length > 0 && <p className="quiet">Skip a lift and its first session is a baseline: you log, it measures.</p>}
+      <Errors errors={errors} />
       <Foot onBack={onBack}>
-        <Button variant="primary" className="grow" iconEnd="check" disabled={busy} onClick={async () => {
-          setBusy(true);
-          const existing = await getActiveProgram(getDb());
-          if (!existing || existing.templateId !== sel) await saveProgram(getDb(), programFromTemplate(sel));
-          finish();
-        }}>Use {name}</Button>
+        <Button variant="primary" className="grow" iconEnd="chevron" disabled={!rows} onClick={save}>Next</Button>
+      </Foot>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------- 04 how GymBro works
+
+const HOW = [
+  'A promise before you lift: each session shows the numbers to hit, and why.',
+  'Two taps a set: did what it says? Log as planned. If not, adjust.',
+  'A grade after: beat, hit or missed, and the next promise follows from it.',
+];
+
+function StepHow({ onBack }: { onBack?: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const plan = useLive(db => { const now = Date.now(); return planToday(db, todayISO(now), now, {}); }, []);
+  const short = plan?.status === 'planned' ? sessionNames(plan.sessionName).short : '';
+  const start = async () => {
+    setBusy(true);
+    try {
+      const now = Date.now();
+      const p = await planToday(getDb(), todayISO(now), now, {});
+      if (p.status !== 'planned') { finish(); return; }
+      const s = await commitSession(getDb(), p, 'green', now);
+      go(`session/${s.id}`, { replace: true, transition: 'push' });
+    } finally { setBusy(false); }
+  };
+  return (
+    <>
+      <Question>How GymBro works</Question>
+      <ol className="onb-how">
+        {HOW.map((line, i) => (
+          <li key={i}><span className="srow-k">{pad2(i + 1)}</span><span>{line}</span></li>
+        ))}
+      </ol>
+      <p className="quiet">Small tips will point things out the first time you meet them.</p>
+      <Foot onBack={onBack}>
+        <Button variant="quiet" onClick={finish}>Look around first</Button>
+        {short && <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={start}>Start {short}</Button>}
       </Foot>
     </>
   );

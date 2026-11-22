@@ -56,3 +56,6 @@ export async function pendingStartingSets(db: GymDb, profile: Profile | undefine
   }
   return out;
 }
+
+/** The setup screens, in order (screens/Onboarding.tsx routes onboarding/1…4). */
+export const SETUP_STEPS = ['About you', 'Program', 'Your numbers', 'How GymBro works'] as const;

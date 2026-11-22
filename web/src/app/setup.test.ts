@@ -4,7 +4,7 @@ import { addSet, defaultProfile, seedCatalog, sealSession, startSession } from '
 import { EX } from '../domain/catalog';
 import { programFromTemplate } from '../domain/templates';
 import type { Profile, Program } from '../domain/types';
-import { mainLifts, pendingStartingSets, startingSetFor, startingSetsFromRows } from './setup';
+import { SETUP_STEPS, mainLifts, pendingStartingSets, startingSetFor, startingSetsFromRows } from './setup';
 
 describe('main lifts asked for in setup', () => {
   it('main lifts per template, program order, first occurrence', () => {
@@ -61,5 +61,11 @@ describe('starting sets', () => {
     await addSet(db, { sessionId: s.id, exerciseId: EX.squat, exerciseNameSnapshot: 'Back Squat', slotOrder: 1, kind: 'working', weight: 130, reps: 3, loggedAt: 2 });
     await sealSession(db, s.id, 3);
     expect((await pendingStartingSets(db, p)).map(s => s.exerciseId)).toEqual([EX.bench]);
+  });
+});
+
+describe('setup steps', () => {
+  it('setup has four steps in order', () => {
+    expect(SETUP_STEPS).toEqual(['About you', 'Program', 'Your numbers', 'How GymBro works']);
   });
 });

@@ -165,3 +165,12 @@ input.field.prog-name { font: var(--text-title); }
 .srow.choice { min-height: 68px; }
 .srow.choice.open { border-bottom-style: solid; border-bottom-color: var(--ink); }
 .choice-body { padding: var(--space-4) 0 var(--space-6); border-bottom: var(--hair); display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* ---------- Setup: your numbers, how GymBro works ---------- */
+.onb-link { align-self: flex-start; min-height: var(--touch-min); text-align: left; }
+.num-rows { display: flex; flex-direction: column; border-top: var(--rule-w) solid var(--ink); }
+.num-row { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-3) 0 var(--space-4); border-bottom: var(--hair); }
+.num-row-hd { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.num-skip { min-height: var(--touch-min); }
+.onb-how { display: flex; flex-direction: column; gap: var(--space-4); margin: 0; padding: 0; list-style: none; border-top: var(--rule-w) solid var(--ink); }
+.onb-how li { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: start; padding-top: var(--space-4); font: var(--text-body); }
