@@ -1,6 +1,7 @@
 // Settings (spec §4 Profile → Settings): appearance, effort scale,
 // benchmarks, plates, backup / restore / import, storage, wipe, about.
 import { useEffect, useState } from 'react';
+import { detectPlatform, storageNote } from '../app/storageNote';
 import type { EffortScale, Profile } from '../domain/types';
 import {
   defaultProfile, exportBackupJson, exportSetsCsv, getDb, getMeta, getProfile, requestPersist, saveProfile, wipeAll,
@@ -119,17 +120,21 @@ function Plates({ value }: { value: PlateSettings }) {
 
 function Storage() {
   const [persisted, setPersisted] = useState<boolean | null>(null);
+  const [denied, setDenied] = useState(false);
   useEffect(() => {
     const s = navigator.storage;
     if (s && typeof s.persisted === 'function') s.persisted().then(setPersisted, () => setPersisted(false));
     else setPersisted(false);
   }, []);
+  const installed = (() => { try { return matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true; } catch { return false; } })();
+  const note = persisted === null ? null : storageNote({ persisted, installed, platform: detectPlatform(navigator.userAgent), denied });
   return (
     <Group label="Storage">
       <LabelValueGrid columns={1} items={[{ label: 'Persistent storage', value: persisted === null ? '…' : persisted ? 'Granted' : 'Not granted' }]} />
-      {persisted !== null && <p className="quiet">{persisted ? 'The browser keeps this app’s data.' : 'The browser may clear this app’s data under storage pressure.'}</p>}
-      {persisted === false && <Button block onClick={async () => setPersisted(await requestPersist(getDb()))}>Ask the browser to keep my data</Button>}
-      <p className="quiet">On iPhone, add the app to the Home Screen to keep your data.</p>
+      {note && <p className="quiet">{note.text}</p>}
+      {note?.offerRequest && (
+        <Button block onClick={async () => { const ok = await requestPersist(getDb()); setPersisted(ok); if (!ok) setDenied(true); }}>Ask the browser to keep my data</Button>
+      )}
     </Group>
   );
 }
