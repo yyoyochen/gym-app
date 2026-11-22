@@ -9,11 +9,9 @@ import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { SUBJECT_BODYWEIGHT, feasibilityWord } from '../app/labels';
 import { useLive } from '../ui/useLive';
-import { DitherBar, LabelValueGrid, Lockup, Verdict, type VerdictKind } from '../ui/kit';
+import { DitherBar, InfoButton, LabelValueGrid, Lockup, Verdict, type VerdictKind } from '../ui/kit';
 import { useScrollTop } from '../ui/session/useNow';
 import { goalRows, latestBodyweight, liftStats, trendOf, type LiftStats } from '../ui/progress/data';
-import { BENCH_CAVEAT, LIFT_WORD, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
-import type { BenchLift } from '../benchmarks/lookup';
 import { rateExercise, type LiftRating } from '../benchmarks/liftRating';
 import { STANDARDS_CAVEAT, contextText, missingForStandards, sourceMeta, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { LevelBar, ValueText } from '../ui/progress/StandardLadder';
@@ -21,12 +19,11 @@ import { SecHead } from '../ui/progress/parts';
 import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats } from '../ui/progress/stats';
 import { Sparkline } from '../ui/progress/Sparkline';
 
-const BENCH_LIFTS: BenchLift[] = ['squat', 'bench', 'deadlift'];
+const BENCH_LIFTS = ['squat', 'bench', 'deadlift'] as const;
 const FEAS_KIND: Record<string, VerdictKind> = { comfortable: 'beat', ambitious: 'hit', unlikely: 'missed' };
 const short = (d: ISODate, today: ISODate) => formatDate(d, { weekday: false, year: d.slice(0, 4) !== today.slice(0, 4) });
 
 export function Progress(_props: { params: string[] }) {
-  const bench = useBenchmarks();
   const gym = useGymStandards();
   useScrollTop('progress');
   const data = useLive(async db => {
@@ -52,17 +49,12 @@ export function Progress(_props: { params: string[] }) {
     if (!tonnage(sets, funIds) && stats.favourite) { funIds = new Set([stats.favourite.exerciseId]); funWord = pluralLift(byId.get(stats.favourite.exerciseId)?.name ?? 'lift'); }
     const fun = funComparison(tonnage(sets, funIds));
     const goals = profile ? await goalRows(db, profile, today) : [];
-    const benchEx = BENCH_LIFTS.map(l => {
-      const st = lifts.find(x => x.exercise.benchmarkKey === l);
-      return { lift: l, e1rm: st?.best90 ?? null };
-    });
-    return { today, profile, bw, stats, lifts, goals, benchEx, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined };
+    return { today, profile, bw, stats, lifts, goals, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined };
   }, []);
 
   if (!data) return <section className="screen" aria-busy="true" />;
-  const { today, profile, bw, stats, lifts, goals, benchEx, fun, funWord, favName } = data;
+  const { today, profile, bw, stats, lifts, goals, fun, funWord, favName } = data;
   const benchIn = { profile, bodyweightKg: bw, year: Number(today.slice(0, 4)) };
-  const missing = missingForBenchmark(benchIn);
   const stdMissing = missingForStandards(benchIn);
   const ctx = standardsContext(benchIn);
   const rated: { l: LiftStats; r: LiftRating }[] = [];
@@ -77,10 +69,9 @@ export function Progress(_props: { params: string[] }) {
     }
   }
   // The summary shows four: the big three first, then the most-trained lifts.
-  const rank = (l: LiftStats) => { const i = BENCH_LIFTS.indexOf(l.exercise.benchmarkKey as BenchLift); return i < 0 ? 3 : i; };
+  const rank = (l: LiftStats) => { const i = (BENCH_LIFTS as readonly string[]).indexOf(l.exercise.benchmarkKey ?? ''); return i < 0 ? 3 : i; };
   const ordered = rated.map((x, i) => ({ ...x, i })).sort((a, b) => rank(a.l) - rank(b.l) || a.i - b.i);
   const topRated = ordered.slice(0, 4), moreRated = ordered.slice(4);
-  const pop = profile?.benchmarkPopulation ?? 'gym';
   const first = stats.first, last = stats.last;
 
   return (
@@ -116,7 +107,7 @@ export function Progress(_props: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Benchmarks">
-        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))}, 90 days`} />
+        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))}, 90 days`} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <p>Data: {gym.meta.attribution} {gym.meta.licenceNote}</p>}</InfoButton>} />
         {gym === undefined && <p className="tk-quiet">Loading…</p>}
         {gym === null && <p className="tk-quiet">Strength standards could not be loaded.</p>}
         {gym && !ctx && (
@@ -139,34 +130,6 @@ export function Progress(_props: { params: string[] }) {
             {noStandard.length > 0 && <p className="tk-quiet">No standard: {noStandard.join(', ')}.</p>}
           </>
         )}
-        <details className="tk-more">
-          <summary>About these levels</summary>
-          <p className="tk-quiet">{STANDARDS_CAVEAT}</p>
-          {gym && <p className="tk-quiet">Data: {gym.meta.attribution} {gym.meta.licenceNote}</p>}
-        </details>
-
-        <details className="tk-more" open={pop !== 'gym'}>
-          <summary>vs competitive powerlifters</summary>
-          <div className="tk-bars">
-            {bench === undefined && <p className="tk-quiet">Loading…</p>}
-            {bench === null && <p className="tk-quiet">Benchmarks could not be loaded.</p>}
-            {bench && missing && <p className="tk-quiet">{missing}</p>}
-            {bench && !missing && benchEx.map(b => {
-              if (b.e1rm === null) return <p key={b.lift} className="tk-quiet">{LIFT_WORD[b.lift]}: no sets in the last 90 days.</p>;
-              const r = benchPercentile(bench, b.lift, b.e1rm, benchIn);
-              if (!r) return <p key={b.lift} className="tk-quiet">{LIFT_WORD[b.lift]}: no bucket for your profile.</p>;
-              return (
-                <div key={b.lift} className="tk-opl">
-                  <DitherBar value={pctNumber(r.percentile) / 100} label={`${LIFT_WORD[b.lift]}, ${kg(Math.round(b.e1rm * 2) / 2)} kg`} valueText={pctText(r.percentile).replace(' percentile', '')} />
-                  <p className="tk-quiet">{benchLine(b.lift, b.e1rm, r)}</p>
-                </div>
-              );
-            })}
-          </div>
-          {bench && <p className="tk-quiet">Only squat, bench and deadlift have a competition dataset. Population: {pop === 'all' ? 'all raw lifters' : 'drug-tested raw lifters'} (Settings).</p>}
-          <p className="tk-quiet">{BENCH_CAVEAT}</p>
-          {bench && <p className="tk-quiet">Data: {bench.attribution} ({bench.dataDate}).</p>}
-        </details>
       </section>
 
       <section className="tk-sec" aria-label="Lifts">

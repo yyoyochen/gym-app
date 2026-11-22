@@ -1,7 +1,7 @@
 // Settings (spec §4 Profile → Settings): appearance, effort scale,
 // benchmarks, plates, backup / restore / import, storage, wipe, about.
 import { useEffect, useState } from 'react';
-import type { BenchmarkPopulation, EffortScale, Profile } from '../domain/types';
+import type { EffortScale, Profile } from '../domain/types';
 import {
   defaultProfile, exportBackupJson, exportSetsCsv, getDb, getMeta, getProfile, requestPersist, saveProfile, wipeAll,
 } from '../db';
@@ -43,9 +43,6 @@ export function Settings(_props: { params: string[] }) {
           <Segmented<EffortScale> label="Effort scale" value={profile.effortScale} onChange={v => setProfile({ effortScale: v })}
             options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
           <p className="quiet">Reps in reserve, or RPE (10 − RIR). Stored as RIR either way.</p>
-          <Segmented<BenchmarkPopulation> label="Benchmark population" value={profile.benchmarkPopulation ?? 'gym'} onChange={v => setProfile({ benchmarkPopulation: v })}
-            options={[{ value: 'gym', label: 'Gym' }, { value: 'tested', label: 'Tested' }, { value: 'all', label: 'All' }]} />
-          <p className="quiet">Levels always compare you with modeled gym-goers (Gym). Tested or All also opens the powerlifter comparison for squat, bench and deadlift, against drug-tested or all raw competitors.</p>
         </Group>
       )}
 

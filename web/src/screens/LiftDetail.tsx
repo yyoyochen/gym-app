@@ -4,14 +4,12 @@
 // the lift's history as spec-sheet rows.
 import { useState } from 'react';
 import { getExercise, getProfile } from '../db';
-import { addDays, bestRecentE1rm } from '../engine';
 import { kg } from '../app/coach';
 import { displayName } from '../app/labels';
 import { formatDate, todayISO } from '../app/dates';
 import { useLive } from '../ui/useLive';
-import { BigNumber, DitherBar, LabelValueGrid, Legend, NavBar, PixelIcon, Segmented } from '../ui/kit';
+import { BigNumber, InfoButton, LabelValueGrid, Legend, NavBar, PixelIcon, Segmented } from '../ui/kit';
 import { latestBodyweight, liftPRs, liftStats, liftVerdicts, trendOf } from '../ui/progress/data';
-import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, pctNumber, pctText, useBenchmarks } from '../ui/progress/benchmarks';
 import { LiftChart, type LinePoint } from '../ui/progress/LiftChart';
 import { liftChartTargets } from '../ui/progress/chartTargets';
 import { SetCells, SetCellsKey } from '../ui/progress/SetCells';
@@ -33,7 +31,6 @@ const VERDICT_WORD = { beat: 'Beat', hit: 'Hit', missed: 'Missed', new: 'New' } 
 
 export function LiftDetail({ params }: { params: string[] }) {
   const id = params[0];
-  const bench = useBenchmarks();
   const gym = useGymStandards();
   const [metric, setMetric] = useState<Metric>('e1rm');
   useScrollTop(id);
@@ -63,13 +60,8 @@ export function LiftDetail({ params }: { params: string[] }) {
   const bestE = st.series.reduce<{ v: number; date: string } | null>((a, p) => (!a || p.e1rm > a.v ? { v: p.e1rm, date: p.date } : a), null);
   const tr = trendOf(st.rate);
   const benchIn = { profile, bodyweightKg: bw, year: Number(today.slice(0, 4)) };
-  const key = ex.benchmarkKey;
-  const then = bestRecentE1rm(st.series, addDays(today, -90));
-  const pctNow = bench && key && st.best90 !== null ? benchPercentile(bench, key, st.best90, benchIn) : null;
-  const pctThen = bench && key && then !== null ? benchPercentile(bench, key, then, benchIn) : null;
   const ctx = standardsContext(benchIn);
   const standing = gym && ctx ? rateExercise(gym, ex, st.history, today, ctx) : null;
-  const pop = profile?.benchmarkPopulation ?? 'gym';
   const vCount = { beat: 0, hit: 0, missed: 0, new: 0 };
   for (const v of verdicts) vCount[v.verdict]++;
   const shown = st.days.slice(0, 30);
@@ -140,7 +132,7 @@ export function LiftDetail({ params }: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Level">
-        <SecHead title="Level" meta={standing?.kind === 'rated' ? sourceMeta([standing]) : 'vs gym-goers'} />
+        <SecHead title="Level" meta={standing?.kind === 'rated' ? sourceMeta([standing]) : 'vs gym-goers'} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p></InfoButton>} />
         {gym === undefined ? <p className="tk-quiet">Loading…</p>
           : gym === null ? <p className="tk-quiet">Strength standards could not be loaded.</p>
           : !ctx ? <p className="tk-quiet">Add {missingForStandards(benchIn).join(' and ')} on <a className="tk-link" href="#/profile">Profile</a> to see your level.</p>
@@ -158,26 +150,6 @@ export function LiftDetail({ params }: { params: string[] }) {
               {standing.note && <p className="tk-quiet">Note: {standing.note}.</p>}
             </>
           )}
-        <details className="tk-more">
-          <summary>About these levels</summary>
-          <p className="tk-quiet">{STANDARDS_CAVEAT}</p>
-        </details>
-        {key && (
-          <details className="tk-more" open={pop !== 'gym'}>
-            <summary>vs competitive powerlifters</summary>
-            {bench === undefined ? <p className="tk-quiet">Loading…</p>
-              : bench === null ? <p className="tk-quiet">Benchmarks could not be loaded.</p>
-              : missingForBenchmark(benchIn) ? <p className="tk-quiet">{missingForBenchmark(benchIn)}</p>
-              : pctNow && st.best90 !== null ? (
-                <>
-                  <DitherBar value={pctNumber(pctNow.percentile) / 100} label={`${half(st.best90)} kg e1RM`} valueText={pctText(pctNow.percentile).replace(' percentile', '')} />
-                  <p className="tk-quiet">{benchLine(key, st.best90, pctNow)}</p>
-                  {pctThen && <p className="tk-quiet">90 days ago: {pctText(pctThen.percentile)} → now {pctText(pctNow.percentile)}.</p>}
-                  <p className="tk-quiet">{BENCH_CAVEAT}</p>
-                </>
-              ) : <p className="tk-quiet">No recent sets to place.</p>}
-          </details>
-        )}
       </section>
 
       <section className="tk-sec" aria-label="History">
