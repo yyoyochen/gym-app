@@ -120,3 +120,27 @@ describe('templates', () => {
     expect(programFromTemplate().sessions[0].slots[0].params.sets).toBe(1);
   });
 });
+
+describe('Hevy and Strong names', () => {
+  it('"Name (Equipment)" lands on the catalogue lift', () => {
+    const id = (n: string) => findInCatalog(n)?.id;
+    expect(id('Bench Press (Barbell)')).toBe(EX.bench);
+    expect(id('Squat (Barbell)')).toBe(EX.squat);
+    expect(id('Deadlift (Barbell)')).toBe(EX.deadlift);
+    expect(id('Overhead Press (Barbell)')).toBe(EX.ohp);
+    expect(id('Bent Over Row (Barbell)')).toBe('barbell-row');
+    expect(id('Romanian Deadlift (Barbell)')).toBe('romanian-deadlift');
+    expect(id('Incline Bench Press (Dumbbell)')).toBe('incline-db-bench-press');
+    expect(id('Lateral Raise (Dumbbell)')).toBe('db-lateral-raise');
+    expect(id('Bench Press (Dumbbell)')).toBe('db-bench-press');
+    expect(id('Triceps Pushdown (Cable - Straight Bar)')).toBe('cable-tricep-pushdown');
+    expect(id('Triceps Rope Pushdown')).toBe('cable-tricep-pushdown');
+    expect(id('Pull Up (Assisted)')).toBe('pull-up');
+  });
+  it('a dumbbell or bodyweight version never lands on the barbell lift', () => {
+    expect(findInCatalog('Squat (Dumbbell)')).toBeUndefined();
+    expect(findInCatalog('Squat (Bodyweight)')).toBeUndefined();
+    expect(findInCatalog('Romanian Deadlift (Dumbbell)')).toBeUndefined();
+  });
+});
+

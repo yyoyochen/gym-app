@@ -71,7 +71,7 @@ const DEFS: Def[] = [
   { name: 'Close-Grip Bench Press', aliases: ['CGBP', 'Close Grip Bench'], muscles: ['triceps', 'chest'], areas: PRESS, slot: 'compound', increment: UPPER, std: 'close_grip_bench' },
   { name: 'Incline Barbell Bench Press', aliases: ['Incline Bench Press'], muscles: ['chest', 'front_delts', 'triceps'], areas: PRESS, slot: 'compound', increment: UPPER, std: 'incline_bench' },
   { name: 'DB Bench Press', aliases: ['Dumbbell Bench Press'], muscles: ['chest', 'front_delts', 'triceps'], areas: PRESS, slot: 'compound', increment: UPPER, std: 'db_bench' },
-  { name: 'Incline DB Bench Press', aliases: ['Incline Dumbbell Bench Press', 'Incline DB Press'], muscles: ['chest', 'front_delts', 'triceps'], areas: PRESS, slot: 'compound', increment: UPPER, std: 'incline_db_bench' },
+  { name: 'Incline DB Bench Press', aliases: ['Incline Dumbbell Bench Press', 'Incline DB Press', 'Dumbbell Incline Bench Press'], muscles: ['chest', 'front_delts', 'triceps'], areas: PRESS, slot: 'compound', increment: UPPER, std: 'incline_db_bench' },
   { name: 'Dips', aliases: ['Dip', 'Parallel Bar Dip'], muscles: ['chest', 'triceps', 'front_delts'], areas: PRESS, slot: 'compound', increment: UPPER, bw: 0.95, std: 'dip' },
   { name: 'Push-Up', aliases: ['Push Up', 'Pushup', 'Push-ups'], muscles: ['chest', 'triceps'], areas: PRESS, slot: 'compound', increment: UPPER, bw: 0.7, std: 'push_up' },
   { name: 'Pec Fly Machine', aliases: ['Machine Fly', 'Pec Deck'], muscles: ['chest'], areas: ['shoulder'], slot: 'isolation', increment: SMALL, std: 'pec_deck' },
@@ -102,7 +102,7 @@ const DEFS: Def[] = [
   { name: 'DB Curl', aliases: ['Dumbbell Curl', 'Bicep Curl'], muscles: ['biceps'], areas: ['elbow', 'wrist'], slot: 'isolation', increment: SMALL, std: 'db_curl' },
   { name: 'Hammer Curl', muscles: ['biceps', 'forearms'], areas: ['elbow', 'wrist'], slot: 'isolation', increment: SMALL, std: 'hammer_curl' },
   { name: 'Preacher Curl', muscles: ['biceps'], areas: ['elbow', 'wrist'], slot: 'isolation', increment: SMALL, std: 'preacher_curl' },
-  { name: 'Cable Tricep Pushdown', aliases: ['Tricep Pushdown', 'Triceps Pushdown', 'Cable Pushdown'], muscles: ['triceps'], areas: ['elbow'], slot: 'isolation', increment: SMALL, std: 'tricep_pushdown' },
+  { name: 'Cable Tricep Pushdown', aliases: ['Tricep Pushdown', 'Triceps Pushdown', 'Cable Pushdown', 'Triceps Rope Pushdown', 'Rope Pushdown'], muscles: ['triceps'], areas: ['elbow'], slot: 'isolation', increment: SMALL, std: 'tricep_pushdown' },
   { name: 'Skull Crusher', aliases: ['Lying Tricep Extension', 'EZ Bar Skull Crusher'], muscles: ['triceps'], areas: ['elbow'], slot: 'isolation', increment: UPPER, std: 'skullcrusher' },
   { name: 'Overhead Tricep Extension', aliases: ['Overhead Triceps Extension'], muscles: ['triceps'], areas: ['elbow', 'shoulder'], slot: 'isolation', increment: SMALL },
   // --- trunk & carries
@@ -148,10 +148,37 @@ export const EX = {
   ohp: 'overhead-press',
 } as const;
 
-/** Find a catalog entry by name or alias (case/punctuation-insensitive). */
-export function findInCatalog(name: string, catalog: Exercise[] = defaultCatalog()): Exercise | undefined {
+const findExact = (name: string, catalog: Exercise[]): Exercise | undefined => {
   const k = nameKey(name);
   return catalog.find(e => nameKey(e.name) === k || e.aliases.some(a => nameKey(a) === k));
+};
+
+/** Barbell lifts a dumbbell, bodyweight or other variant must never be filed under. */
+const BARBELL_ONLY = new Set<string>([EX.squat, EX.bench, EX.deadlift, EX.ohp, EX.frontSquat, 'romanian-deadlift', 'sumo-deadlift', 'barbell-row']);
+/** Equipment whose plain name is the catalogue lift itself ("Leg Press (Machine)" is Leg Press). */
+const SAME_AS_PLAIN = /^(barbell|machine|cable.*|assisted|band|weighted|smith machine)$/i;
+
+/**
+ * Find a catalog entry by name or alias (case/punctuation-insensitive). Hevy and
+ * Strong name lifts "Name (Equipment)": try "Equipment Name", "DB Name", then the
+ * plain name, but never file a non-barbell variant under a barbell lift.
+ */
+export function findInCatalog(name: string, catalog: Exercise[] = defaultCatalog()): Exercise | undefined {
+  const exact = findExact(name, catalog);
+  if (exact) return exact;
+  const m = /^(.*?)\s*\(([^)]+)\)\s*$/.exec(name.trim());
+  if (!m) return undefined;
+  const [, base, equipment] = m;
+  const short = /^dumbbells?$/i.test(equipment) ? 'DB' : /^barbell$/i.test(equipment) ? 'BB' : null;
+  for (const candidate of [`${equipment} ${base}`, ...(short ? [`${short} ${base}`] : [])]) {
+    const hit = findExact(candidate, catalog);
+    if (hit) return hit;
+  }
+  const plain = findExact(base, catalog);
+  if (!plain) return undefined;
+  if (/^barbell$/i.test(equipment)) return plain;
+  if (BARBELL_ONLY.has(plain.id)) return undefined;
+  return SAME_AS_PLAIN.test(equipment) || /^dumbbells?$/i.test(equipment) ? plain : undefined;
 }
 
 // ---------------------------------------------------------------- keyword matcher

@@ -7,7 +7,8 @@ import type { Exercise, ImportFlag, ISODate, Millis, Session, SetKind } from '..
 import { findInCatalog, guessExercise, nameKey } from '../domain/catalog';
 import type { GymDb, StoredSet } from '../db/schema';
 import { daysInMonth, hashString, noonUTC, pad } from '../db/util';
-import { parseCsv } from './csv';
+import { parseCsv, sniffDelimiter } from './csv';
+import { detectFormat, parseHevy, parseStrong, unitOfStrong, type CsvFormat, type WeightUnit } from './formats';
 
 export type AliasMap = Record<string, string>;
 
@@ -128,6 +129,8 @@ export interface PlannedSet {
   weight: number;
   reps: number;
   flags: ImportFlag[];
+  kind: SetKind;
+  rir?: number;
 }
 
 export interface PlannedSession {
@@ -146,20 +149,21 @@ export function canonicalName(raw: string, aliases: AliasMap): string {
   return raw;
 }
 
-export function sessionIdFor(date: ISODate, label: string): string {
-  return `ses_notion_${hashString(`notion|${date}|${label}`)}`;
+/** One id per (date, label); Hevy/Strong add the workout key so two same-named workouts on a day stay apart. */
+export function sessionIdFor(date: ISODate, label: string, group?: string): string {
+  return `ses_notion_${hashString(`notion|${date}|${label}${group ? `|${group}` : ''}`)}`;
 }
 
 export function planNotionImport(rows: NotionRow[], aliases: AliasMap = {}): PlannedSession[] {
   const groups = new Map<string, NotionRow[]>();
   for (const r of rows) {
-    const k = `${r.date}\u001f${r.label}`;
+    const k = `${r.date}\u001f${r.label}\u001f${r.group ?? ''}`;
     const g = groups.get(k);
     if (g) g.push(r); else groups.set(k, [r]);
   }
   const out: PlannedSession[] = [];
   for (const g of groups.values()) {
-    const { date, label } = g[0];
+    const { date, label, group } = g[0];
     // Order within the session: Order, then Set, then file position (Notion exports newest first).
     const sorted = [...g].sort((a, b) => (a.order ?? 1e9) - (b.order ?? 1e9) || (a.set ?? 1e9) - (b.set ?? 1e9) || a.line - b.line);
     const setCount = new Map<number, number>();
@@ -178,10 +182,12 @@ export function planNotionImport(rows: NotionRow[], aliases: AliasMap = {}): Pla
         weight: row.weight ?? 0,
         reps: row.reps ?? 0,
         flags,
+        kind: row.kind ?? 'working',
+        ...(row.rir !== undefined ? { rir: row.rir } : {}),
       };
     });
     const importKey = `notion:${hashString(sets.map(s => s.row.raw).sort().join('\u001e'))}`;
-    out.push({ id: sessionIdFor(date, label), date, label, importKey, sets });
+    out.push({ id: sessionIdFor(date, label, group), date, label, importKey, sets });
   }
   return out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.label.localeCompare(b.label)));
 }
@@ -210,7 +216,33 @@ export interface NotionImportOptions {
 
 /** Parse + plan + write in one transaction. Unknown exercises are created from catalog defaults or keyword guesses. */
 export async function importNotionCsv(db: GymDb, text: string, opts: NotionImportOptions = {}): Promise<NotionImportResult> {
-  const parsed = parseNotionCsv(text);
+  return importParsed(db, parseNotionCsv(text), opts);
+}
+
+export const UNKNOWN_CSV = 'GymBro can read three kinds of CSV: the GymBro template (Date, Session, Exercise, Order, Set, Reps, Weight (kg), Notes), a Hevy export, or a Strong export. This file is none of them.';
+
+/** A Strong export with no unit anywhere (the iOS export): the person must say kg or lb before importing. */
+export function needsUnit(text: string): boolean {
+  const header = parseCsv(text.split(/\r?\n/, 1)[0] ?? '', sniffDelimiter(text))[0] ?? [];
+  return detectFormat(header) === 'strong' && unitOfStrong(header) === null;
+}
+
+/** "Import a CSV": the GymBro template, a Hevy export or a Strong export, told apart by the header. */
+export async function importCsv(
+  db: GymDb, text: string, opts: NotionImportOptions & { unit?: WeightUnit } = {},
+): Promise<NotionImportResult & { format: CsvFormat }> {
+  const table = parseCsv(text, sniffDelimiter(text));
+  if (!table.length) throw new Error('Empty CSV');
+  const format = detectFormat(table[0]);
+  if (!format) throw new Error(UNKNOWN_CSV);
+  if (format === 'strong' && unitOfStrong(table[0]) === null && !opts.unit) {
+    throw new Error('This Strong file does not say whether weights are in kg or lb. Choose one, then import.');
+  }
+  const parsed = format === 'hevy' ? parseHevy(table) : format === 'strong' ? parseStrong(table, opts.unit ?? 'kg') : parseNotionCsv(text);
+  return { ...(await importParsed(db, parsed, opts)), format };
+}
+
+async function importParsed(db: GymDb, parsed: ParsedNotion, opts: NotionImportOptions): Promise<NotionImportResult> {
   const plan = planNotionImport(parsed.rows, opts.aliases ?? {});
   const result: NotionImportResult = {
     rowsRead: parsed.rows.length + parsed.skipped.length,
@@ -227,12 +259,16 @@ export async function importNotionCsv(db: GymDb, text: string, opts: NotionImpor
     };
     exercises.filter(e => !e.archived).forEach(index);
     const ids = new Set(exercises.map(e => e.id));
+    const byId = new Map(exercises.filter(e => !e.archived).map(e => [e.id, e] as const));
     const touched = new Map<string, Exercise>();
 
     const resolve = (canonical: string, raw: string): Exercise => {
       let ex = byKey.get(nameKey(canonical));
+      // "Bench Press (Barbell)" is the catalogue's Barbell Bench Press: reuse the lift already in the log.
+      const viaCatalog = ex ? undefined : findInCatalog(canonical);
+      if (!ex && viaCatalog && nameKey(viaCatalog.name) !== nameKey(canonical)) ex = byId.get(viaCatalog.id);
       if (!ex) {
-        const fromCatalog = findInCatalog(canonical);
+        const fromCatalog = viaCatalog;
         if (fromCatalog && !ids.has(fromCatalog.id)) ex = fromCatalog;
         else {
           ex = guessExercise(canonical);
@@ -277,7 +313,8 @@ export async function importNotionCsv(db: GymDb, text: string, opts: NotionImpor
           exerciseNameSnapshot: p.canonical,
           slotOrder: p.slotOrder,
           setOrder: p.setOrder,
-          kind: 'working',
+          kind: p.kind,
+          ...(p.rir !== undefined ? { rir: p.rir } : {}),
           weight: p.weight,
           reps: p.reps,
           ...(p.row.notes ? { note: p.row.notes } : {}),
