@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { exercise, set } from './__fixtures__/build';
 import {
-  bestRecentE1rm, e1rm, heaviestSingle, liftSeries, pace, prs, recentRate, repPRs, weakFlags, weeklySetsPerMuscle,
+  bestRecentE1rm, e1rm, heaviestSingle, liftSeries, pace, prs, recentRate, repMaxes, repPRs, weakFlags, weeklySetsPerMuscle,
   workingSets, type DatedSets,
 } from './progress';
 import { readinessFromAnswers, autoregulate, legacyReadiness } from './readiness';
@@ -51,6 +51,38 @@ describe('series, PRs, best recent', () => {
       { weight: 85, reps: 6, date: '2026-10-01' }, { weight: 87.5, reps: 1, date: '2026-11-10' }]);
     expect(heaviestSingle(bench, h)).toEqual({ weight: 87.5, date: '2026-11-10' });
     expect(workingSets([set(1, 1, { kind: 'warmup' })])).toEqual([]);
+  });
+});
+
+describe('best weight at reps', () => {
+  const h = [
+    day('2026-05-17', set(50, 8), set(55, 8)),
+    day('2026-06-07', set(60, 8), set(80, 1)),
+    day('2026-08-16', set(85, 3)),
+  ];
+  const counts = [1, 2, 3, 5, 8];
+  it('best weight lifted for at least n reps; rows equal to the one above are dropped', () => {
+    expect(repMaxes(bench, h, counts)).toEqual([
+      { reps: 1, weight: 85, date: '2026-08-16', trail: [55, 80, 85] },
+      { reps: 5, weight: 60, date: '2026-06-07', trail: [55, 60] },
+    ]);
+  });
+  it('history order does not matter', () => {
+    expect(repMaxes(bench, [h[2], h[0], h[1]], counts)).toEqual(repMaxes(bench, h, counts));
+  });
+  it('failed sets and warm-ups are ignored', () => {
+    const f = [h[0], h[1], day('2026-08-16', set(85, 3, { failed: true }), set(90, 1, { kind: 'warmup' }))];
+    expect(repMaxes(bench, f, counts)[0]).toEqual({ reps: 1, weight: 80, date: '2026-06-07', trail: [55, 80] });
+  });
+  it('a lift with only high-rep sets still starts at its heaviest weight', () => {
+    const only = [day('2026-05-17', set(40, 12), set(45, 10))];
+    expect(repMaxes(bench, only, [1, 2, 3, 5, 8, 10, 12])).toEqual([
+      { reps: 1, weight: 45, date: '2026-05-17', trail: [45] },
+      { reps: 12, weight: 40, date: '2026-05-17', trail: [40] },
+    ]);
+  });
+  it('nothing logged gives no rows', () => {
+    expect(repMaxes(bench, [])).toEqual([]);
   });
 });
 

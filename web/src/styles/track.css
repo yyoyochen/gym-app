@@ -105,6 +105,10 @@
 .tk-srow .k { color: var(--mid); }
 .tk-srow .k.r { text-align: right; }
 .tk-srow .v { font: var(--text-value); letter-spacing: var(--track-value); text-transform: none; font-variant-numeric: tabular-nums; }
+.tk-rm { display: grid; grid-template-columns: 5ch 1fr auto 80px; gap: var(--space-3); align-items: center; min-height: var(--touch-min); border-bottom: var(--hair); }
+.tk-rm .k { font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; }
+.tk-rm .d { font: var(--text-quiet); letter-spacing: var(--track-quiet); color: var(--mid); }
+.tk-rm .v { font: var(--text-value); letter-spacing: var(--track-value); font-variant-numeric: tabular-nums; text-align: right; }
 .tk-set { grid-template-columns: 44px 1fr auto 9px; min-height: 48px; }
 .tk-set.warm .v { font: var(--text-body-strong); letter-spacing: var(--track-body-strong); color: var(--mid); }
 .tk-set .px { color: var(--mid); }

@@ -79,6 +79,37 @@ export function repPRs(exercise: Exercise, history: DatedSets[]): { weight: numb
   return [...best.values()].sort((a, b) => a.weight - b.weight);
 }
 
+export interface RepMaxRow { reps: number; weight: number; date: ISODate; trail: number[] }
+
+/**
+ * Best weight lifted for at least n reps, for each n in `counts`, with the date
+ * that weight was first reached and the running best after each session that
+ * had a qualifying set (the sparkline). Rows with no data, or the same weight
+ * as the row above, are dropped, so the table shows the real steps only.
+ * Failed sets and warm-ups are ignored; history order does not matter.
+ */
+export function repMaxes(exercise: Exercise, history: DatedSets[], counts: number[] = [1, 2, 3, 5, 8, 10, 12]): RepMaxRow[] {
+  const days = [...history].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const out: RepMaxRow[] = [];
+  for (const n of counts) {
+    let best = -Infinity, bestDate: ISODate | null = null;
+    const trail: number[] = [];
+    for (const h of days) {
+      let dayBest = -Infinity;
+      for (const s of workingSets(h.sets)) {
+        if (s.exerciseId === exercise.id && s.reps >= n && !s.failed && s.weight > dayBest) dayBest = s.weight;
+      }
+      if (dayBest === -Infinity) continue;
+      if (dayBest > best) { best = dayBest; bestDate = h.date; }
+      trail.push(best);
+    }
+    if (bestDate === null) continue;
+    if (out.length && out[out.length - 1].weight === best) continue;
+    out.push({ reps: n, weight: best, date: bestDate, trail });
+  }
+  return out;
+}
+
 /** Heaviest completed single or better (the "heaviest single" PR). */
 export function heaviestSingle(exercise: Exercise, history: DatedSets[]): { weight: number; date: ISODate } | null {
   let out: { weight: number; date: ISODate } | null = null;

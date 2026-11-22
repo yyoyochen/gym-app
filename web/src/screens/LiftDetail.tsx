@@ -15,6 +15,7 @@ import { BENCH_CAVEAT, benchLine, benchPercentile, missingForBenchmark, pctNumbe
 import { LiftChart, type LinePoint } from '../ui/progress/LiftChart';
 import { liftChartTargets } from '../ui/progress/chartTargets';
 import { SetCells, SetCellsKey } from '../ui/progress/SetCells';
+import { Sparkline } from '../ui/progress/Sparkline';
 import { anyDecimals } from '../ui/progress/cellRules';
 import { stepRuns } from '../ui/progress/chartModel';
 import { useScrollTop } from '../ui/session/useNow';
@@ -122,13 +123,15 @@ export function LiftDetail({ params }: { params: string[] }) {
           { label: 'Heaviest single', value: prs.heaviest ? <>{kg(prs.heaviest.weight)} kg<span className="tk-date">{formatDate(prs.heaviest.date, { weekday: false })}</span></> : '—' },
           { label: 'Best e1RM', value: bestE ? <>{half(bestE.v)} kg<span className="tk-date">{formatDate(bestE.date, { weekday: false })}</span></> : '—' },
         ]} />
-        {prs.reps.length > 0 && (
+        {prs.repMaxes.length > 0 && (
           <div className="tk-sheet">
-            <div className="tk-sheet-hd"><span>Best reps at weight</span><span>kg × reps</span></div>
-            {prs.reps.slice(-8).reverse().map(r => (
-              <div key={r.weight} className="tk-srow">
-                <span className="k">{formatDate(r.date, { weekday: false })}</span>
-                <span className="v">{kg(r.weight)} × {r.reps}</span>
+            <div className="tk-sheet-hd"><span>Best weight at reps</span><span>kg</span></div>
+            {prs.repMaxes.map(r => (
+              <div key={r.reps} className="tk-rm">
+                <span className="k">{r.reps}RM</span>
+                <span className="d">{formatDate(r.date, { weekday: false })}</span>
+                <span className="v">{kg(r.weight)}</span>
+                <Sparkline values={r.trail} label={`${r.reps} rep best over time, now ${kg(r.weight)} kg`} w={80} />
               </div>
             ))}
           </div>

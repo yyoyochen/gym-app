@@ -5,7 +5,7 @@ import { getActiveProgram, getCommit, getExerciseHistory, listBodyweight, listEv
 import { nextRotationKey } from '../../app/coach';
 import { weekBodyPartSets, type BodyPartRow } from '../../app/weekSets';
 import {
-  addDays, bestRecentE1rm, grade, heaviestSingle, liftSeries, pace, prs, recentRate, repPRs, type DatedSets, type Pace,
+  addDays, bestRecentE1rm, grade, heaviestSingle, liftSeries, pace, prs, recentRate, repMaxes, type DatedSets, type Pace,
 } from '../../engine';
 import { consistency, type Consistency } from './consistency';
 import { kg } from '../../app/coach';
@@ -59,7 +59,7 @@ export async function liftStats(db: GymDb, exercise: Exercise, today: ISODate, b
 }
 
 export function liftPRs(st: LiftStats) {
-  return { marks: prs(st.series), heaviest: heaviestSingle(st.exercise, st.history), reps: repPRs(st.exercise, st.history) };
+  return { marks: prs(st.series), heaviest: heaviestSingle(st.exercise, st.history), repMaxes: repMaxes(st.exercise, st.history) };
 }
 
 /** Verdicts this lift earned, oldest first (sessions with a committed target for it). */
