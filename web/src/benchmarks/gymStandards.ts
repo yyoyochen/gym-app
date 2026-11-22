@@ -145,7 +145,8 @@ export function tableThresholds(data: GymStandardsData, id: string, sex: StdSex,
 /** Piecewise-linear percentile (0–1) over the five level thresholds; 0.97 past elite. */
 function pctFromPoints(vals: number[], value: number): number {
   const pts = vals.map((v, i) => [v, LEVEL_P[LEVEL_NAMES[i]]] as const);
-  if (value <= pts[0][0]) return pts[0][0] ? (0.05 * Math.max(value, 0)) / pts[0][0] : 0.05;
+  if (value === pts[0][0]) return pts[0][1]; // exactly Beginner: scaling by value/value can land a hair under 0.05
+  if (value < pts[0][0]) return pts[0][0] ? (0.05 * Math.max(value, 0)) / pts[0][0] : 0.05;
   if (value >= pts[pts.length - 1][0]) return 0.97;
   for (let i = 0; i < pts.length - 1; i++) {
     const [v0, p0] = pts[i];

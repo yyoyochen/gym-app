@@ -20,6 +20,21 @@ describe('rating against a bodyweight table', () => {
   it('a value on a threshold gets that level', () => {
     expect(rate(data, 'bench_press', 'male', 70, 85)).toEqual({ level: 'intermediate', percentile: 50 });
   });
+  it('a value exactly on any of the five thresholds gets that level, at awkward numbers too', () => {
+    const levels = ['beginner', 'novice', 'intermediate', 'advanced', 'elite'];
+    const thr = [43, 60.5, 80.25, 101.5, 125];
+    const awkward: GymStandardsData = { ...base, tables: { bench_press: { bw: [60, 80], male: [thr, thr] } } };
+    thr.forEach((v, i) => expect(rate(awkward, 'bench_press', 'male', 70, v)?.level, `threshold ${v}`).toBe(levels[i]));
+    expect(rate(awkward, 'bench_press', 'male', 70, 43)?.percentile).toBe(5);
+  });
+  it('a Beginner threshold of any quarter-kilo from 1 to 400 rates itself as beginner', () => {
+    const bad: number[] = [];
+    for (let v = 1; v <= 400; v += 0.25) {
+      const d: GymStandardsData = { ...base, tables: { bench_press: { bw: [60, 80], male: [[v, v + 10, v + 20, v + 30, v + 40], [v, v + 10, v + 20, v + 30, v + 40]] } } };
+      if (rate(d, 'bench_press', 'male', 70, v)?.level !== 'beginner') bad.push(v);
+    }
+    expect(bad).toEqual([]);
+  });
   it('below beginner scales from 0', () => {
     expect(rate(data, 'bench_press', 'male', 70, 22.5)).toEqual({ level: 'below beginner', percentile: 2.5 });
   });
