@@ -1,6 +1,7 @@
 // Restore from a backup file: validate → confirm → restore, plus Undo last restore.
 import { useState } from 'react';
 import { getDb, hasUndo, restoreBackup, undoLastRestore, validateExport, type ExportDoc } from '../../db';
+import { suppressTipsIfReturning } from '../tips';
 import { ConfirmButton, Errors, FilePicker } from '../../ui/common';
 import { LabelValueGrid, showHud } from '../../ui/kit';
 import { useLive } from '../../ui/useLive';
@@ -32,6 +33,7 @@ export function RestorePanel({ onRestored }: { onRestored?: () => void }) {
             message="Your current data is kept as an undo copy until the next restore." confirmText="Replace all my data" onConfirm={async () => {
               try {
                 await restoreBackup(getDb(), doc);
+                await suppressTipsIfReturning(getDb());
                 setDoc(null);
                 showHud({ text: 'Restored', icon: 'import' });
                 onRestored?.();

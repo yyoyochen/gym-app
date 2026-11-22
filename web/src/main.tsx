@@ -5,10 +5,13 @@ import { registerSW } from './sw/register';
 import { initTheme } from './ui/kit/useTheme';
 import { initHaptics } from './ui/kit/useHaptics';
 import { installPressFeedback } from './ui/kit/motion/press';
+import { getDb } from './db';
+import { initTips } from './app/tips';
 
 initTheme();
 initHaptics();
 installPressFeedback();
+void initTips(getDb()).catch(e => console.error(e));
 createRoot(document.getElementById('root')!).render(<App />);
 registerSW();
 

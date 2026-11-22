@@ -40,6 +40,8 @@ export interface MetaValues {
   theme: 'system' | 'dark' | 'light';
   /** Haptics on/off (default on). See ui/kit/useHaptics.ts. */
   haptics: boolean;
+  /** Tip ids dismissed with Got it (app/tips.ts). Unset: not decided yet, no tip shows. */
+  tipsSeen: string[];
 }
 export type MetaKey = keyof MetaValues;
 /** Meta keys that describe this device/browser, never exported or restored. */
