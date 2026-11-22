@@ -78,7 +78,7 @@ export function Profile({ params }: { params: string[] }) {
     <section className="screen setup">
       <DemoBanner />
       <NavBar title="Profile" titleAction={
-        <a className="icon-btn" href="#/profile/settings" aria-label="Settings" data-press="dim"><PixelIcon name="settings" /></a>
+        <a className="icon-btn" href="#/profile/settings" aria-label="Settings: appearance, effort scale, backup" data-press="dim"><PixelIcon name="settings" /></a>
       }>
         <Lockup mid={`Profile //${GOAL_SHORT[p.primaryGoal]}`} />
       </NavBar>
@@ -90,11 +90,8 @@ export function Profile({ params }: { params: string[] }) {
           : <BigNumber size="display" value="—" unit="kg" caption="nothing logged yet" />}
       </section>
 
-      <nav className="link-rows" aria-label="Program and settings">
+      <nav className="link-rows" aria-label="Program">
         <ValueRow href="#/profile/program" className="nav-row" data-press="row" k={<PixelIcon name="bar" />} value="Program" sub="Sessions, slots, phases">
-          <PixelIcon name="chevron" />
-        </ValueRow>
-        <ValueRow href="#/profile/settings" className="nav-row" data-press="row" k={<PixelIcon name="settings" />} value="Settings" sub="Appearance, effort scale, backup">
           <PixelIcon name="chevron" />
         </ValueRow>
       </nav>
