@@ -21,7 +21,7 @@ export function ScreenTip({ id, shown }: { id: CardId; shown: CardId | null }) {
   if (id === 'goalNudge') {
     return (
       <Tip text={GOAL_NUDGE_TEXT} onDismiss={dismiss}>
-        <a className="link tip-link" href="#/profile">Set a goal</a>
+        <a className="link tip-link" href="#/profile/targets" onClick={dismiss}>Set a goal</a>
       </Tip>
     );
   }

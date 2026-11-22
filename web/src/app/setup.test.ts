@@ -4,7 +4,7 @@ import { addSet, defaultProfile, seedCatalog, sealSession, startSession } from '
 import { EX } from '../domain/catalog';
 import { programFromTemplate } from '../domain/templates';
 import type { Profile, Program } from '../domain/types';
-import { SETUP_STEPS, editStartingSet, mainLifts, removeStartingSet, pendingStartingSets, startingSetFor, startingSetsFromRows } from './setup';
+import { SETUP_STEPS, editStartingSet, hasLoggedWork, mainLifts, removeStartingSet, pendingStartingSets, startingSetFor, startingSetsFromRows } from './setup';
 
 describe('main lifts asked for in setup', () => {
   it('main lifts per template, program order, first occurrence', () => {
@@ -41,13 +41,13 @@ describe('starting sets', () => {
       { exerciseId: 'v', reps: 3, date: '2026-11-23' },
       { exerciseId: 'z', weight: 100, reps: 3, date: '2026-11-23' },
     ] } as unknown as Profile;
-    expect(startingSetFor(p, 'x')).toBeUndefined();
-    expect(startingSetFor(p, 'y')).toBeUndefined();
-    expect(startingSetFor(p, 'w')).toBeUndefined();
-    expect(startingSetFor(p, 'v')).toBeUndefined();
-    expect(startingSetFor(p, 'z')).toEqual({ weight: 100, reps: 3 });
-    expect(startingSetFor(undefined, 'z')).toBeUndefined();
-    expect(startingSetFor(defaultProfile(), 'z')).toBeUndefined();
+    expect(startingSetFor(p, 'x', '2026-11-23')).toBeUndefined();
+    expect(startingSetFor(p, 'y', '2026-11-23')).toBeUndefined();
+    expect(startingSetFor(p, 'w', '2026-11-23')).toBeUndefined();
+    expect(startingSetFor(p, 'v', '2026-11-23')).toBeUndefined();
+    expect(startingSetFor(p, 'z', '2026-11-23')).toEqual({ weight: 100, reps: 3 });
+    expect(startingSetFor(undefined, 'z', '2026-11-23')).toBeUndefined();
+    expect(startingSetFor(defaultProfile(), 'z', '2026-11-23')).toBeUndefined();
   });
   it('pendingStartingSets drops lifts that have been logged', async () => {
     const db = freshDb();
@@ -56,14 +56,14 @@ describe('starting sets', () => {
       { exerciseId: EX.squat, weight: 140, reps: 3, date: '2026-11-20' },
       { exerciseId: EX.bench, weight: 100, reps: 3, date: '2026-11-20' },
     ] };
-    expect((await pendingStartingSets(db, p)).map(s => s.exerciseId)).toEqual([EX.squat, EX.bench]);
+    expect((await pendingStartingSets(db, p, '2026-11-21')).map(s => s.exerciseId)).toEqual([EX.squat, EX.bench]);
     const s = await startSession(db, { programSessionKey: 'A', nameSnapshot: 'A', date: '2026-11-21', now: 1 });
     await addSet(db, { sessionId: s.id, exerciseId: EX.squat, exerciseNameSnapshot: 'Back Squat', slotOrder: 1, kind: 'warmup', weight: 60, reps: 5, loggedAt: 2 });
     // A warm-up alone is not a logged session for the lift: the planner still seeds from the starting set.
-    expect((await pendingStartingSets(db, p)).map(s => s.exerciseId)).toEqual([EX.squat, EX.bench]);
+    expect((await pendingStartingSets(db, p, '2026-11-21')).map(s => s.exerciseId)).toEqual([EX.squat, EX.bench]);
     await addSet(db, { sessionId: s.id, exerciseId: EX.squat, exerciseNameSnapshot: 'Back Squat', slotOrder: 1, kind: 'working', weight: 130, reps: 3, loggedAt: 2 });
     await sealSession(db, s.id, 3);
-    expect((await pendingStartingSets(db, p)).map(s => s.exerciseId)).toEqual([EX.bench]);
+    expect((await pendingStartingSets(db, p, '2026-11-21')).map(s => s.exerciseId)).toEqual([EX.bench]);
   });
 });
 
@@ -80,5 +80,28 @@ describe('editing starting numbers', () => {
   });
   it('removing a starting set', () => {
     expect(removeStartingSet([{ exerciseId: 'a', weight: 1, reps: 1, date: '2026-11-23' }], 'a')).toEqual([]);
+  });
+});
+
+describe('starting sets: limits', () => {
+  const p = (weight: number, date = '2026-11-20') => ({ ...defaultProfile(), startingSets: [{ exerciseId: 'z', weight, reps: 3, date }] }) as Profile;
+  it('a weight above 500 kg is ignored', () => {
+    expect(startingSetFor(p(5000), 'z', '2026-11-21')).toBeUndefined();
+    expect(startingSetFor(p(500), 'z', '2026-11-21')).toEqual({ weight: 500, reps: 3 });
+  });
+  it('a starting set expires after 60 days', () => {
+    expect(startingSetFor(p(100, '2026-09-22'), 'z', '2026-11-21')).toEqual({ weight: 100, reps: 3 });
+    expect(startingSetFor(p(100, '2026-09-21'), 'z', '2026-11-21')).toBeUndefined();
+  });
+  it('an expired starting set is not listed as pending', async () => {
+    const db = freshDb();
+    expect(await pendingStartingSets(db, p(100, '2026-09-01'), '2026-11-21')).toEqual([]);
+  });
+  it('a failed 0-rep working set counts as logged work, as in the planner', async () => {
+    const db = freshDb();
+    await seedCatalog(db);
+    const s = await startSession(db, { programSessionKey: 'A', nameSnapshot: 'A', date: '2026-11-21', now: 1 });
+    await addSet(db, { sessionId: s.id, exerciseId: EX.squat, exerciseNameSnapshot: 'Back Squat', slotOrder: 1, kind: 'working', weight: 140, reps: 0, failed: true, loggedAt: 2 });
+    expect(await hasLoggedWork(db, EX.squat)).toBe(true);
   });
 });

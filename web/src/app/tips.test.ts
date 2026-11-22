@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { getMeta, setMeta, startSession } from '../db';
 import { loadDemo } from './demo';
 import {
-  TIP_IDS, TIP_TEXT, getTipsSeen, goalNudgeDue, initTips, markTipSeen, pickTip, resetTips, suppressTipsIfReturning, tipNumber,
+  TIP_IDS, TIP_TEXT, firstPromisedSession, getTipsSeen, goalNudgeDue, initTips, markTipSeen, pickTip, resetTips, suppressTipsIfReturning, tipNumber,
 } from './tips';
 
 const ALL = [...TIP_IDS, 'goalNudge'];
@@ -90,5 +90,19 @@ describe('tips storage', () => {
     const csv = readFileSync(fileURLToPath(new URL('../import/__fixtures__/sample-notion.csv', import.meta.url)), 'utf8');
     await loadDemo(db, Date.now(), csv);
     expect(await getTipsSeen(db)).toEqual([]);
+  });
+  it('a restore with no log and no list starts the tips', async () => {
+    const db = freshDb();
+    await suppressTipsIfReturning(db);
+    expect(await getTipsSeen(db)).toEqual([]);
+  });
+});
+
+describe('goal nudge clock', () => {
+  it('starts at the first finished session that had a promise, not imported or demo history', () => {
+    const s = (id: string, date: string, sealed = true) => ({ id, date, sealed });
+    const sessions = [s('imp1', '2026-01-01'), s('imp2', '2026-02-01'), s('open', '2026-11-19', false), s('real', '2026-11-20'), s('real2', '2026-11-21')];
+    expect(firstPromisedSession(sessions, new Set(['open', 'real', 'real2']))).toBe('2026-11-20');
+    expect(firstPromisedSession(sessions, new Set())).toBeNull();
   });
 });

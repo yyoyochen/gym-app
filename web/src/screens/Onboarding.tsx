@@ -180,17 +180,23 @@ function StepProgram({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
   const active = useLive(db => getActiveProgram(db), []);
   const [sel, setSel] = useState(DEFAULT_TEMPLATE_ID);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   useEffect(() => { if (active?.templateId && TEMPLATES.some(t => t.id === active.templateId)) setSel(active.templateId); }, [active?.templateId]);
   return (
     <>
       <Question sub="Pick a template. Everything in it can be edited later under You, Program.">Program</Question>
       <TemplateList exercises={exercises} selected={sel} onSelect={setSel} />
+      {error && <span className="field-error" role="alert">{error}</span>}
       <Foot onBack={onBack}>
         <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={async () => {
-          setBusy(true);
-          const existing = await getActiveProgram(getDb());
-          if (!existing || existing.templateId !== sel) await saveProgram(getDb(), programFromTemplate(sel));
-          onNext();
+          setBusy(true); setError('');
+          try {
+            const existing = await getActiveProgram(getDb());
+            if (!existing || existing.templateId !== sel) await saveProgram(getDb(), programFromTemplate(sel));
+            onNext();
+          } catch (e) {
+            setError(`Could not save the program: ${e instanceof Error ? e.message : 'unknown error'}. Try again.`);
+          } finally { setBusy(false); }
         }}>Next</Button>
       </Foot>
     </>
@@ -286,16 +292,19 @@ const HOW = [
 
 function StepHow({ onBack }: { onBack?: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const plan = useLive(db => { const now = Date.now(); return planToday(db, todayISO(now), now, {}); }, []);
   const short = plan?.status === 'planned' ? sessionNames(plan.sessionName).short : '';
   const start = async () => {
-    setBusy(true);
+    setBusy(true); setError('');
     try {
       const now = Date.now();
       const p = await planToday(getDb(), todayISO(now), now, {});
       if (p.status !== 'planned') { finish(); return; }
       const s = await commitSession(getDb(), p, 'green', now);
       go(`session/${s.id}`, { replace: true, transition: 'push' });
+    } catch (e) {
+      setError(`Could not start the session: ${e instanceof Error ? e.message : 'unknown error'}. Try again, or look around first.`);
     } finally { setBusy(false); }
   };
   return (
@@ -307,6 +316,7 @@ function StepHow({ onBack }: { onBack?: () => void }) {
         ))}
       </ol>
       <p className="quiet">Small tips will point things out the first time you meet them.</p>
+      {error && <span className="field-error" role="alert">{error}</span>}
       <Foot onBack={onBack}>
         <Button variant="quiet" onClick={finish}>Look around first</Button>
         {short && <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={start}>Start {short}</Button>}

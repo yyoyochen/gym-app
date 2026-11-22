@@ -31,7 +31,7 @@ const SEX_WORD: Record<Sex, string> = { M: 'Male', F: 'Female' };
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const isMainLift = (e: Exercise) => !!e.benchmarkKey || e.id === 'overhead-press';
 
-export function Profile(_props: { params: string[] }) {
+export function Profile({ params }: { params: string[] }) {
   const stored = useLive(db => getProfile(db).then(r => r ?? null), []);
   const exercises = useLive(db => listExercises(db), []) ?? [];
   const bodyweight = useLive(db => listBodyweight(db), []) ?? [];
@@ -48,9 +48,10 @@ export function Profile(_props: { params: string[] }) {
     return out;
   }, []);
   // Starting numbers matter only until each lift's first logged session.
-  const pending = useLive(db => (stored ? pendingStartingSets(db, strip(stored)) : Promise.resolve([] as StartingSet[])), [stored]) ?? [];
+  const pending = useLive(db => (stored ? pendingStartingSets(db, strip(stored), today) : Promise.resolve([] as StartingSet[])), [stored]) ?? [];
   const gym = useGymStandards();
-  const [open, setOpen] = useState<SheetKey | null>(null);
+  // #/profile/targets (the goal nudge's link) opens the Targets sheet.
+  const [open, setOpen] = useState<SheetKey | null>(params[0] === 'targets' ? 'targets' : null);
 
   const base: ProfileT | undefined = stored === undefined ? undefined : stored ? strip(stored) : defaultProfile();
   if (!base) return <section className="screen setup"><NavBar title="Profile" /></section>;
@@ -81,7 +82,7 @@ export function Profile(_props: { params: string[] }) {
       </NavBar>
 
       <section className="you-hero" aria-label="Bodyweight">
-        <div className="group-hd"><h2 className="label">Bodyweight</h2><GroupAction onClick={() => setOpen('bodyweight')}>Log</GroupAction></div>
+        <div className="group-hd"><h2 className="label">Bodyweight</h2><GroupAction onClick={() => setOpen('bodyweight')}>Update</GroupAction></div>
         {latest
           ? <BigNumber size="display" value={kg(latest.kg)} unit="kg" caption={formatDate(latest.date, { year: false })} />
           : <BigNumber size="display" value="—" unit="kg" caption="nothing logged yet" />}
@@ -302,9 +303,9 @@ function BodyweightBody({ latestKg, entries, onClose }: { latestKg?: number; ent
         setErrors(errs);
         if (errs.length) return;
         await addBodyweight(getDb(), date, kgv);
-        showHud('Logged');
+        showHud('Bodyweight updated');
         onClose();
-      }}>Log {kg(kgv)} kg</Button>
+      }}>Update to {kg(kgv)} kg</Button>
       {recent.length > 0 && (
         <div className="sheetblk">
           <div className="sheetblk-hd"><span>Recent</span><span>kg</span></div>

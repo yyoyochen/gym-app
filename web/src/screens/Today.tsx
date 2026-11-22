@@ -8,7 +8,7 @@ import type { ReadinessAnswers } from '../engine';
 import { formatElapsed, readinessFromAnswers, formatEffort } from '../engine';
 import { backupDue, commitSession, kg, planToday, skipSession, todayState, type SlotPlan } from '../app/coach';
 import { useFirstRunRedirect } from '../app/firstRun';
-import { goalNudgeDue } from '../app/tips';
+import { firstPromisedSession, goalNudgeDue } from '../app/tips';
 import { ScreenTip, useScreenTip } from '../app/parts/ScreenTip';
 import { DemoBanner } from '../app/DemoBanner';
 import { formatDate, todayISO } from '../app/dates';
@@ -76,16 +76,17 @@ export function Today(_props: { params: string[] }) {
       loadWeekBodyParts(db, today, profile?.sessionsPerWeekTarget ?? 3),
       listSessions(db),
     ]);
+    const committed = new Set((await db.commits.toCollection().primaryKeys()) as string[]);
     const finished = sessions.filter(s => s.sealed);
     const counts: Record<string, number> = {};
     for (const col of heat.grid.columns) for (const c of col) if (c.inWindow && c.count > 0) counts[c.date] = c.count;
-    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals, parts, finished: finished.length, firstFinished: finished[0]?.date ?? null };
+    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals, parts, finished: finished.length, firstPromised: firstPromisedSession(sessions, committed) };
   }, [readiness, minimum]);
 
   const tip = useScreenTip(data ? {
     promise: data.plan.status === 'committed' || (data.plan.status === 'planned' && (!data.state.doneToday || showNext)),
     readiness: data.plan.status === 'planned' && !data.state.open && (!data.state.doneToday || showNext) && data.finished >= 1,
-    goalNudge: goalNudgeDue(data.firstFinished, data.today, (data.profile?.targets.length ?? 0) > 0),
+    goalNudge: goalNudgeDue(data.firstPromised, data.today, (data.profile?.targets.length ?? 0) > 0),
   } : {});
 
   if (gate !== 'ready' || !data) return <section className="screen today" aria-busy="true" />;
@@ -128,7 +129,6 @@ export function Today(_props: { params: string[] }) {
       <div className="place">
         <div>
           <h1 className="title">{done && !showNext ? sessionNames(done.session.nameSnapshot).title : showPlan ? names.title : 'Today'}</h1>
-          <p className="quiet">{formatDate(today)}{open ? `, live ${formatElapsed(clock - open.session.startedAt)}` : ''}</p>
         </div>
       </div>
 

@@ -31,6 +31,13 @@ export function pickTip(qualifying: Partial<Record<CardId, boolean>>, seen: read
   return ALL_CARDS.find(id => qualifying[id] && !seen.includes(id)) ?? null;
 }
 
+/** When the goal nudge's week starts: the first finished session that had a promise (imported and demo history have none). */
+export function firstPromisedSession(sessions: { id: string; date: ISODate; sealed: boolean }[], committed: ReadonlySet<string>): ISODate | null {
+  let first: ISODate | null = null;
+  for (const s of sessions) if (s.sealed && committed.has(s.id) && (first === null || s.date < first)) first = s.date;
+  return first;
+}
+
 export function goalNudgeDue(firstFinished: ISODate | null, today: ISODate, hasTarget: boolean): boolean {
   return !!firstFinished && !hasTarget && daysBetween(firstFinished, today) >= GOAL_NUDGE_DAYS;
 }
@@ -63,4 +70,5 @@ export async function initTips(db: GymDb): Promise<void> {
 /** After restoring a backup: a restored log means a returning user, whatever the backup's own list says. */
 export async function suppressTipsIfReturning(db: GymDb): Promise<void> {
   if (await returningUser(db)) await setMeta(db, 'tipsSeen', ALL_CARDS);
+  else if ((await getTipsSeen(db)) === null) await setMeta(db, 'tipsSeen', []);
 }

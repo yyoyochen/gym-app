@@ -13,7 +13,7 @@ import { successCriteria, why as legacyWhy } from './port/criteria';
 import { MIN_SETS_AT_TOP, progressionTarget } from './port/progression';
 import { scoreLift } from './port/scoring';
 import { attemptHistory, easeTarget, workedLoad } from './port/service';
-import { FIVE_RM_FACTOR, floorTo, strengthTarget, TARGET_SETS, TM_BUFFER } from './port/strength';
+import { FIVE_RM_FACTOR, floorTo, strengthTarget, TARGET_REPS, TARGET_SETS, TM_BUFFER } from './port/strength';
 import type { LegacySetRow, LegacyTarget, WR } from './port/types';
 import { workingSets } from './progress';
 
@@ -319,8 +319,10 @@ function seededTarget(
   const share = bodyShare(exercise, ctx);
   const e1 = epley(start.weight + share, start.reps);
   const loadFor = (n: number) => Math.max(0, floorTo(e1 / (1 + (n + floor.floor) / 30) - share + EPS, inc));
-  const n = slot.model === 'topset' ? p.topReps ?? 1 : slot.model === 'linear5x5' ? TARGET_SETS : p.repMin;
+  const n = slot.model === 'topset' ? p.topReps ?? 1 : slot.model === 'linear5x5' ? TARGET_REPS : p.repMin;
   const w = round2(loadFor(n));
+  // Too light to round to a load: a promise of 0kg means nothing, so log a baseline instead.
+  if (w <= 0) return newTarget(base, slot, ctx.startingWeight ?? 0);
   const why = `from your starting set ${pyG(start.weight)} × ${start.reps}: a ${repWord(n)} with ${floor.floor} in reserve ≈ ${pyG(w)} kg`;
   const rule = 'start_seed';
 

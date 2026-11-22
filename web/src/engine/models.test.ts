@@ -228,6 +228,9 @@ describe('prescribe: seeded from a starting set', () => {
     expect(prescribe(topSl, bench, hist, ctx({ startingSet: start })).rule).not.toBe('start_seed');
     expect(prescribe(dblSl, bench, hist, ctx({ startingSet: start })).rule).not.toBe('start_seed');
   });
+  it('a starting set too light to seed anything keeps the baseline', () => {
+    expect(prescribe(topSl, bench, [], ctx({ startingSet: { weight: 2.5, reps: 1 } })).rule).toBe('baseline');
+  });
   it('no starting set keeps the baseline', () => {
     expect(prescribe(topSl, bench, [], ctx()).rule).toBe('baseline');
   });

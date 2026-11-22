@@ -3,12 +3,17 @@
 // A starting set seeds a lift's first target only; it is never a logged set.
 import { getExerciseHistory, type GymDb } from '../db';
 import { EX } from '../domain/catalog';
+import { daysBetween } from '../engine/dates';
 import type { ISODate, Profile, Program, StartingSet } from '../domain/types';
 
 /** Squat, bench, deadlift and overhead press: the lifts setup asks about. */
 export const MAIN_LIFT_IDS: readonly string[] = [EX.squat, EX.bench, EX.deadlift, EX.ohp];
 const MAX_ASKED = 4;
 export const START_REPS = { min: 1, max: 12 } as const;
+/** Heaviest starting set accepted (setup's own limit). */
+export const START_MAX_KG = 500;
+/** A "best set in the last month" stops seeding after this many days (as the planner's own seed window). */
+export const START_TTL_DAYS = 60;
 
 /** The program's main lifts in program order, first occurrence only, at most four. */
 export function mainLifts(program: Program): string[] {
@@ -32,7 +37,8 @@ export function startingSetsFromRows(rows: NumberRow[], date: ISODate): Starting
 
 function valid(s: Partial<StartingSet> | null | undefined): s is StartingSet {
   return !!s && typeof s.exerciseId === 'string'
-    && typeof s.weight === 'number' && Number.isFinite(s.weight) && s.weight > 0
+    && typeof s.weight === 'number' && Number.isFinite(s.weight) && s.weight > 0 && s.weight <= START_MAX_KG
+    && typeof s.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s.date)
     && typeof s.reps === 'number' && Number.isInteger(s.reps) && s.reps >= START_REPS.min && s.reps <= START_REPS.max;
 }
 
@@ -42,21 +48,23 @@ export function startingSetsOf(profile: Profile | undefined): StartingSet[] {
   return Array.isArray(list) ? list.filter(valid) : [];
 }
 
-/** The starting set the planner may seed from, if the profile holds a valid one for this lift. */
-export function startingSetFor(profile: Profile | undefined, exerciseId: string): { weight: number; reps: number } | undefined {
-  const s = startingSetsOf(profile).find(x => x.exerciseId === exerciseId);
+const fresh = (s: StartingSet, today: ISODate) => daysBetween(s.date, today) <= START_TTL_DAYS;
+
+/** The starting set the planner may seed from: a valid one for this lift, at most 60 days old. */
+export function startingSetFor(profile: Profile | undefined, exerciseId: string, today: ISODate): { weight: number; reps: number } | undefined {
+  const s = startingSetsOf(profile).find(x => x.exerciseId === exerciseId && fresh(x, today));
   return s ? { weight: s.weight, reps: s.reps } : undefined;
 }
 
 /** Whether a lift has any logged non-warm-up set: what ends its starting set (as in the planner). */
 export async function hasLoggedWork(db: GymDb, exerciseId: string): Promise<boolean> {
-  return (await getExerciseHistory(db, exerciseId)).some(d => d.sets.some(x => x.kind !== 'warmup' && x.reps > 0));
+  return (await getExerciseHistory(db, exerciseId)).some(d => d.sets.some(x => x.kind !== 'warmup'));
 }
 
 /** Starting sets whose lift has no logged session yet: the ones that still matter. */
-export async function pendingStartingSets(db: GymDb, profile: Profile | undefined): Promise<StartingSet[]> {
+export async function pendingStartingSets(db: GymDb, profile: Profile | undefined, today: ISODate): Promise<StartingSet[]> {
   const out: StartingSet[] = [];
-  for (const s of startingSetsOf(profile)) {
+  for (const s of startingSetsOf(profile).filter(x => fresh(x, today))) {
     if (!(await hasLoggedWork(db, s.exerciseId))) out.push(s);
   }
   return out;
