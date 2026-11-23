@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { applyLang, langFromLocale } from './lang';
+import { applyLang, langFromLocale, resolveLang } from './lang';
 import { fill, t, tn } from './t';
 import { tr } from './tr';
 import { compileTable, translateWith } from './engine';
@@ -88,6 +88,21 @@ describe('language from the phone', () => {
     expect(langFromLocale('zh-Hant-HK')).toBe('zh');
     expect(langFromLocale('en-GB')).toBe('en');
     expect(langFromLocale(undefined)).toBe('en');
+  });
+});
+
+describe('opening language', () => {
+  it('follows the phone\'s first preferred language when the lifter has not picked one', () => {
+    expect(resolveLang(null, ['zh-Hant-TW', 'en-US'])).toBe('zh');
+    expect(resolveLang(null, ['zh-TW'])).toBe('zh');
+    expect(resolveLang(null, ['en-TW', 'zh-Hant-TW'])).toBe('en');
+    expect(resolveLang(null, ['ja-JP'])).toBe('en');
+    expect(resolveLang(null, [])).toBe('en');
+  });
+  it('keeps the lifter\'s own pick over the phone', () => {
+    expect(resolveLang('en', ['zh-Hant-TW'])).toBe('en');
+    expect(resolveLang('zh', ['en-US'])).toBe('zh');
+    expect(resolveLang('garbage', ['zh-TW'])).toBe('zh');
   });
 });
 

@@ -81,8 +81,9 @@
 /* the spec sheet: one per lift */
 .lg-spec-list { display: flex; flex-direction: column; gap: var(--space-8); }
 .lg-spec { font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); }
-.lg-spec-hd { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); color: var(--mid); padding-bottom: var(--space-2); border-bottom: var(--rule-w) solid var(--ink); }
-.lg-spec-name { min-height: var(--touch-min); text-align: left; color: var(--ink); font: var(--text-stamp); letter-spacing: var(--track-stamp); text-transform: uppercase; }
+.lg-spec-hd { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-3); color: var(--mid); padding-bottom: var(--space-2); border-bottom: var(--rule-w) solid var(--ink); }
+.lg-spec-name { min-height: var(--touch-min); text-align: left; color: var(--ink); font: var(--text-num-lg); letter-spacing: var(--track-num-lg); } /* the lift's name: big and bold, so it reads at a glance between sets */
+.lg-spec-hd > span { flex: none; padding-bottom: var(--space-1); }
 .lg-spec.focused .lg-spec-name { color: var(--accent); }
 .lg-spec-crit { margin: var(--space-3) 0 var(--space-half); font: var(--text-body-strong); text-transform: none; letter-spacing: var(--track-body-strong); color: var(--ink); }
 .lg-spec-floor { margin: 0 0 var(--space-2); color: var(--mid); }
