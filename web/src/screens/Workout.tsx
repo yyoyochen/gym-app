@@ -3,22 +3,26 @@
 // clear it and build your own. Start locks it like a program session
 // (docs/superpowers/specs/2026-11-23-plan-todays-workout-design.md).
 import { useEffect, useMemo, useState } from 'react';
-import type { Exercise, GoalKind, Session } from '../domain/types';
+import type { Exercise, GoalKind, Readiness, Session } from '../domain/types';
 import { getDb, getOpenSession, listExercises } from '../db';
 import { DemoBanner } from '../app/DemoBanner';
 import { todayISO } from '../app/dates';
 import { estimateMinutes, isMain, slotFor, type DraftSlot, type PartWeek } from '../app/suggest';
 import { bodyPartOf, type BodyPart } from '../app/weekSets';
 import {
-  canStartWorkout, commitWorkout, focusState, loadDraft, planSummary, planWorkout, saveDraft, suggestDraft, type WorkoutDraft, type WorkoutPlan,
+  canStartWorkout, commitWorkout, draftKey, focusState, loadDraft, planSummary, planWorkout, saveDraft, suggestDraft, swapLift, type WorkoutDraft, type WorkoutPlan,
 } from '../app/workout';
 import { WorkoutLiftSheet } from '../app/parts/WorkoutLiftSheet';
 import { newId } from '../db/util';
 import { Button, NavBar, PixelIcon, go } from '../ui/kit';
 import { ExercisePicker } from '../ui/session/ExercisePicker';
 
-export function Workout(_props: { params: string[] }) {
+const READINESS: readonly Readiness[] = ['green', 'amber', 'red'];
+
+export function Workout({ params }: { params: string[] }) {
   const today = todayISO();
+  // Today's check-in, when the lifter came from it (#/workout/<readiness>); green otherwise.
+  const readiness: Readiness = READINESS.find(r => r === params[0]) ?? 'green';
   const [draft, setDraft] = useState<WorkoutDraft | null>(null);
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [rows, setRows] = useState<PartWeek[]>([]);
@@ -42,9 +46,9 @@ export function Workout(_props: { params: string[] }) {
     const db = getDb();
     void saveDraft(db, draft);
     let live = true;
-    void planWorkout(db, draft, today, Date.now()).then(p => { if (live) setPlan(p); });
+    void planWorkout(db, draft, today, Date.now(), { readiness }).then(p => { if (live) setPlan(p); });
     return () => { live = false; };
-  }, [draft, today]);
+  }, [draft, today, readiness]);
 
   const minutes = useMemo(() => (draft ? estimateMinutes(draft.slots.map(s => s.slot)) : 0), [draft]);
   if (!draft) return <section className="screen" aria-busy="true"><NavBar title="Today's workout" backLabel="Today" fallback="today" /></section>;
@@ -58,18 +62,17 @@ export function Workout(_props: { params: string[] }) {
     const part = ex.muscles[0] ? bodyPartOf(ex.muscles[0]) : null;
     setSlots([...draft.slots, { slot: slotFor(ex, goal, isMain(ex) || goalIds.has(ex.id), newId('slot')), part }]);
   };
-  const swap = (i: number, ex: Exercise) => {
-    setSlots(draft.slots.map((s, j) => (j === i ? { slot: { ...s.slot, exerciseId: ex.id }, part: s.part } : s)));
-  };
+  const swap = (i: number, ex: Exercise) => setSlots(draft.slots.map((s, j) => (j === i ? swapLift(s, ex, goal, goalIds) : s)));
   const start = async () => {
     if (!plan) return;
     setBusy(true);
     try {
-      const s = await commitWorkout(getDb(), plan, 'green', Date.now());
+      const s = await commitWorkout(getDb(), plan, plan.readiness, Date.now());
       go(`session/${s.id}`, { replace: true });
     } finally { setBusy(false); }
   };
-  const ready = plan && plan.slots.length === draft.slots.length;
+  // Only a plan built from the draft on screen can be shown as current or started.
+  const ready = !!plan && plan.draftKey === draftKey(draft);
   const canStart = !!ready && canStartWorkout(open, plan!);
 
   return (

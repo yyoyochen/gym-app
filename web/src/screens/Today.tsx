@@ -258,7 +258,7 @@ export function Today(_props: { params: string[] }) {
           ) : (
             <>
               <Button variant="primary" block iconEnd="chevron" disabled={busy} onClick={start}>Start {names.short}</Button>
-              <a className="link today-other" href="#/workout">Something else today</a>
+              <a className="link today-other" href={readiness === 'green' ? '#/workout' : `#/workout/${readiness}`}>Something else today</a>
             </>
           )}
         </div>

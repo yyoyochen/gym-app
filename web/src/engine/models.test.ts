@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ModelKind, SetEntry, Target } from '../domain/types';
 import { exercise, rng, session, set, slot } from './__fixtures__/build';
-import { chosenTarget, grade, minimumToKeep, prescribe, toLegacy, type LiftSession, type PrescribeContext } from './models';
+import { backoffWeight, chosenTarget, grade, minimumToKeep, prescribe, toLegacy, type LiftSession, type PrescribeContext } from './models';
 import type { PainStatus } from './pain';
 
 const bench = exercise();
@@ -326,5 +326,17 @@ describe('chosenTarget: a plan at a weight the lifter set', () => {
       const t = chosenTarget(sl, bench, w, ctx());
       expect(grade(t, planned(t)).verdict, t.criterion).toBe('hit');
     }
+  });
+});
+
+describe('backoffWeight: the one rounding for back-offs', () => {
+  it('floors the share of the top set to the increment, never above the top', () => {
+    expect(backoffWeight(85, 75, 2.5)).toBe(62.5);
+    expect(backoffWeight(105, 75, 5)).toBe(75);
+    expect(backoffWeight(100, 75, 2.5)).toBe(75);
+  });
+  it('matches what a top-set target plans', () => {
+    const t = chosenTarget(slot('topset', { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 }), bench, 85, ctx());
+    expect(t.weight).toBe(backoffWeight(85, 75, 2.5));
   });
 });

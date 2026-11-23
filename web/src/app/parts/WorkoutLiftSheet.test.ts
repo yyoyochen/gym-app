@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { editedSlot } from './WorkoutLiftSheet';
+import { editedSlot, sheetResult } from './WorkoutLiftSheet';
 
 const dbl = { id: 'x', exerciseId: 'barbell-row', model: 'double' as const, params: { sets: 3, repMin: 8, repMax: 12, rirFloor: 2 } };
 const top = { id: 'y', exerciseId: 'back-squat', model: 'topset' as const, params: { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 } };
@@ -17,5 +17,19 @@ describe('editedSlot: the lift sheet choices as a slot', () => {
   });
   it('keeps the slot id and lift', () => {
     expect(editedSlot(top, 'double', 3, 8, false)).toMatchObject({ id: 'y', exerciseId: 'back-squat', model: 'double' });
+  });
+});
+
+describe('sheetResult: pressing Done', () => {
+  const item = { part: 'Back' as const, slot: { ...dbl, params: { sets: 3, repMin: 10, repMax: 15, rirFloor: 2 } } };
+  const start = { kind: 'double' as const, sets: 3, reps: 10, weight: 70 };
+  it('with nothing changed leaves the lift exactly as it was', () => {
+    expect(sheetResult(item, start, start, false)).toEqual(item);
+  });
+  it('a changed weight is kept as the lifter’s', () => {
+    expect(sheetResult(item, start, { ...start, weight: 72.5 }, false)).toEqual({ ...item, weight: 72.5 });
+  });
+  it('changed reps rewrite the range', () => {
+    expect(sheetResult(item, start, { ...start, reps: 8 }, false).slot.params).toMatchObject({ repMin: 8, repMax: 10 });
   });
 });

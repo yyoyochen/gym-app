@@ -327,6 +327,11 @@ function seededTarget(
   return targetAtWeight(slot, exercise, w, floor, inc, scale, base, why, 'start_seed');
 }
 
+/** Back-off weight for a top set: its share of the top, floored to the increment, never above the top. */
+export function backoffWeight(top: number, pct: number, inc: number): number {
+  return round2(Math.min(floorTo((pct / 100) * top + EPS, inc), top));
+}
+
 /**
  * The plan at a weight the lifter set themselves (a one-off workout): the
  * same shapes as a seeded plan, graded the same way, so beating it is still
@@ -355,7 +360,7 @@ function targetAtWeight(
 
   if (slot.model === 'topset') {
     const nB = p.backoffSets ?? p.sets;
-    const B = round2(Math.min(floorTo(((p.backoffPct ?? 80) / 100) * w + EPS, inc), w));
+    const B = backoffWeight(w, p.backoffPct ?? 80, inc);
     const word = repWord(n);
     return {
       ...base, model: 'topset', weight: B, targetReps: p.repMin, repMax: p.repMax, targetSets: nB,

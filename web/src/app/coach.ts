@@ -185,6 +185,8 @@ export async function planToday(db: GymDb, today: ISODate, now: Millis, opts: Pl
 export async function planSlots(db: GymDb, i: {
   slots: { raw: Slot; slot: Slot; chosen?: number }[]; today: ISODate; readiness: Readiness; effortScale: EffortScale;
   gapDays: number | null; reentry: ReentryState; profile: ProfileRecord | undefined; minimumIds: string[];
+  /** A one-off workout: count planned sets from the target alone, as the logger will once no program slot exists. */
+  slotless?: boolean;
 }): Promise<SlotPlan[]> {
   const { today } = i;
   // Pain flags in the last 60 days (the rules look back 14; holds look at the last session).
@@ -207,9 +209,10 @@ export async function planSlots(db: GymDb, i: {
       reentry: i.reentry.reentry, afterLayoff: i.reentry.afterLayoff, pain, startingSet: startingSetFor(i.profile, exercise.id, today),
     };
     const fresh = !hist.some(h => h.sets.some(s => s.kind !== 'warmup'));
+    // A weight on a lift never done before is a plain fixed plan; a top set stays a top set with its back-offs.
     const target = chosen === undefined ? prescribe(slot, exercise, hist, ctx)
-      : chosenTarget(fresh ? { ...slot, model: 'fixed' } : slot, exercise, chosen, ctx);
-    out.push(slotPlan(n + 1, raw, exercise, target, hist, i.effortScale, plates, i.minimumIds.includes(raw.id), pain));
+      : chosenTarget(fresh && slot.model !== 'topset' ? { ...slot, model: 'fixed' } : slot, exercise, chosen, ctx);
+    out.push(slotPlan(n + 1, i.slotless ? null : raw, exercise, target, hist, i.effortScale, plates, i.minimumIds.includes(raw.id), pain));
   }
   return out;
 }

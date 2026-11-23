@@ -6,15 +6,18 @@ import type { GymDb } from '../db';
 import {
   getActiveProgram, getMeta, getProfile, listEvents, listExercises, listSessions, listSetsByDate, putCommit, setMeta, startSession,
 } from '../db';
-import type { GoalKind, ISODate, Millis, Readiness, Session, Target } from '../domain/types';
+import type { Exercise, GoalKind, ISODate, Millis, Readiness, Session, Target } from '../domain/types';
 import { addDays, daysBetween, reentryNote, reentryState } from '../engine';
 import { kg, nextRotationKey, planSlots, type DayPlan } from './coach';
 import { newId } from '../db/util';
-import { GOAL_WEEK_SETS, pickFocus, reasonLine, suggestWorkout, type DraftSlot, type LiftUse, type PartWeek } from './suggest';
+import { GOAL_WEEK_SETS, isMain, pickFocus, reasonLine, slotFor, suggestWorkout, type DraftSlot, type LiftUse, type PartWeek } from './suggest';
 import { BODY_PARTS, bodyPartOf, weekBodyPartSets, type BodyPart } from './weekSets';
 
 export interface WorkoutDraft { date: ISODate; focus: BodyPart[]; slots: DraftSlot[] }
-export type WorkoutPlan = DayPlan & { reasons: string[] };
+export type WorkoutPlan = DayPlan & { reasons: string[]; draftKey: string };
+
+/** Identity of a draft's lifts: a plan built from another draft must not be started. */
+export const draftKey = (d: WorkoutDraft): string => JSON.stringify(d.slots);
 
 /** A one-off workout's session key: not a program session, so the rotation ignores it. */
 export const WORKOUT_KEY = 'workout';
@@ -93,7 +96,7 @@ export async function planWorkout(db: GymDb, d: WorkoutDraft, today: ISODate, no
   const effortScale = w.profile?.effortScale ?? 'rir';
   const slots = await planSlots(db, {
     slots: d.slots.map(s => ({ raw: s.slot, slot: s.slot, ...(s.weight !== undefined ? { chosen: s.weight } : {}) })),
-    today, readiness, effortScale, gapDays, reentry, profile: w.profile, minimumIds: [],
+    today, readiness, effortScale, gapDays, reentry, profile: w.profile, minimumIds: [], slotless: true,
   });
   const reasons = d.slots.map((s, i) => {
     if (s.weight !== undefined) return 'Your weight';
@@ -102,7 +105,7 @@ export async function planWorkout(db: GymDb, d: WorkoutDraft, today: ISODate, no
   });
   return {
     status: slots.length ? 'planned' : 'empty_session', today, sessionKey: WORKOUT_KEY, sessionName: WORKOUT_NAME,
-    readiness, minimum: false, slots, reentry, reentryNote: reentryNote(reentry), gapDays, effortScale, reasons,
+    readiness, minimum: false, slots, reentry, reentryNote: reentryNote(reentry), gapDays, effortScale, reasons, draftKey: draftKey(d),
   };
 }
 
@@ -125,4 +128,9 @@ export function planSummary(t: Target, plannedSets: number): string {
   if (t.isNew) return 'First time: pick a weight';
   if (t.model === 'topset' && t.topWeight !== undefined) return `Top ${kg(t.topWeight)} × ${t.topReps ?? 1}, then ${t.targetSets ?? 0} × ${t.targetReps} at ${kg(t.weight)}`;
   return t.weight > 0 ? `${plannedSets} × ${t.targetReps} at ${kg(t.weight)}` : `${plannedSets} × ${t.targetReps}`;
+}
+
+/** Swap lift: the new lift gets its own plan shape and body part; a chosen weight does not carry over. */
+export function swapLift(item: DraftSlot, ex: Exercise, goal: GoalKind, goalLiftIds: Set<string>): DraftSlot {
+  return { slot: slotFor(ex, goal, isMain(ex) || goalLiftIds.has(ex.id), item.slot.id), part: ex.muscles[0] ? bodyPartOf(ex.muscles[0]) : null };
 }

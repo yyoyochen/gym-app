@@ -7,7 +7,7 @@ import type { ISODate } from '../domain/types';
 import { nextRotationKey, planToday } from './coach';
 import { listEvents, listSessions } from '../db';
 import { FALLBACK_LIFT } from './suggest';
-import { WORKOUT_NAME, canStartWorkout, commitWorkout, loadDraft, planSummary, planWorkout, saveDraft, type WorkoutDraft } from './workout';
+import { WORKOUT_NAME, canStartWorkout, commitWorkout, draftKey, loadDraft, planSummary, planWorkout, saveDraft, swapLift, type WorkoutDraft } from './workout';
 
 const TODAY: ISODate = '2026-11-23';
 const at = (iso: ISODate, h = 12) => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d, h).getTime(); };
@@ -114,5 +114,54 @@ describe('planSummary: the line under each lift', () => {
   });
   it('bodyweight with nothing added', () => {
     expect(planSummary({ ...base, model: 'double', weight: 0, targetReps: 8, targetSets: null, isNew: false }, 3)).toBe('3 × 8');
+  });
+});
+
+describe('review fixes', () => {
+  const topSlot = { id: 't', exerciseId: EX.squat, model: 'topset' as const, params: { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 } };
+
+  it('a top-set weight on a lift never done before stays a top set with back-offs', async () => {
+    const db = await fresh();
+    const t = (await planWorkout(db, { date: TODAY, focus: [], slots: [{ part: 'Legs', weight: 60, slot: topSlot }] }, TODAY, at(TODAY))).slots[0].target;
+    expect(t).toMatchObject({ model: 'topset', topWeight: 60, topReps: 2, weight: 45, targetSets: 3, targetReps: 8, rule: 'chosen' });
+  });
+
+  it('the plan says which draft it was built from, so a stale one can not be started', async () => {
+    const db = await fresh();
+    const d = await loadDraft(db, TODAY);
+    const plan = await planWorkout(db, d, TODAY, at(TODAY));
+    expect(plan.draftKey).toBe(draftKey(d));
+    expect(draftKey({ ...d, slots: d.slots.slice(1) })).not.toBe(plan.draftKey);
+  });
+
+  it("Today's readiness carries into the plan and the session", async () => {
+    const db = await fresh();
+    await logRow(db, '2026-11-16');
+    const d: WorkoutDraft = { date: TODAY, focus: [], slots: [{ part: 'Back', slot: { id: 'x', exerciseId: 'barbell-row', model: 'double', params: { sets: 3, repMin: 8, repMax: 12, rirFloor: 2 } } }] };
+    const green = await planWorkout(db, d, TODAY, at(TODAY));
+    const red = await planWorkout(db, d, TODAY, at(TODAY), { readiness: 'red' });
+    expect(red.readiness).toBe('red');
+    expect(red.slots[0].target.rirFloor).toBeGreaterThan(green.slots[0].target.rirFloor);
+    const s = await commitWorkout(db, red, red.readiness, at(TODAY));
+    expect((await getCommit(db, s.id))!.readiness).toBe('red');
+  });
+
+  it('the set count in the builder is the one the logger shows after Start', async () => {
+    const db = await fresh();
+    await logRow(db, '2026-11-16');
+    await logRow(db, '2026-11-19');
+    const d: WorkoutDraft = { date: TODAY, focus: [], slots: [{ part: 'Back', slot: { id: 'x', exerciseId: 'barbell-row', model: 'double', params: { sets: 4, repMin: 8, repMax: 12, rirFloor: 2 } } }] };
+    const plan = await planWorkout(db, d, TODAY, at(TODAY));
+    await commitWorkout(db, plan, 'green', at(TODAY));
+    const logger = await planToday(db, TODAY, at(TODAY, 13));
+    expect(logger.slots[0].plannedSets).toBe(plan.slots[0].plannedSets);
+  });
+
+  it('swapping a lift re-plans it for the new lift and its body part', () => {
+    const item = { part: 'Legs' as const, weight: 100, slot: topSlot };
+    const curl = { id: 'db-curl', name: 'DB Curl', aliases: [], muscles: ['biceps'], areasLoaded: [], slotType: 'isolation' as const, increment: 1, bodyweightFactor: 0, benchmarkKey: null };
+    const next = swapLift(item, curl, 'maintain', new Set());
+    expect(next).toMatchObject({ part: 'Arms', slot: { id: 't', exerciseId: 'db-curl', model: 'double', params: { sets: 3, repMin: 12, repMax: 15 } } });
+    expect(next.weight).toBeUndefined();
   });
 });
