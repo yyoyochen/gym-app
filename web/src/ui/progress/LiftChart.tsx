@@ -4,8 +4,8 @@
 // ceiling 120% of the best, floor 90% of the lowest. Targets too close to or
 // above the ceiling sit in a lane above the plot and never move the scale;
 // a thin dither band marks the ceiling edge. Target names sit in a key above
-// the chart, never on the plot: inside it a target is a line and nothing else,
-// fine dots for the next level and dense square dots for your own target.
+// the chart, never on the plot: inside it a target is a line typed out in the
+// mono font and nothing else: · · · for the next level, * * * for your target.
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
@@ -42,7 +42,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
       {allTargets.length > 0 && (
         <ul className="tk-target-key">
           {allTargets.map(t => (
-            <li key={t.name}><svg className="tk-key-line" viewBox="0 0 18 4" aria-hidden="true"><line className={`tk-target ${t.kind ?? 'level'}`} x1={0} x2={18} y1={2} y2={2} /></svg><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
+            <li key={t.name}><span className="tk-key-chars" aria-hidden="true">{charsOf(t).repeat(4)}</span><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
           ))}
         </ul>
       )}
@@ -59,11 +59,11 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
 
         {s.pinned.map((t, k) => {
           const by = PT - 10 - k * PIN_ROW;
-          return <line key={t.name} className={`tk-target ${t.kind ?? 'level'}`} x1={L} x2={W - R} y1={by} y2={by} />;
+          return <CharLine key={t.name} t={t} y={by} x0={L} x1={W - R} />;
         })}
 
         {s.inRange.map(t => (
-          <line key={t.name} className={`tk-target ${t.kind ?? 'level'}`} x1={L} x2={W - R} y1={y(t.value)} y2={y(t.value)} />
+          <CharLine key={t.name} t={t} y={y(t.value)} x0={L} x1={W - R} />
         ))}
         {bars ? data.map((p, i) => {
           const bx = ev(L + 6 + i * step);
@@ -86,5 +86,19 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
         )}
       </svg>
     </figure>
+  );
+}
+
+/** The character a target line is typed with. */
+const charsOf = (t: ChartTarget) => (t.kind === 'goal' ? '*' : '·');
+/** Vertical nudge so the glyph's centre, not its baseline, sits on the value (micro size). */
+const CHAR_DY: Record<string, number> = { '*': 5.5, '·': 3 };
+
+/** A target line typed out in the mono font, spread evenly from x0 to x1 and centred on y. */
+function CharLine({ t, y, x0, x1 }: { t: ChartTarget; y: number; x0: number; x1: number }) {
+  const ch = charsOf(t);
+  const n = Math.max(2, Math.floor((x1 - x0) / 6));
+  return (
+    <text className={`tk-target-chars ${t.kind ?? 'level'}`} x={x0} y={y + CHAR_DY[ch]} textLength={x1 - x0} lengthAdjust="spacing">{ch.repeat(n)}</text>
   );
 }
