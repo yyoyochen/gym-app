@@ -6,10 +6,11 @@ import { TEMPLATES, programFromTemplate } from '../../domain/templates';
 import { PixelIcon } from '../../ui/kit';
 import { describeSlot } from '../program';
 import { t, tn } from '../../i18n';
+import { displayName } from '../labels';
 
 /** "A: Squat + Bench" (or an older stored dot form) → "Squat + Bench" (the key has its own cell). Translated when a built-in name. */
 export function sessionTitle(s: Pick<ProgramSession, 'key' | 'name'>): string {
-  const name = tn(s.name);
+  const name = tn(displayName(s.name));
   const esc = s.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return name.replace(new RegExp(`^${esc}\\s*[·:：\\-–]\\s*`), '').trim() || name;
 }
@@ -28,7 +29,7 @@ export function TemplateSummary({ templateId, exercises }: { templateId: string;
     <div className="tpl-sessions">
       {p.sessions.map(s => (
         <div key={s.key} className="tpl-session">
-          <div className="tpl-session-hd"><span className="key-inv">{s.key}</span><span>{sessionTitle(s)}</span></div>
+          <div className="tpl-session-hd"><span className="key-inv">{tn(s.key)}</span><span>{sessionTitle(s)}</span></div>
           <dl className="tpl-slots">
             {s.slots.map(sl => (
               <div key={sl.id} className="tpl-slot">

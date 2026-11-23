@@ -59,8 +59,8 @@ export function isUnloaded(weight: number, bodyweightFactor = 0): boolean {
 /** Load as a lifter reads it: "100", for bodyweight lifts "BW", "BW+10", "BW−15", and "—" for 0 kg on anything else. */
 export function formatLoad(weight: number, bodyweightFactor = 0): string {
   if (bodyweightFactor > 0) {
-    if (weight === 0) return 'BW';
-    return weight > 0 ? `BW+${weight}` : `BW−${Math.abs(weight)}`;
+    if (weight === 0) return t('BW');
+    return weight > 0 ? `${t('BW')}+${weight}` : `${t('BW')}−${Math.abs(weight)}`;
   }
   return isUnloaded(weight, bodyweightFactor) ? '—' : String(weight);
 }

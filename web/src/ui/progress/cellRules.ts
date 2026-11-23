@@ -29,7 +29,7 @@ export function setCountsText(sets: { weight: number; kind: string }[], bodyweig
 
 /** Weight split for the slots: "82" + ".5"; bodyweight lifts read "BW" or "+10". */
 export function cellWeight(weight: number, bodyweightFactor: number): { int: string; dec: string } {
-  if (bodyweightFactor > 0 && weight === 0) return { int: 'BW', dec: '' };
+  if (bodyweightFactor > 0 && weight === 0) return { int: t('BW'), dec: '' };
   const [i, d] = kg(weight).split('.');
   return { int: `${bodyweightFactor > 0 && weight > 0 ? '+' : ''}${i}`, dec: d ? `.${d}` : '' };
 }

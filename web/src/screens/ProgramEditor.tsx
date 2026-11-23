@@ -164,7 +164,7 @@ function SessionBlock({ s, inRotation, exById, apply, onEditSession, onAdd, onEd
   return (
     <section className={`sess${inRotation ? '' : ' off'}`} aria-label={t('Session {key}', { key: s.key })}>
       <button type="button" className="sess-hd" data-press="row" onClick={onEditSession} aria-label={t('Edit session {key}: {name}', { key: s.key, name: sessionTitle(s) })}>
-        <span className="key-inv">{s.key}</span>
+        <span className="key-inv">{tn(s.key)}</span>
         <span className="sess-name">{sessionTitle(s)}</span>
         <span className="sess-meta">{inRotation ? t('{n} slots', { n: s.slots.length }) : t('Off rotation')}</span>
         <PixelIcon name="edit" />
@@ -231,7 +231,7 @@ function SlotForm({ slot, session, exercise, minimum, onSave, onSwap, onRemove }
   const name = exercise ? tn(exercise.name) : t('this exercise');
   return (
     <>
-      <div className="slot-spec"><span className="key-inv">{session.key}</span><Parts items={[MODEL_LABELS[draft.model], describeSlot(draft)]} /></div>
+      <div className="slot-spec"><span className="key-inv">{tn(session.key)}</span><Parts items={[MODEL_LABELS[draft.model], describeSlot(draft)]} /></div>
       <Segmented<ModelKind> label={t('Model')} value={draft.model} onChange={m => setDraft(changeModel(draft, m, exercise?.slotType))}
         options={MODELS.map(m => ({ value: m, label: MODEL_SHORT[m] }))} />
       <div className="grid2 steppers">

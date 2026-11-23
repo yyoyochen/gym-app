@@ -59,7 +59,7 @@ export function effortWords(rir: number, scale: EffortScale): string {
 
 /** A set's load as shown: "BW" for an unloaded bodyweight lift, "—" for 0 kg on any other lift, else kg without trailing zeros. */
 export function loadText(weight: number, bodyweightFactor: number): string {
-  if (weight === 0) return isUnloaded(weight, bodyweightFactor) ? '—' : 'BW';
+  if (weight === 0) return isUnloaded(weight, bodyweightFactor) ? '—' : t('BW');
   return String(Math.round(weight * 100) / 100);
 }
 
