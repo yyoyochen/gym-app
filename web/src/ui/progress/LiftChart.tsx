@@ -3,19 +3,22 @@
 // dotted) or solid weekly bars. The y-axis follows one rule (chartModel):
 // ceiling 120% of the best, floor 90% of the lowest. Targets too close to or
 // above the ceiling sit in a lane above the plot and never move the scale;
-// a thin dither band marks the ceiling edge. Target names sit in a key above
-// the chart, never on the plot: inside it a target is a line and nothing else:
+// a thin dither band marks the ceiling edge. Target names and values sit in a
+// key above the chart; inside it a target is a line, with its gap (+13) at the
+// line's right end, in a margin of its own so it never touches the plot:
 // the next level is the grid's fine dotted line in the accent colour, your own
 // target is a tight row of * at 70% of the micro type size.
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
 import { t } from '../../i18n';
-import { PLOT_PX, chartScale, fillWeeks, gapText, stepRuns, type ChartTarget } from './chartModel';
+import { PLOT_PX, chartScale, fillWeeks, gapText, spreadLabels, stepRuns, type ChartTarget } from './chartModel';
 
 export interface LinePoint { date: ISODate; value: number; pr?: boolean }
 
-const W = 342, L = 34, R = 6, BOTTOM = 22, PIN_ROW = 13;
+const W = 342, L = 34, BOTTOM = 22, PIN_ROW = 13;
+/** Right margin: room for the gap labels when there are targets. */
+const R_PLAIN = 6, R_GAPS = 34, GAP_ROW = 10;
 const ev = (v: number) => 2 * Math.round(v / 2);
 const fmtTick = (v: number) => (Math.abs(v) >= 10_000 ? `${Math.round(v / 1000)}k` : Math.abs(v) >= 1000 ? `${Math.round(v / 100) / 10}k` : String(Math.round(v * 10) / 10));
 
@@ -25,6 +28,8 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
 }) {
   if (points.length < 2) return <p className="tk-quiet">{empty}</p>;
   const bars = kind === 'bars';
+  const hasTargets = !bars && targets.length > 0;
+  const R = hasTargets ? R_GAPS : R_PLAIN;
   const data: LinePoint[] = bars ? fillWeeks(points) : points;
   const s = chartScale({ values: data.map(p => p.value), zeroBased: bars, targets: bars ? [] : targets });
   const PT = ev((s.pinned.length ? s.pinned.length * PIN_ROW + 6 : 0) + 8);
@@ -44,7 +49,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
       {allTargets.length > 0 && (
         <ul className="tk-target-key">
           {allTargets.map(t => (
-            <li key={t.name}><svg className="tk-key-line" viewBox={`0 0 ${KEY_W} 8`} aria-hidden="true"><CharLine t={t} y={4} x0={0} x1={KEY_W} /></svg><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
+            <li key={t.name}><svg className="tk-key-line" viewBox={`0 0 ${KEY_W} 8`} aria-hidden="true"><CharLine t={t} y={4} x0={0} x1={KEY_W} /></svg><span>{t.name} {kg(t.value)} kg</span></li>
           ))}
         </ul>
       )}
@@ -67,6 +72,12 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
         {s.inRange.map(t => (
           <CharLine key={t.name} t={t} y={y(t.value)} x0={L} x1={W - R} />
         ))}
+        {(() => {
+          // Each target's gap at the right end of its line, nudged apart when two lines sit close.
+          const lines = [...s.pinned.map((t, k) => ({ t, ly: PT - 10 - k * PIN_ROW })), ...s.inRange.map(t => ({ t, ly: y(t.value) }))];
+          const at = spreadLabels(lines.map(l => l.ly), GAP_ROW);
+          return lines.map((l, i) => <text key={l.t.name} className="tk-gap" x={W} y={at[i] + 3.5} textAnchor="end">{gapText(l.t.value, now)}</text>);
+        })()}
         {bars ? data.map((p, i) => {
           const bx = ev(L + 6 + i * step);
           return p.value > 0

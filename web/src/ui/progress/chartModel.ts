@@ -77,3 +77,24 @@ export function gapText(target: number, current: number): string {
   return d <= 0 ? t('reached') : `+${d}`;
 }
 
+
+/** Label heights for lines at `ys`: each label stays at its line unless two
+ *  would be closer than `min`; then the crowded ones spread evenly around their
+ *  average height, in the same order as their lines. */
+export function spreadLabels(ys: number[], min: number): number[] {
+  const order = ys.map((_, i) => i).sort((a, b) => ys[a] - ys[b]);
+  const groups: { idx: number[]; centre: number }[] = [];
+  const half = (g: { idx: number[] }) => ((g.idx.length - 1) * min) / 2;
+  for (const i of order) {
+    groups.push({ idx: [i], centre: ys[i] });
+    while (groups.length > 1) {
+      const b = groups[groups.length - 1], a = groups[groups.length - 2];
+      if (b.centre - half(b) - (a.centre + half(a)) >= min) break;
+      const idx = [...a.idx, ...b.idx];
+      groups.splice(-2, 2, { idx, centre: idx.reduce((s, k) => s + ys[k], 0) / idx.length });
+    }
+  }
+  const out = ys.slice();
+  for (const g of groups) g.idx.forEach((k, j) => { out[k] = g.centre + (j - (g.idx.length - 1) / 2) * min; });
+  return out;
+}

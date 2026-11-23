@@ -96,3 +96,15 @@ describe('gapText', () => {
   });
 });
 
+
+describe('spreadLabels', () => {
+  it('keeps labels at their lines when they are far apart', async () => {
+    const { spreadLabels } = await import('./chartModel');
+    expect(spreadLabels([20, 60], 10)).toEqual([20, 60]);
+  });
+  it('pushes close labels apart around their middle, keeping order', async () => {
+    const { spreadLabels } = await import('./chartModel');
+    expect(spreadLabels([40, 44], 10)).toEqual([37, 47]);
+    expect(spreadLabels([44, 40], 10)).toEqual([47, 37]);
+  });
+});
