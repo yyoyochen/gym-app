@@ -195,3 +195,9 @@
 .tk-lift-name { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
 .tk-flag { white-space: nowrap; padding: var(--space-half) var(--space-1); border: var(--rule-w) dashed var(--accent); color: var(--accent); font: var(--text-stamp); letter-spacing: var(--track-stamp); text-transform: uppercase; }
 .tk-lift.quiet .tk-lift-name, .tk-lift.quiet .tk-lift-v { color: var(--mid); }
+/* Lift chart: target names in a key above the plot, so nothing is written over the line. */
+.tk-target-key { list-style: none; margin: var(--space-2) 0 var(--space-1); padding: 0; display: flex; flex-direction: column; gap: var(--space-1);
+  font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--accent); }
+.tk-target-key li { display: flex; align-items: center; gap: var(--space-2); }
+.tk-target-key .tk-sw.target { margin-left: 0; }
+.tk-target-key .gap { margin-left: auto; font-variant-numeric: tabular-nums; }

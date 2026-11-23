@@ -3,7 +3,10 @@
 // dotted) or solid weekly bars. The y-axis follows one rule (chartModel):
 // ceiling 120% of the best, floor 90% of the lowest. Targets too close to or
 // above the ceiling sit in a lane above the plot and never move the scale;
-// a thin dither band marks the ceiling edge.
+// a thin dither band marks the ceiling edge. Target names sit in a key above
+// the chart, never on the plot: inside it a target is only its dotted line, a
+// diamond at the right and its value on the y-axis (grey ticks too close to it
+// are dropped so the two never collide).
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
@@ -32,12 +35,22 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
   const now = current ?? data[data.length - 1].value;
   const last = data[data.length - 1];
   const step = (W - L - R - 6) / data.length, bw = ev(Math.min(20, step * 0.7));
+  const targetYs = [...s.inRange.map(t => y(t.value)), ...s.pinned.map((_, k) => PT - 7 - k * PIN_ROW - 3)];
+  const ticks = s.ticks.filter(v => targetYs.every(ty => Math.abs(y(v) - ty) >= 10));
+  const allTargets = [...s.pinned, ...s.inRange].sort((a, b) => b.value - a.value);
   const aria = s.pinned.length ? `${label}. Above the chart: ${s.pinned.map(t => `${t.name} ${kg(t.value)} kg, ${gapText(t.value, now)}`).join('; ')}.` : label;
 
   return (
     <figure className="tk-chart">
+      {allTargets.length > 0 && (
+        <ul className="tk-target-key">
+          {allTargets.map(t => (
+            <li key={t.name}><i className="tk-sw target" aria-hidden="true" /><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
+          ))}
+        </ul>
+      )}
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={aria}>
-        {s.ticks.map(v => (
+        {ticks.map(v => (
           <g key={v}>
             {v !== 0 && <line className="tk-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} />}
             <text className="tk-tick" x={L - 6} y={y(v) + 3.5} textAnchor="end">{fmtTick(v)}</text>
@@ -51,20 +64,19 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
           const by = PT - 7 - k * PIN_ROW, ax = W - R - 5;
           return (
             <g key={t.name}>
-              <text className="tk-target-tx" x={W - R - 14} y={by} textAnchor="end">{`${t.name} ${kg(t.value)} kg  ${gapText(t.value, now)}`}</text>
+              <text className="tk-target-tx" x={L - 6} y={by} textAnchor="end">{kg(t.value)}</text>
               <polygon className="tk-target-mark" points={diamondPoints(ax, by - 3, 4)} />
             </g>
           );
         })}
 
         {s.inRange.map(t => {
-          const ty = y(t.value), name = `${t.name} ${kg(t.value)} kg`, gap = gapText(t.value, now);
+          const ty = y(t.value);
           return (
             <g key={t.name}>
               <line className="tk-target" x1={L} x2={W - R - 8} y1={ty} y2={ty} />
               <polygon className="tk-target-mark" points={diamondPoints(W - R - 4, ty, 4)} />
-              <text className="tk-target-tx" x={L + 4} y={ty - 5}>{name}</text>
-              <text className="tk-target-tx" x={W - R - 8} y={ty - 5} textAnchor="end">{gap}</text>
+              <text className="tk-target-tx" x={L - 6} y={ty + 3.5} textAnchor="end">{kg(t.value)}</text>
             </g>
           );
         })}
