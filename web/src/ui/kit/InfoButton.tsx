@@ -1,5 +1,5 @@
 // A small (i) that opens a sheet explaining something on the page: a pixel
-// lowercase i in a ring. The visual button is 22 px; its hit area is the 48 px touch minimum (like the toggle).
+// lowercase i in a ring. The visual button is 18 px; its hit area is the 48 px touch minimum (like the toggle).
 import { useState, type ReactNode } from 'react';
 import { Sheet } from './Sheet';
 import { PixelIcon } from './PixelIcon';

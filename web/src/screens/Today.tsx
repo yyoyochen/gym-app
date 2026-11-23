@@ -129,7 +129,7 @@ export function Today(_props: { params: string[] }) {
     <section className="screen today">
       <DemoBanner />
       {!open && <UpdateBanner />}
-      <Lockup mid={`Training log //${open ? 'Live' : done && !showNext ? 'Done today' : names.short}`} />
+      <Lockup mid={`Training log / ${open ? 'Live' : done && !showNext ? 'Done today' : names.short}`} />
 
       <div className="place">
         <div>
@@ -169,13 +169,13 @@ export function Today(_props: { params: string[] }) {
             {sp.lastNote && <p className="quiet">Last note: {sp.lastNote}</p>}
           </div>
           <ScreenTip id="promise" shown={tip} />
-          {sp.pain?.painCheck && <p className="note">//Pain check — how does it feel warming up? {sp.pain.reasons[0]}</p>}
+          {sp.pain?.painCheck && <p className="note">Pain check: how does it feel warming up? {sp.pain.reasons[0]}</p>}
           <LabelValueGrid items={pairs} />
         </>
       )}
 
       {!open && !done && state.lastLine && !showPlan && <p className="quiet">{state.lastLine}</p>}
-      {!open && plan.reentryNote && showPlan && <p className="note">//Re-entry — {plan.reentryNote}</p>}
+      {!open && plan.reentryNote && showPlan && <p className="note">Re-entry: {plan.reentryNote}</p>}
 
       {plan.status === 'no_program' && (
         <div className="banner stack">

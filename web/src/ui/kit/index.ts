@@ -3,6 +3,7 @@ export { PixelIcon } from './PixelIcon';
 export { ICONS, PR_ICON, iconRuns, type IconName } from './icons';
 export { Lockup, BigNumber, LabelValue, LabelValueGrid, Verdict, DitherBar, ValueRow, Legend, stampDate, type LabelValueItem, type VerdictKind } from './Display';
 export { GlyphHeatmap } from './GlyphHeatmap';
+export { DragList } from './DragList';
 export { SquareHeatmap, cellPixels, shadeOn, SUBPIXELS } from './SquareHeatmap';
 export { RecentWeeks, recentWeeks } from './RecentWeeks';
 export { ditherBar, ditherBarText, heatmapGrid, heatmapText, heatLevel, heatGlyph, SHADES, EMPTY, type HeatGrid, type HeatCell } from './dither';

@@ -152,7 +152,7 @@ export function Session({ params }: { params: string[] }) {
     <section className="screen logger">
       <header className="lhead">
         <button type="button" className="lhead-close" data-press="dim" onClick={() => back('today')}><PixelIcon name="back" />Back</button>
-        <span className="lhead-mid">[{names.short}]{focus ? ` //${focus.exercise.name}` : ''}</span>
+        <span className="lhead-mid">[{names.short}]{focus ? ` / ${focus.exercise.name}` : ''}</span>
         {session.programSessionKey === 'adhoc'
           ? <span className="lhead-t tnum">{formatDate(session.date, { weekday: false })}</span>
           : <span className="lhead-t tnum" aria-label={`Session time ${formatElapsed(now - session.startedAt)}`}>{formatElapsed(now - session.startedAt)}</span>}
@@ -161,7 +161,7 @@ export function Session({ params }: { params: string[] }) {
       {session.sealed && (
         <div className="banner spread"><span>Finished. Changes are marked “edited”.</span><LinkButton href={`#/review/${id}`}>Review</LinkButton></div>
       )}
-      {!view.commit && <p className="note">//Note: this session has no locked-in plan; sets are logged ungraded.</p>}
+      {!view.commit && <p className="note">Note: this session has no locked-in plan; sets are logged ungraded.</p>}
 
       {count.planned > 0 && (
         <DitherBar label={names.short} valueText={`${count.done} of ${count.planned} sets`} value={count.done / count.planned} />
@@ -214,7 +214,7 @@ export function Session({ params }: { params: string[] }) {
             </p>
           )}
           <ScreenTip id="undo" shown={tip} />
-          {note && <p className={`note nudge ${note.kind}`} role="status">//{note.kind === 'stop' ? 'Stop' : 'Note'}: {note.text}</p>}
+          {note && <p className={`note nudge ${note.kind}`} role="status">{note.kind === 'stop' ? 'Stop' : 'Note'}: {note.text}</p>}
         </div>
       )}
 

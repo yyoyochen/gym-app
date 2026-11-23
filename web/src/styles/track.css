@@ -185,3 +185,8 @@
 .sd-name { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .sd-name-v { font: var(--text-title); letter-spacing: var(--track-title); overflow-wrap: anywhere; }
 .sd-name .icon-btn { margin-right: calc(-1 * var(--space-3)); }
+/* Session detail: each set's load boxed like the lift page's cells (fill = top set, outline = work set, dotted = ramp). */
+.tk-sd-cell { justify-self: start; padding: var(--space-1) var(--space-2); border: var(--rule-w) solid var(--ink); }
+.tk-sd-cell.top { background: var(--ink); color: var(--paper); }
+.tk-sd-cell.top .x, .tk-sd-cell.top .mid { color: inherit; }
+.tk-sd-cell.ramp { border-style: dotted; border-color: var(--mid); color: var(--mid); }

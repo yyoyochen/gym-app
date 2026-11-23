@@ -10,7 +10,7 @@ import {
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { DatePickerSheet, Errors, useTrainedDays } from '../ui/common';
-import { BigNumber, Button, ConfirmButton, NavBar, Parts, PixelIcon, Segmented, Select, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
+import { BigNumber, Button, ConfirmButton, Legend, NavBar, Parts, PixelIcon, Segmented, Select, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { gradeCommit } from '../app/coach';
 import { formatDate, todayISO } from '../app/dates';
@@ -18,7 +18,8 @@ import { formatRir, rirToScale, scaleToRir } from '../app/effort';
 import { groupBlocks } from '../app/history';
 import { PAIN_AREAS, PAIN_AREA_LABELS, SIDE_LABELS, displayName, formatLoad } from '../app/labels';
 import { SecHead } from '../ui/progress/parts';
-import { anyDecimals, setCountsText } from '../ui/progress/cellRules';
+import { anyDecimals, classifySets, setCountsText } from '../ui/progress/cellRules';
+import { SetCellsKey } from '../ui/progress/SetCells';
 import { kindAfterWarmupToggle } from '../ui/session/setKind';
 import { SESSION_NAME_MAX, cleanSessionName } from '../ui/session/cleanName';
 import { Load } from '../ui/progress/Load';
@@ -96,15 +97,17 @@ export function SessionDetail({ params }: { params: string[] }) {
       <section className="tk-sec" aria-label="Sets">
         <SecHead title="Sets" meta={`${sets.length} logged, tap to edit`} />
         {sets.length === 0 && <p className="tk-quiet">No sets logged.</p>}
+        {sets.length > 0 && <Legend className="tk-legend tk-legend-top"><SetCellsKey /></Legend>}
         {groupBlocks(sets).map(b => {
           let w = 0, n = 0;
+          const roles = classifySets(b.sets, bwFactor.get(b.exerciseId) ?? 0);
           return (
             <div key={b.key} className="tk-sheet">
               <div className="tk-sheet-hd">
                 <a href={`#/lift/${encodeURIComponent(b.exerciseId)}`} data-press="dim">{b.name}<PixelIcon name="chevron" scale={1} /></a>
                 <span>{setCountsText(b.sets, bwFactor.get(b.exerciseId) ?? 0)}</span>
               </div>
-              {b.sets.map(s => {
+              {b.sets.map((s, si) => {
                 const k = s.kind === 'warmup' ? `W${++w}` : s.kind === 'top' ? 'Top' : `${KIND_PREFIX[s.kind] ?? ''}${++n}`;
                 const tags = [s.failed ? 'failed' : '',
                   s.importFlags?.includes('blank_weight') ? 'blank weight' : '', s.importFlags?.includes('blank_reps') ? 'blank reps' : ''].filter(Boolean);
@@ -113,7 +116,7 @@ export function SessionDetail({ params }: { params: string[] }) {
                     <button type="button" className={`tk-srow tk-set${s.kind === 'warmup' ? ' warm' : ''}`} data-press="row" onClick={() => setEditing(s)}
                       aria-label={`Edit set ${k}: ${formatLoad(s.weight, bwFactor.get(s.exerciseId))} × ${s.reps}`}>
                       <span className="k">{k}</span>
-                      <span className="v"><Load weight={s.weight} reps={s.reps} bodyweightFactor={bwFactor.get(s.exerciseId) ?? 0} decimals={anyDecimals(b.sets)} /></span>
+                      <span className={`v tk-sd-cell ${roles[si]}`} title={roles[si] === 'top' ? 'Top set' : roles[si] === 'ramp' ? 'Ramp' : 'Work set'}><Load weight={s.weight} reps={s.reps} bodyweightFactor={bwFactor.get(s.exerciseId) ?? 0} decimals={anyDecimals(b.sets)} /></span>
                       <span className="k r">{formatRir(s.rir, scale)}</span>
                       <PixelIcon name="edit" scale={1} />
                     </button>

@@ -73,9 +73,9 @@ describe('heatmap', () => {
 });
 
 describe('pixel icons', () => {
-  it('every icon is a square of # and .: 9 × 9, the gear 13 × 13, info 11 × 11', () => {
+  it('every icon is a square of # and .: 9 × 9, the gear 13 × 13', () => {
     for (const [name, rows] of Object.entries(ICONS)) {
-      const n = name === 'settings' ? 13 : name === 'info' ? 11 : 9;
+      const n = name === 'settings' ? 13 : 9;
       expect(rows, name).toHaveLength(n);
       for (const r of rows) expect(r, name).toMatch(new RegExp(`^[#.]{${n}}$`));
       expect(rows.join('').includes('#'), name).toBe(true);

@@ -28,7 +28,6 @@ const strip = (p: ProfileT & { id?: string; history?: unknown }): ProfileT => {
 
 type SheetKey = 'where' | 'bodyweight' | 'goals' | 'targets' | 'injuries' | 'maxes' | 'checkpoints' | 'starting';
 const SEX_WORD: Record<Sex, string> = { M: 'Male', F: 'Female' };
-const pad2 = (n: number) => String(n).padStart(2, '0');
 const isMainLift = (e: Exercise) => !!e.benchmarkKey || e.id === 'overhead-press';
 
 export function Profile({ params }: { params: string[] }) {
@@ -80,7 +79,7 @@ export function Profile({ params }: { params: string[] }) {
       <NavBar title="Profile" titleAction={
         <a className="icon-btn" href="#/profile/settings" aria-label="Settings: appearance, effort scale, backup" data-press="dim"><PixelIcon name="settings" /></a>
       }>
-        <Lockup mid={`Profile //${GOAL_SHORT[p.primaryGoal]}`} />
+        <Lockup mid={`Profile / ${GOAL_SHORT[p.primaryGoal]}`} />
       </NavBar>
 
       <section className="you-hero" aria-label="Bodyweight">
@@ -91,7 +90,7 @@ export function Profile({ params }: { params: string[] }) {
       </section>
 
       <nav className="link-rows" aria-label="Program">
-        <ValueRow href="#/profile/program" className="nav-row" data-press="row" k={<PixelIcon name="bar" />} value="Program" sub="Sessions, slots, phases">
+        <ValueRow href="#/profile/program" className="nav-row" data-press="row" k={<PixelIcon name="bar" />} value="Program" sub="Sessions and lifts">
           <PixelIcon name="chevron" />
         </ValueRow>
       </nav>
@@ -115,7 +114,7 @@ export function Profile({ params }: { params: string[] }) {
             {p.targets.map((t, i) => {
               const r = rowFor.get(t.id);
               return (
-                <ValueRow key={t.id} className="tall" k={pad2(i + 1)} value={r?.name ?? names.get(t.subject) ?? t.subject} sub={targetLine(t)}
+                <ValueRow key={t.id} className="tall" k={String(i + 1)} value={r?.name ?? names.get(t.subject) ?? t.subject} sub={targetLine(t)}
                   main={<span className="srow-bars">
                     <TargetLevelBar gym={gym} ctx={ctx} ex={byId.get(t.subject)} value={t.value} />
                     {r && <PaceBar row={r} />}
@@ -167,12 +166,12 @@ export function Profile({ params }: { params: string[] }) {
           ? <p className="quiet">No checkpoint dates.</p>
           : <div className="sheetblk">
               {p.checkpoints.map((c, i) => (
-                <ValueRow key={c} k={pad2(i + 1)} value={formatDate(c)} right={c < today ? 'past' : ''} rightMid />
+                <ValueRow key={c} k={String(i + 1)} value={formatDate(c)} right={c < today ? 'past' : ''} rightMid />
               ))}
             </div>}
       </Group>
 
-      <p className="note">//Note: each save keeps the earlier version with its date.</p>
+      <p className="note">Note: each save keeps the earlier version with its date.</p>
 
       <BodyweightSheet open={open === 'bodyweight'} onClose={close} entries={bodyweight} />
       <EditSheet open={open === 'where'} title="Where I am" base={p} onClose={close}>{(d, set) => <WhereForm p={d} set={set} />}</EditSheet>

@@ -51,7 +51,7 @@ export function History(_props: { params: string[] }) {
   return (
     <section className="screen tk-screen">
       <DemoBanner />
-      <Lockup mid={`Calendar //${total} session${total === 1 ? '' : 's'}`} />
+      <Lockup mid={`Calendar / ${total} session${total === 1 ? '' : 's'}`} />
 
       {data && (
         <section className="tk-block cal-hero" aria-label="Last 3 months">

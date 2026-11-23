@@ -84,7 +84,7 @@ export interface PrMomentData {
   unit?: string;
   /** Quiet text after the unit, e.g. "new best double". */
   caption?: string;
-  /** Lift name for the spec line: "[PR] //Back squat, Fri 21 Nov". */
+  /** Lift name for the spec line: "[PR] Back squat, Fri 21 Nov". */
   lift?: string;
   /** Label/value pairs below (previous best, e1RM change). */
   pairs?: { label: string; value: ReactNode }[];
@@ -138,7 +138,7 @@ export function PrMoment({ data, onClose }: { data: PrMomentData; onClose: () =>
   return (
     <div className="pr-moment" ref={root} role="dialog" aria-modal="true" aria-label={`New best: ${data.value} ${data.unit ?? ''}`} tabIndex={-1} onClick={onClose}>
       <div className="pr-inner">
-        <div className="label"><Parts items={[`[PR] //${data.lift ?? 'New best'}`, stampDate()]} /></div>
+        <div className="label"><Parts items={[`[PR] ${data.lift ?? 'New best'}`, stampDate()]} /></div>
         <DitherNumber text={data.value} className="accent" />
         {(data.unit || data.caption) && <div className="pr-sub">{data.unit}{data.caption && <span>{data.caption}</span>}</div>}
         {data.pairs && data.pairs.length > 0 && (

@@ -6,7 +6,7 @@ import type { Exercise, GoalKind, GoalTarget, ISODate, Profile, TargetType } fro
 import { newId } from '../../db';
 import { DateField, Errors, Segmented } from '../../ui/common';
 import { Select } from '../../ui/kit';
-import { DitherBar, PixelIcon, Toggle, ValueRow } from '../../ui/kit';
+import { DitherBar, DragList, PixelIcon, Toggle, ValueRow } from '../../ui/kit';
 import { formatDate, todayISO } from '../dates';
 import {
   GOALS, GOAL_LABELS, SUBJECT_BODYWEIGHT, SUBJECT_SESSIONS, TARGET_TYPE_LABELS, subjectLabel, subjectUnit,
@@ -88,12 +88,17 @@ export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { 
       {profile.targets.length > 0 && (
         <div className="sheetblk">
           <div className="sheetblk-hd"><span>Targets</span><span>{profile.targets.length}</span></div>
-          {profile.targets.map((t, i) => (
-            <ValueRow key={t.id} k={String(i + 1).padStart(2, '0')} value={subjectLabel(t.subject, names)} sub={targetLine(t)}>
-              <button type="button" className="icon-btn" aria-label={`Remove ${subjectLabel(t.subject, names)} target`} data-press="dim"
-                onClick={() => onChange({ ...profile, targets: profile.targets.filter(x => x.id !== t.id) })}><PixelIcon name="trash" /></button>
-            </ValueRow>
-          ))}
+          <DragList items={profile.targets} keyOf={t => t.id} labelOf={t => subjectLabel(t.subject, names)}
+            onReorder={targets => onChange({ ...profile, targets })}
+            render={(t, i, grip) => (
+              <ValueRow k={String(i + 1)} value={subjectLabel(t.subject, names)} sub={targetLine(t)}>
+                <span className="row-actions">
+                  <button type="button" className="icon-btn" aria-label={`Remove ${subjectLabel(t.subject, names)} target`} data-press="dim"
+                    onClick={() => onChange({ ...profile, targets: profile.targets.filter(x => x.id !== t.id) })}><PixelIcon name="trash" /></button>
+                  {grip}
+                </span>
+              </ValueRow>
+            )} />
         </div>
       )}
       <div className="form-group">
@@ -129,7 +134,7 @@ export function CheckpointsEditor({ profile, onChange }: { profile: Profile; onC
       {profile.checkpoints.length > 0 && (
         <div className="sheetblk">
           {profile.checkpoints.map((c, i) => (
-            <ValueRow key={c} k={String(i + 1).padStart(2, '0')} value={formatDate(c)}>
+            <ValueRow key={c} k={String(i + 1)} value={formatDate(c)}>
               <button type="button" className="icon-btn" aria-label={`Remove checkpoint ${formatDate(c)}`} data-press="dim"
                 onClick={() => onChange({ ...profile, checkpoints: profile.checkpoints.filter(x => x !== c) })}><PixelIcon name="trash" /></button>
             </ValueRow>

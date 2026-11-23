@@ -14,7 +14,7 @@ export function stampDate(d: Date = new Date()): string {
 
 /**
  * Boxed header lockup: [mark | INVERTED CELL | right]. Mono caps.
- * e.g. <Lockup mid="Training log //Session A" /> → [▮GB | TRAINING LOG //SESSION A | Fri 21 Nov]
+ * e.g. <Lockup mid="Training log / Session A" /> → [▮GB | TRAINING LOG / SESSION A | Fri 21 Nov]
  */
 export function Lockup({ mid, left, right, date, className = '' }: {
   mid: ReactNode; left?: ReactNode; right?: ReactNode; date?: Date; className?: string;

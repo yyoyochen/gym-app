@@ -273,3 +273,11 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .update-banner-txt b { font: var(--text-value); letter-spacing: var(--track-value); }
 .update-banner-txt span { font: var(--text-quiet); letter-spacing: var(--track-quiet); }
 .update-banner:disabled { opacity: 0.7; }
+
+/* ---------- drag to reorder (ui/kit/DragList) ---------- */
+.drag-item { position: relative; background: var(--paper); transition: transform var(--dur-base) var(--ease-out); }
+.drag-item.lifted { z-index: 2; transition: none; outline: var(--rule-w) solid var(--ink); }
+.drag-grip { display: grid; place-items: center; width: var(--touch-min); height: var(--touch-min); color: var(--mid); touch-action: none; cursor: grab; }
+.drag-list.dragging .drag-grip { cursor: grabbing; }
+.drag-grip:focus-visible { outline: var(--focus-w) solid var(--accent); outline-offset: calc(-1 * var(--focus-w)); }
+.row-actions { display: inline-flex; align-items: center; justify-self: end; }

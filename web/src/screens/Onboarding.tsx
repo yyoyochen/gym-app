@@ -23,7 +23,6 @@ import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import { TemplateList } from '../app/parts/TemplatePicker';
 
-const pad2 = (n: number) => String(n).padStart(2, '0');
 const COUNT = SETUP_STEPS.length;
 
 async function currentProfile(): Promise<Profile> {
@@ -53,7 +52,7 @@ export function Onboarding({ params }: { params: string[] }) {
 
   return (
     <section className="screen onb">
-      <Lockup left={<span className="tnum">{pad2(step + 1)}/{pad2(COUNT)}</span>} mid={`Setup //${SETUP_STEPS[step]}`} />
+      <Lockup left={<span className="tnum">{step + 1}/{COUNT}</span>} mid={`Setup / ${SETUP_STEPS[step]}`} />
       <DitherBar cells={40} value={(step + 1) / COUNT} label="Setup" valueText={`Step ${step + 1} of ${COUNT}`} />
       {step === 0 && <StepAbout onNext={next} />}
       {step === 1 && <StepProgram onNext={next} onBack={prev} />}
