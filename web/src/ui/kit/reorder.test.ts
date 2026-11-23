@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dropIndex, moveTo, shiftFor } from './reorder';
+import { dropIndex, moveTo, pressOutcome, shiftFor } from './reorder';
 
 const h = [60, 60, 60, 60]; // four rows, 60 px each
 
@@ -37,5 +37,16 @@ describe('moveTo', () => {
     expect(moveTo(['a', 'b', 'c', 'd'], 0, 2)).toEqual(['b', 'c', 'a', 'd']);
     expect(moveTo(['a', 'b', 'c', 'd'], 3, 1)).toEqual(['a', 'd', 'b', 'c']);
     expect(moveTo(['a', 'b'], 1, 1)).toEqual(['a', 'b']);
+  });
+});
+
+describe('pressOutcome: hold to lift a row, move to scroll', () => {
+  it('a still hold of 400 ms lifts the row', () => {
+    expect(pressOutcome(400, 3)).toBe('lift');
+    expect(pressOutcome(399, 0)).toBe('wait');
+  });
+  it('moving 8 px or more before then is a scroll, never a drag', () => {
+    expect(pressOutcome(120, 8)).toBe('scroll');
+    expect(pressOutcome(500, 12)).toBe('scroll');
   });
 });

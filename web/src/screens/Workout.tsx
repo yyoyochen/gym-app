@@ -14,7 +14,7 @@ import {
 } from '../app/workout';
 import { WorkoutLiftSheet } from '../app/parts/WorkoutLiftSheet';
 import { newId } from '../db/util';
-import { Button, NavBar, PixelIcon, go } from '../ui/kit';
+import { Button, DragList, NavBar, PixelIcon, go } from '../ui/kit';
 import { ExercisePicker } from '../ui/session/ExercisePicker';
 
 const READINESS: readonly Readiness[] = ['green', 'amber', 'red'];
@@ -96,19 +96,21 @@ export function Workout({ params }: { params: string[] }) {
 
       <div className="wk-lifts">
         <div className="tk-hd"><h2>{draft.slots.length} lift{draft.slots.length === 1 ? '' : 's'}</h2>{draft.slots.length > 0 && <span className="tk-hd-r"><span>about {minutes} min</span></span>}</div>
-        {draft.slots.map((s, i) => {
-          const sp = ready ? plan!.slots[i] : null;
-          return (
-            <button key={s.slot.id} type="button" className="wk-lift" data-press="row" onClick={() => sp && setEditing(i)}>
-              <span className="wk-lift-main">
-                <b>{sp?.exercise.name ?? exercises.find(e => e.id === s.slot.exerciseId)?.name ?? s.slot.exerciseId}</b>
-                <span className="wk-rx">{sp ? planSummary(sp.target, sp.plannedSets) : '…'}</span>
-                {ready && <span className="wk-why">{plan!.reasons[i]}</span>}
-              </span>
-              <PixelIcon name="chevron" scale={1} />
-            </button>
-          );
-        })}
+        <DragList items={draft.slots} keyOf={s => s.slot.id} longPress onReorder={setSlots}
+          labelOf={s => exercises.find(e => e.id === s.slot.exerciseId)?.name ?? s.slot.exerciseId}
+          render={(s, i) => {
+            const sp = ready ? plan!.slots[i] : null;
+            return (
+              <button type="button" className="wk-lift" data-press="row" onClick={() => sp && setEditing(i)}>
+                <span className="wk-lift-main">
+                  <b>{sp?.exercise.name ?? exercises.find(e => e.id === s.slot.exerciseId)?.name ?? s.slot.exerciseId}</b>
+                  <span className="wk-rx">{sp ? planSummary(sp.target, sp.plannedSets) : '…'}</span>
+                  {ready && <span className="wk-why">{plan!.reasons[i]}</span>}
+                </span>
+                <PixelIcon name="chevron" scale={1} />
+              </button>
+            );
+          }} />
       </div>
 
       <Button block className="wk-add" icon="plus" onClick={() => setPicker({})}>Add a lift</Button>

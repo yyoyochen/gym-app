@@ -32,3 +32,13 @@ export function moveTo<T>(items: readonly T[], from: number, to: number): T[] {
   out.splice(to, 0, x);
   return out;
 }
+
+/** How long a still finger must rest on a row before it lifts (ms), and how far it may wander (px). */
+export const LONG_PRESS_MS = 400;
+export const LONG_PRESS_SLOP = 8;
+
+/** A press on a row: still waiting, lifted for dragging, or a scroll (moved too far too soon). */
+export function pressOutcome(elapsedMs: number, movedPx: number): 'wait' | 'lift' | 'scroll' {
+  if (movedPx >= LONG_PRESS_SLOP) return 'scroll';
+  return elapsedMs >= LONG_PRESS_MS ? 'lift' : 'wait';
+}
