@@ -11,6 +11,6 @@ export function readable(text: string): string {
     .replace(/\[(\d+(?:\.\d+)?(?:, \d+(?:\.\d+)?)*)\]/g, '$1')        // [8, 8] → 8, 8
     .replace(/(\d(?:kg)?)\s?x\s?(\d)/g, '$1 × $2')                   // 100kg x 2 → 100kg × 2
     .replace(/Log your sets at 0kg — /g, 'Log your sets — ')
-    .replace(/\bat 0kg\b/g, 'at bodyweight')
+    .replace(/(?<!capped )\bat 0kg\b/g, 'at bodyweight')        // a 0 kg jump cap stays 0 kg
     .replace(/\bstay at 0kg\b/g, 'stay at bodyweight'));
 }

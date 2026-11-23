@@ -12,6 +12,7 @@ import { kg, nextRotationKey, planSlots, type DayPlan } from './coach';
 import { newId } from '../db/util';
 import { GOAL_WEEK_SETS, isMain, pickFocus, reasonLine, slotFor, suggestWorkout, type DraftSlot, type LiftUse, type PartWeek } from './suggest';
 import { BODY_PARTS, bodyPartOf, weekBodyPartSets, type BodyPart } from './weekSets';
+import { t, te, tn } from '../i18n';
 
 export interface WorkoutDraft { date: ISODate; focus: BodyPart[]; slots: DraftSlot[] }
 export type WorkoutPlan = DayPlan & { reasons: string[]; draftKey: string };
@@ -21,6 +22,7 @@ export const draftKey = (d: WorkoutDraft): string => JSON.stringify(d.slots);
 
 /** A one-off workout's session key: not a program session, so the rotation ignores it. */
 export const WORKOUT_KEY = 'workout';
+/** Saved as the session's name (English, like every stored name); shown through tn(). */
 export const WORKOUT_NAME = "Today's workout";
 
 /** This week's sets per body part against its target, when each was last trained, and each lift's use in 90 days. */
@@ -99,10 +101,10 @@ export async function planWorkout(db: GymDb, d: WorkoutDraft, today: ISODate, no
     today, readiness, effortScale, gapDays, reentry, profile: w.profile, minimumIds: [], slotless: true,
   });
   const reasons = d.slots.map((s, i) => {
-    if (s.sets?.length) return 'Your sets';
-    if (s.weight !== undefined) return 'Your weight';
+    if (s.sets?.length) return t('Your sets');
+    if (s.weight !== undefined) return t('Your weight');
     const row = w.rows.find(r => r.part === s.part) ?? null;
-    return reasonLine(row, w.use.get(s.slot.exerciseId)?.lastDate ?? null, w.goalLiftIds.has(s.slot.exerciseId), today, slots[i].exercise.name.toLowerCase());
+    return reasonLine(row, w.use.get(s.slot.exerciseId)?.lastDate ?? null, w.goalLiftIds.has(s.slot.exerciseId), today, tn(slots[i].exercise.name).toLowerCase());
   });
   return {
     status: slots.length ? 'planned' : 'empty_session', today, sessionKey: WORKOUT_KEY, sessionName: WORKOUT_NAME,
@@ -125,11 +127,13 @@ export async function commitWorkout(db: GymDb, plan: WorkoutPlan, readiness: Rea
 }
 
 /** The line under a lift in the builder: "Top 100 × 2, then 3 × 8 at 75", "3 × 8 at 70", or a first time. */
-export function planSummary(t: Target, plannedSets: number): string {
-  if (t.setList) return describeSets(t.setList, '');
-  if (t.isNew) return 'First time: pick a weight';
-  if (t.model === 'topset' && t.topWeight !== undefined) return `Top ${kg(t.topWeight)} × ${t.topReps ?? 1}, then ${t.targetSets ?? 0} × ${t.targetReps} at ${kg(t.weight)}`;
-  return t.weight > 0 ? `${plannedSets} × ${t.targetReps} at ${kg(t.weight)}` : `${plannedSets} × ${t.targetReps}`;
+export function planSummary(x: Target, plannedSets: number): string {
+  if (x.setList) return te(describeSets(x.setList, ''));
+  if (x.isNew) return t('First time: pick a weight');
+  if (x.model === 'topset' && x.topWeight !== undefined) {
+    return t('Top {top} × {topReps}, then {n} × {reps} at {w}', { top: kg(x.topWeight), topReps: x.topReps ?? 1, n: x.targetSets ?? 0, reps: x.targetReps, w: kg(x.weight) });
+  }
+  return x.weight > 0 ? t('{n} × {reps} at {w}', { n: plannedSets, reps: x.targetReps, w: kg(x.weight) }) : `${plannedSets} × ${x.targetReps}`;
 }
 
 /** Swap lift: the new lift gets its own plan shape and body part; a chosen weight does not carry over. */

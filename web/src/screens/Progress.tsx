@@ -8,18 +8,19 @@ import { getActiveProgram, getProfile, listExercises, listSessions } from '../db
 import { addDays } from '../engine';
 import { kg } from '../app/coach';
 import { DemoBanner } from '../app/DemoBanner';
-import { formatDate, todayISO } from '../app/dates';
+import { formatDate, todayISO, weekdayLong } from '../app/dates';
+import { t, tn, tr } from '../i18n';
 import { SUBJECT_BODYWEIGHT, feasibilityWord } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { DitherBar, InfoButton, LabelValueGrid, Lockup, Verdict, type VerdictKind } from '../ui/kit';
 import { useScrollTop } from '../ui/session/useNow';
-import { goalRows, latestBodyweight, liftStats, trendOf, type LiftStats } from '../ui/progress/data';
+import { goalRows, latestBodyweight, liftStats, trendOf, type LiftStats, type Trend } from '../ui/progress/data';
 import { rateExercise, type LiftRating } from '../benchmarks/liftRating';
 import { DataCredit } from '../ui/progress/DataCredit';
-import { STANDARDS_CAVEAT, contextText, missingForStandards, sourceMeta, standardsContext, useGymStandards } from '../ui/progress/standards';
+import { contextText, missingForStandards, missingText, sourceMeta, standardsCaveat, standardsContext, useGymStandards } from '../ui/progress/standards';
 import { LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
-import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats } from '../ui/progress/stats';
+import { funComparison, funLine, pluralLift, tonnage, trainingStats } from '../ui/progress/stats';
 import { Sparkline } from '../ui/progress/Sparkline';
 import { flagRank, flagText, liftFlag, type LiftFlag } from '../ui/progress/liftFlags';
 
@@ -50,7 +51,7 @@ export function Progress(_props: { params: string[] }) {
     // the ones that need a look on top with a flag saying why; then everything else.
     const mine = new Set<string>();
     if (sessions.length) {
-      for (const t of profile?.targets ?? []) if (byId.has(t.subject)) mine.add(t.subject);
+      for (const tg of profile?.targets ?? []) if (byId.has(tg.subject)) mine.add(tg.subject);
       // Program lifts count only once you train them: a template can list lifts you never do.
       for (const ps of program?.sessions ?? []) if (program!.rotation.includes(ps.key)) for (const sl of ps.slots) if (recent.has(sl.exerciseId)) mine.add(sl.exerciseId);
     }
@@ -63,8 +64,8 @@ export function Progress(_props: { params: string[] }) {
     const others = lifts.filter(l => !mine.has(l.exercise.id));
     // Fun line: squat tonnage since the first session (else the favourite lift's).
     const squats = exercises.filter(e => e.benchmarkKey === 'squat' && !(e.bodyweightFactor > 0));
-    let funIds = new Set(squats.map(e => e.id)), funWord = 'squats';
-    if (!tonnage(sets, funIds) && stats.favourite) { funIds = new Set([stats.favourite.exerciseId]); funWord = pluralLift(byId.get(stats.favourite.exerciseId)?.name ?? 'lift'); }
+    let funIds = new Set(squats.map(e => e.id)), funWord = t('squats');
+    if (!tonnage(sets, funIds) && stats.favourite) { funIds = new Set([stats.favourite.exerciseId]); funWord = pluralLift(byId.get(stats.favourite.exerciseId)?.name ?? t('lift')); }
     const fun = funComparison(tonnage(sets, funIds));
     const goals = profile ? await goalRows(db, profile, today) : [];
     return { today, profile, bw, stats, lifts, yours, others, goals, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined,
@@ -97,89 +98,91 @@ export function Progress(_props: { params: string[] }) {
   return (
     <section className="screen tk-screen">
       <DemoBanner />
-      <Lockup mid={first ? `Progress // Since ${short(first, today)}` : 'Progress'} />
+      <Lockup mid={first ? t('Progress // Since {date}', { date: short(first, today) }) : t('Progress')} />
 
-      {stats.sessions === 0 && <p className="tk-quiet">Nothing logged yet. Sessions you log or import show up here.</p>}
+      {stats.sessions === 0 && <p className="tk-quiet">{t('Nothing logged yet. Sessions you log or import show up here.')}</p>}
 
-      <section className="tk-sec" aria-label="Goal board">
-        <SecHead title="Goal board" meta={goals.length ? `${goals.length} target${goals.length === 1 ? '' : 's'}` : undefined} />
-        {!goals.length && <p className="tk-quiet">No targets yet. <a className="tk-link" href="#/profile">Set them on Profile</a>.</p>}
+      <section className="tk-sec" aria-label={t('Goal board')}>
+        <SecHead title={t('Goal board')} meta={goals.length ? goals.length === 1 ? t('{n} target', { n: 1 }) : t('{n} targets', { n: goals.length }) : undefined} />
+        {!goals.length && <p className="tk-quiet">{tr('No targets yet. {link}.', { link: <a className="tk-link" href="#/profile">{t('Set them on Profile')}</a> })}</p>}
         {goals.map(g => {
-          const verb = g.target.type === 'hold' ? 'Hold' : g.target.type === 'at_least' ? 'At least' : 'Reach';
-          const unit = g.target.subject === 'sessions_per_week' ? '/wk' : ' kg';
+          const verb = g.target.type === 'hold' ? t('Hold') : g.target.type === 'at_least' ? t('At least') : t('Reach');
+          const unit = g.target.subject === 'sessions_per_week' ? t('/wk') : ' kg';
           const frac = g.current !== null && g.target.subject !== SUBJECT_BODYWEIGHT && g.target.value > 0 ? g.current / g.target.value : null;
           return (
             <article key={g.target.id} className="tk-goal">
               <div className="tk-goal-head">
                 <div>
                   <h3 className="heading">{g.name}</h3>
-                  <p className="tk-goal-sub">{verb} <b className="tnum">{kg(g.target.value)}{unit}</b> by {formatDate(g.target.deadline, { weekday: false })}</p>
+                  <p className="tk-goal-sub">{tr('{verb} {value} by {date}', { verb, value: <b className="tnum">{kg(g.target.value)}{unit}</b>, date: formatDate(g.target.deadline, { weekday: false }) })}</p>
                 </div>
                 {g.pace && <Verdict kind={FEAS_KIND[g.pace.feasibility] ?? 'new'}>{feasibilityWord(g.pace.feasibility)}</Verdict>}
               </div>
               {frac !== null
-                ? <DitherBar value={frac} label={`Now ${g.evidence}`} valueText={`${Math.round(frac * 100)}%`} />
-                : <p className="tk-mono">Now {g.evidence}</p>}
-              {g.paceLine && <p className="tk-mono mid">{g.paceLine}{g.pace?.assumedFlat ? ', no trend yet, assumed flat' : ''}</p>}
+                ? <DitherBar value={frac} label={t('Now {evidence}', { evidence: g.evidence })} valueText={`${Math.round(frac * 100)}%`} />
+                : <p className="tk-mono">{t('Now {evidence}', { evidence: g.evidence })}</p>}
+              {g.paceLine && <p className="tk-mono mid">{g.pace?.assumedFlat ? t('{line}, no trend yet, assumed flat', { line: g.paceLine }) : g.paceLine}</p>}
             </article>
           );
         })}
       </section>
 
-      <section className="tk-sec" aria-label="Benchmarks">
-        <SecHead title="Benchmarks" meta={sourceMeta(rated.map(x => x.r))} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <><p>{gym.meta.licenceNote}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
-        {gym === undefined && <p className="tk-quiet">Loading…</p>}
-        {gym === null && <p className="tk-quiet">Strength standards could not be loaded.</p>}
+      <section className="tk-sec" aria-label={t('Benchmarks')}>
+        <SecHead title={t('Benchmarks')} meta={sourceMeta(rated.map(x => x.r))} right={<InfoButton label={t('About levels')}><p>{standardsCaveat()}</p>{gym && <><p>{tn(gym.meta.licenceNote)}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
+        {gym === undefined && <p className="tk-quiet">{t('Loading…')}</p>}
+        {gym === null && <p className="tk-quiet">{t('Strength standards could not be loaded.')}</p>}
         {gym && !ctx && (
-          <p className="tk-quiet">Add {stdMissing.join(' and ')} on <a className="tk-link" href="#/profile">Profile</a> to see your level for each lift.</p>
+          <p className="tk-quiet">{tr('Add {missing} on {profile} to see your level for each lift.', { missing: missingText(stdMissing), profile: <a className="tk-link" href="#/profile">{t('Profile')}</a> })}</p>
         )}
         {gym && ctx && (
           <>
-            <p className="tk-quiet">Levels for <ValueText text={contextText(ctx)} />, from each lift’s best e1RM in the last 90 days.</p>
+            <p className="tk-quiet">{tr('Levels for {context}, from each lift’s best e1RM in the last 90 days.', { context: <ValueText text={contextText(ctx)} /> })}</p>
             {topRated.length > 0 && (
-              <div className="tk-bars">{topRated.map(({ l, r }) => <RatedBar key={l.exercise.id} l={l} r={r} label={l.exercise.name} />)}</div>
+              <div className="tk-bars">{topRated.map(({ l, r }) => <RatedBar key={l.exercise.id} l={l} r={r} label={tn(l.exercise.name)} />)}</div>
             )}
             {moreRated.length > 0 && (
               <details className="tk-more">
-                <summary>{moreRated.length} more lift{moreRated.length === 1 ? '' : 's'}</summary>
-                <div className="tk-bars">{moreRated.map(({ l, r }) => <RatedBar key={l.exercise.id} l={l} r={r} label={l.exercise.name} />)}</div>
+                <summary>{moreRated.length === 1 ? t('{n} more lift', { n: 1 }) : t('{n} more lifts', { n: moreRated.length })}</summary>
+                <div className="tk-bars">{moreRated.map(({ l, r }) => <RatedBar key={l.exercise.id} l={l} r={r} label={tn(l.exercise.name)} />)}</div>
               </details>
             )}
-            {!rated.length && <p className="tk-quiet">No lift with a standard logged in the last 90 days.</p>}
-            {notRated.length > 0 && <p className="tk-quiet">Not rated (no qualifying sets in 90 days): {notRated.join(', ')}.</p>}
-            {noStandard.length > 0 && <p className="tk-quiet">No standard: {noStandard.join(', ')}.</p>}
+            {!rated.length && <p className="tk-quiet">{t('No lift with a standard logged in the last 90 days.')}</p>}
+            {notRated.length > 0 && <p className="tk-quiet">{t('Not rated (no qualifying sets in 90 days): {list}.', { list: notRated.map(tn).join(t(', ')) })}</p>}
+            {noStandard.length > 0 && <p className="tk-quiet">{t('No standard: {list}.', { list: noStandard.map(tn).join(t(', ')) })}</p>}
             <DataCredit meta={gym.meta} />
           </>
         )}
       </section>
 
-      <section className="tk-sec" aria-label="Lifts">
-        <SecHead title="Lifts (90 days)" meta="e1RM and trend" />
-        {!lifts.length && !yours.length && <p className="tk-quiet">Nothing logged in the last 90 days.</p>}
+      <section className="tk-sec" aria-label={t('Lifts')}>
+        <SecHead title={t('Lifts (90 days)')} meta={t('e1RM and trend')} />
+        {!lifts.length && !yours.length && <p className="tk-quiet">{t('Nothing logged in the last 90 days.')}</p>}
         {yours.length > 0 && <>
-          <div className="tk-sub-hd">Your lifts</div>
+          <div className="tk-sub-hd">{t('Your lifts')}</div>
           <ul className="tk-rows">{yours.map(({ l, flag }) => <li key={l.exercise.id}><LiftRow l={l} flag={flag} /></li>)}</ul>
         </>}
         {others.length > 0 && <>
-          {yours.length > 0 && <div className="tk-sub-hd">Other lifts</div>}
+          {yours.length > 0 && <div className="tk-sub-hd">{t('Other lifts')}</div>}
           <ul className="tk-rows">{others.map(l => <li key={l.exercise.id}><LiftRow l={l} quiet={yours.length > 0} /></li>)}</ul>
         </>}
         <ScreenTip id="progress" shown={pickTip({ progress: data.finished >= 2 && lifts.length > 0 }, tipsSeen)} />
       </section>
 
       {stats.sessions > 0 && (
-        <section className="tk-sec" aria-label="Training summary">
-          <SecHead title="Training summary" />
+        <section className="tk-sec" aria-label={t('Training summary')}>
+          <SecHead title={t('Training summary')} />
           <LabelValueGrid variant="stats" className="tk-stats" items={[
-            { label: 'Favourite lift:', value: favName ?? '—' },
-            { label: 'Sessions:', value: stats.sessions.toLocaleString('en-GB') },
-            { label: 'Sets logged:', value: stats.sets.toLocaleString('en-GB') },
-            { label: 'Sets per session:', value: stats.setsPerSession !== null ? kg(stats.setsPerSession) : '—' },
-            { label: 'Busiest day:', value: stats.busiestDay !== null ? WEEKDAY_LONG[stats.busiestDay] : '—' },
-            { label: 'Longest break:', value: stats.longestBreak !== null ? `${stats.longestBreak} day${stats.longestBreak === 1 ? '' : 's'}` : '—' },
+            { label: t('Favourite lift:'), value: favName ? tn(favName) : '—' },
+            { label: t('Sessions:'), value: stats.sessions.toLocaleString('en-GB') },
+            { label: t('Sets logged:'), value: stats.sets.toLocaleString('en-GB') },
+            { label: t('Sets per session:'), value: stats.setsPerSession !== null ? kg(stats.setsPerSession) : '—' },
+            { label: t('Busiest day:'), value: stats.busiestDay !== null ? weekdayLong(stats.busiestDay) : '—' },
+            { label: t('Longest break:'), value: stats.longestBreak !== null ? stats.longestBreak === 1 ? t('{n} day', { n: 1 }) : t('{n} days', { n: stats.longestBreak }) : '—' },
           ]} />
           {fun && first && <p className="tk-fun">{funLine(funWord, short(first, today), fun)}</p>}
-          {first && last && <p className="tk-since">Stats from {stats.sessions} session{stats.sessions === 1 ? '' : 's'}, {short(first, today)} to {short(last, today)}</p>}
+          {first && last && <p className="tk-since">{stats.sessions === 1
+            ? t('Stats from {n} session, {from} to {to}', { n: 1, from: short(first, today), to: short(last, today) })
+            : t('Stats from {n} sessions, {from} to {to}', { n: stats.sessions, from: short(first, today), to: short(last, today) })}</p>}
         </section>
       )}
     </section>
@@ -194,15 +197,19 @@ function RatedBar({ l, r, label }: { l: LiftStats; r: LiftRating; label: string 
   );
 }
 
+function trendLabel(x: Trend): string {
+  return x === 'up' ? t('trend up') : x === 'down' ? t('trend down') : x === 'flat' ? t('trend flat') : t('trend not enough data');
+}
+
 /** One row of the lift list: name (and a flag when it needs a look), best e1RM in 90 days, the trend. */
 function LiftRow({ l, flag = null, quiet = false }: { l: LiftStats; flag?: LiftFlag | null; quiet?: boolean }) {
-  const tr = trendOf(l.rate);
+  const trend = trendOf(l.rate);
   const trail = l.series.slice(-12).map(p => p.e1rm);
   return (
     <a className={`tk-lift${quiet ? ' quiet' : ''}`} data-press="row" href={`#/lift/${encodeURIComponent(l.exercise.id)}`}>
-      <span className="tk-lift-name">{l.exercise.name}{flag && <span className="tk-flag">{flagText(flag)}</span>}</span>
-      <span className="tk-lift-v">{l.best90 !== null ? <>{kg(Math.round(l.best90 * 2) / 2)}<small> kg{l.exercise.bodyweightFactor > 0 ? ' incl. BW' : ''}</small></> : '—'}</span>
-      <span className="tk-trend">{trail.length > 1 ? <Sparkline values={trail} label={`trend ${tr === 'unknown' ? 'not enough data' : tr}`} /> : <span aria-hidden="true" className="mid">·</span>}</span>
+      <span className="tk-lift-name">{tn(l.exercise.name)}{flag && <span className="tk-flag">{flagText(flag)}</span>}</span>
+      <span className="tk-lift-v">{l.best90 !== null ? <>{kg(Math.round(l.best90 * 2) / 2)}<small>{l.exercise.bodyweightFactor > 0 ? t(' kg incl. BW') : ' kg'}</small></> : '—'}</span>
+      <span className="tk-trend">{trail.length > 1 ? <Sparkline values={trail} label={trendLabel(trend)} /> : <span aria-hidden="true" className="mid">·</span>}</span>
     </a>
   );
 }

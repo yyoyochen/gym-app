@@ -23,6 +23,7 @@ import { focusSlot, liftRows, nextAction, nextLabel, rowLabelOf, sessionCount, u
 import { priorFromHistory, prMomentFor } from '../ui/session/prs';
 import { effortWords, sessionNames } from '../ui/session/text';
 import { formatDate } from '../app/dates';
+import { t, te, tn, tr } from '../i18n';
 
 const key = (id: string) => `gymbro.session.${id}.overrides`;
 function readOverrides(id: string): SlotOverrides {
@@ -95,7 +96,7 @@ export function Session({ params }: { params: string[] }) {
 
   if (view === undefined) return <section className="screen logger" aria-busy="true" />;
   if (view === null) return (
-    <section className="screen logger"><LinkButton variant="quiet" href="#/today" icon="back">Today</LinkButton><p className="quiet">This session doesn’t exist.</p></section>
+    <section className="screen logger"><LinkButton variant="quiet" href="#/today" icon="back">{t('Today')}</LinkButton><p className="quiet">{t('This session doesn’t exist.')}</p></section>
   );
 
   const { session, slots, scale } = view;
@@ -108,15 +109,17 @@ export function Session({ params }: { params: string[] }) {
   const last = view.lastSet;
   const lastAt = last ? rowLabelOf(slots, last.id) : null;
   const rest = last && lastAt
-    ? `Rested ${formatElapsed(now - last.loggedAt)} since ${lastAt.lift !== focus?.exercise.name ? `${lastAt.lift}, ` : ''}${lastAt.label}`
+    ? lastAt.lift !== focus?.exercise.name
+      ? t('Rested {time} since {lift}, {label}', { time: formatElapsed(now - last.loggedAt), lift: tn(lastAt.lift), label: lastAt.label })
+      : t('Rested {time} since {label}', { time: formatElapsed(now - last.loggedAt), label: lastAt.label })
     : null;
   const tip = pickTip(loggerTips({ hasNext: !!focus && !!next, sealed: session.sealed, last: last ?? null, now }), tipsSeen);
   const act = focus && next ? nextAction(next, focus.exercise.bodyweightFactor) : null;
   const load = focus && next && isBarbell(focus.exercise) ? platesPerSide(next.weight, view.plates.barKg, view.plates.platesKg) : null;
   const note = focus?.nudge
-    ? { kind: focus.nudge.kind, text: focus.nudge.text }
+    ? { kind: focus.nudge.kind, text: te(focus.nudge.text) }
     : focus?.plan?.pain?.painCheck && !focus.work.length
-      ? { kind: 'stop' as const, text: `Pain check first: how does it feel warming up? ${focus.plan.pain.reasons[0] ?? ''}`.trim() }
+      ? { kind: 'stop' as const, text: t('Pain check first: how does it feel warming up? {reason}', { reason: te(focus.plan.pain.reasons[0] ?? '') }).trim() }
       : null;
 
   const save = async (d: SetDraft) => {
@@ -140,45 +143,45 @@ export function Session({ params }: { params: string[] }) {
 
   const finish = async () => { await finishSession(getDb(), id, Date.now()); go(`review/${id}`); };
   const finishButton = session.sealed ? (
-    <LinkButton variant="primary" block href={`#/review/${id}`} iconEnd="chevron">Back to review</LinkButton>
+    <LinkButton variant="primary" block href={`#/review/${id}`} iconEnd="chevron">{t('Back to review')}</LinkButton>
   ) : unlogged > 0 ? (
-    <ConfirmButton className="primary block split" confirmLabel={`Finish with ${unlogged} planned set${unlogged === 1 ? '' : 's'} unlogged?`}
-      confirmText="Finish session" onConfirm={finish}>Finish session</ConfirmButton>
+    <ConfirmButton className="primary block split" confirmLabel={unlogged === 1 ? t('Finish with {n} planned set unlogged?', { n: unlogged }) : t('Finish with {n} planned sets unlogged?', { n: unlogged })}
+      confirmText={t('Finish session')} onConfirm={finish}>{t('Finish session')}</ConfirmButton>
   ) : (
-    <Button variant="primary" block iconEnd="chevron" onClick={finish}>Finish session</Button>
+    <Button variant="primary" block iconEnd="chevron" onClick={finish}>{t('Finish session')}</Button>
   );
 
   return (
     <section className="screen logger">
       <header className="lhead">
-        <button type="button" className="lhead-close" data-press="dim" onClick={() => back('today')}><PixelIcon name="back" />Back</button>
-        <span className="lhead-mid">[{names.short}]{focus ? ` // ${focus.exercise.name}` : ''}</span>
+        <button type="button" className="lhead-close" data-press="dim" onClick={() => back('today')}><PixelIcon name="back" />{t('Back')}</button>
+        <span className="lhead-mid">[{names.short}]{focus ? ` // ${tn(focus.exercise.name)}` : ''}</span>
         {session.programSessionKey === 'adhoc'
           ? <span className="lhead-t tnum">{formatDate(session.date, { weekday: false })}</span>
-          : <span className="lhead-t tnum" aria-label={`Session time ${formatElapsed(now - session.startedAt)}`}>{formatElapsed(now - session.startedAt)}</span>}
+          : <span className="lhead-t tnum" aria-label={t('Session time {time}', { time: formatElapsed(now - session.startedAt) })}>{formatElapsed(now - session.startedAt)}</span>}
       </header>
 
       {session.sealed && (
-        <div className="banner spread"><span>Finished. Changes are marked “edited”.</span><LinkButton href={`#/review/${id}`}>Review</LinkButton></div>
+        <div className="banner spread"><span>{t('Finished. Changes are marked “edited”.')}</span><LinkButton href={`#/review/${id}`}>{t('Review')}</LinkButton></div>
       )}
-      {!view.commit && <p className="note">// Note: this session has no locked-in plan; sets are logged ungraded.</p>}
+      {!view.commit && <p className="note">{t('// Note: this session has no locked-in plan; sets are logged ungraded.')}</p>}
 
       {count.planned > 0 && (
-        <DitherBar label={names.short} valueText={`${count.done} of ${count.planned} sets`} value={count.done / count.planned} />
+        <DitherBar label={names.short} valueText={t('{done} of {planned} sets', { done: count.done, planned: count.planned })} value={count.done / count.planned} />
       )}
 
       {focus && next && !session.sealed ? (
         <div className="next">
           <span className="label">{nextLabel(next)}</span>
-          <div className="next-hero" aria-label={act!.needsWeight ? `No weight set yet × ${next.reps}` : `${kg(next.weight)} kilograms × ${next.reps}`}>
+          <div className="next-hero" aria-label={act!.needsWeight ? t('No weight set yet × {reps}', { reps: next.reps }) : t('{w} kilograms × {reps}', { w: kg(next.weight), reps: next.reps })}>
             <span className="next-w">{act!.hero}</span><span className="next-r"> × {next.reps}</span>
           </div>
           <div className="next-meta">
             {act!.caption && <span>{act!.caption}</span>}
-            <span>{next.warm ? 'Warm-up' : 'Effort'}{next.rir !== undefined && !next.warm && <b> {effortWords(next.rir, scale)}</b>}</span>
+            <span>{next.warm ? t('Warm-up') : t('Effort')}{next.rir !== undefined && !next.warm && <b> {effortWords(next.rir, scale)}</b>}</span>
             {load && !load.belowBar && (
               <button type="button" className="next-plates" data-press="dim" onClick={() => setPlates(next.weight)}>
-                Plates each side <b>{load.perSide.length ? load.perSide.map(kg).join(' + ') : 'empty bar'}</b>
+                {tr('Plates each side {plates}', { plates: <b>{load.perSide.length ? load.perSide.map(kg).join(' + ') : t('empty bar')}</b> })}
               </button>
             )}
           </div>
@@ -188,7 +191,7 @@ export function Session({ params }: { params: string[] }) {
             ) : (
               <>
                 <Button variant="primary" block icon="check" className="log-btn" onClick={() => { void logPlanned(focus, next.planned!); }}>{act!.primaryLabel}</Button>
-                <Button block className="adjust-btn" onClick={() => handlers.adjust(focus, next)}>Adjust weight, reps, effort</Button>
+                <Button block className="adjust-btn" onClick={() => handlers.adjust(focus, next)}>{t('Adjust weight, reps, effort')}</Button>
               </>
             )}
           </div>
@@ -196,9 +199,9 @@ export function Session({ params }: { params: string[] }) {
         </div>
       ) : graded.length > 0 && (
         <div className="next">
-          <span className="label">{session.sealed ? 'Finished' : 'Every planned set is logged'}</span>
-          <div className="next-hero"><span className="next-w">{count.done}</span><span className="next-r"> of {count.planned}</span></div>
-          <div className="next-meta"><span>Sets logged. Add a set below, or finish.</span></div>
+          <span className="label">{session.sealed ? t('Finished') : t('Every planned set is logged')}</span>
+          <div className="next-hero"><span className="next-w">{count.done}</span><span className="next-r"> {t('of {n}', { n: count.planned })}</span></div>
+          <div className="next-meta"><span>{t('Sets logged. Add a set below, or finish.')}</span></div>
           <div className="next-actions">{finishButton}</div>
         </div>
       )}
@@ -209,12 +212,12 @@ export function Session({ params }: { params: string[] }) {
             <p className="rested tnum" aria-live="off">
               {rest}
               {last && undoable(last, now) && (
-                <button type="button" className="undo" data-press="dim" onClick={() => deleteSet(getDb(), last.id)}>Undo last set</button>
+                <button type="button" className="undo" data-press="dim" onClick={() => deleteSet(getDb(), last.id)}>{t('Undo last set')}</button>
               )}
             </p>
           )}
           <ScreenTip id="undo" shown={tip} />
-          {note && <p className={`note nudge ${note.kind}`} role="status">// {note.kind === 'stop' ? 'Stop' : 'Note'}: {note.text}</p>}
+          {note && <p className={`note nudge ${note.kind}`} role="status">{note.kind === 'stop' ? t('// Stop: {text}', { text: note.text }) : t('// Note: {text}', { text: note.text })}</p>}
         </div>
       )}
 
@@ -225,17 +228,17 @@ export function Session({ params }: { params: string[] }) {
         ))}
       </div>
 
-      <Button block icon="plus" onClick={() => setPicker({ mode: 'add' })}>Add a lift (ungraded)</Button>
+      <Button block icon="plus" onClick={() => setPicker({ mode: 'add' })}>{t('Add a lift (ungraded)')}</Button>
       {((next && !session.sealed) || !graded.length) && <div className="finish">{finishButton}</div>}
 
       {sheet && (
-        <SetSheet open title={sheet.set ? `Edit set: ${sheet.slot.exercise.name}` : `Log set: ${sheet.slot.exercise.name}`}
+        <SetSheet open title={sheet.set ? t('Edit set: {name}', { name: tn(sheet.slot.exercise.name) }) : t('Log set: {name}', { name: tn(sheet.slot.exercise.name) })}
           initial={sheet.draft} step={sheet.slot.exercise.increment || 2.5} scale={scale}
-          saveLabel={sheet.set ? 'Save' : 'Log set'} onSave={save} onClose={() => setSheet(null)}
+          saveLabel={sheet.set ? t('Save') : t('Log set')} onSave={save} onClose={() => setSheet(null)}
           onDelete={sheet.set ? async () => { await deleteSet(getDb(), sheet.set!.id); setSheet(null); } : undefined} />
       )}
       <PlateSheet weight={plates} plates={view.plates} onClose={() => setPlates(null)} />
-      <ExercisePicker open={!!picker} title={picker?.mode === 'swap' ? 'Swap lift (logged, not graded)' : 'Add a lift (ungraded)'}
+      <ExercisePicker open={!!picker} title={picker?.mode === 'swap' ? t('Swap lift (logged, not graded)') : t('Add a lift (ungraded)')}
         exercises={exercises ?? []} onClose={() => setPicker(null)}
         onPick={e => {
           if (picker?.mode === 'swap') updateOverrides({ ...overrides, swaps: { ...overrides.swaps, [picker.slotOrder]: e.id } });

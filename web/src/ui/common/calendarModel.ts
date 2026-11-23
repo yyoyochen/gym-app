@@ -2,7 +2,8 @@
 // keyboard moves, and the spoken label for a day. DatePickerSheet only paints it.
 // Month labels and month shifts come from app/dates (monthLabel, shiftMonth).
 import type { ISODate } from '../../domain/types';
-import { addDays, shiftMonth, weekday } from '../../app/dates';
+import { addDays, monthLong, shiftMonth, weekday, weekdayLong } from '../../app/dates';
+import { t } from '../../i18n';
 
 /** How much you trained on a day: 0 light, 1 moderate, 2 heavy; null when there is no session. */
 export type DayLevel = 0 | 1 | 2;
@@ -57,15 +58,12 @@ export function sameDayIn(iso: ISODate, n: number): ISODate {
   return `${t.year}-${pad(t.month)}-${pad(Math.min(d, dim))}`;
 }
 
-const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-const LEVEL_WORD = ['light', 'moderate', 'heavy'] as const;
-
 /** "Thursday 19 November 2026, trained, heavy day". */
 export function dayLabel(iso: ISODate, level: DayLevel | null): string {
   const [y, m, d] = iso.split('-').map(Number);
-  return `${WEEKDAYS_LONG[weekday(iso)]} ${d} ${MONTHS_LONG[m - 1]} ${y}${level === null ? '' : `, trained, ${LEVEL_WORD[level]} day`}`;
+  const date = t('{weekday} {d} {month} {y}', { weekday: weekdayLong(weekday(iso)), d, month: monthLong(m), y });
+  if (level === null) return date;
+  return level === 0 ? t('{date}, trained, light day', { date }) : level === 1 ? t('{date}, trained, moderate day', { date }) : t('{date}, trained, heavy day', { date });
 }
 
 /** Working sets per day to three steps, in thirds of the busiest day. A session with no sets is light. */

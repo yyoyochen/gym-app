@@ -8,7 +8,7 @@ import { getDb, getOpenSession, listExercises } from '../db';
 import { DemoBanner } from '../app/DemoBanner';
 import { todayISO } from '../app/dates';
 import { estimateMinutes, isMain, slotFor, type DraftSlot, type PartWeek } from '../app/suggest';
-import { bodyPartOf, type BodyPart } from '../app/weekSets';
+import { bodyPartLabel, bodyPartOf, type BodyPart } from '../app/weekSets';
 import {
   canStartWorkout, commitWorkout, draftKey, focusState, loadDraft, planSummary, planWorkout, saveDraft, suggestDraft, swapLift, type WorkoutDraft, type WorkoutPlan,
 } from '../app/workout';
@@ -16,6 +16,7 @@ import { WorkoutLiftSheet } from '../app/parts/WorkoutLiftSheet';
 import { newId } from '../db/util';
 import { Button, DragList, NavBar, PixelIcon, go } from '../ui/kit';
 import { ExercisePicker } from '../ui/session/ExercisePicker';
+import { t, tn } from '../i18n';
 
 const READINESS: readonly Readiness[] = ['green', 'amber', 'red'];
 
@@ -51,7 +52,7 @@ export function Workout({ params }: { params: string[] }) {
   }, [draft, today, readiness]);
 
   const minutes = useMemo(() => (draft ? estimateMinutes(draft.slots.map(s => s.slot)) : 0), [draft]);
-  if (!draft) return <section className="screen" aria-busy="true"><NavBar title="Today's workout" backLabel="Today" fallback="today" /></section>;
+  if (!draft) return <section className="screen" aria-busy="true"><NavBar title={t("Today's workout")} backLabel={t('Today')} fallback="today" /></section>;
 
   const setSlots = (slots: DraftSlot[]) => setDraft({ ...draft, slots });
   const toggle = async (part: BodyPart) => {
@@ -78,16 +79,16 @@ export function Workout({ params }: { params: string[] }) {
   return (
     <section className="screen workout">
       <DemoBanner />
-      <NavBar title="Today's workout" backLabel="Today" fallback="today" />
+      <NavBar title={t("Today's workout")} backLabel={t('Today')} fallback="today" />
 
       <div className="wk-focus">
-        <span className="label">Focus</span>
+        <span className="label">{t('Focus')}</span>
         <div className="wk-chips">
           {rows.map(r => {
             const on = draft.focus.includes(r.part);
             return (
               <button key={r.part} type="button" className={`chip wk-chip${on ? ' on' : ''}`} aria-pressed={on} data-press="dim" onClick={() => { void toggle(r.part); }}>
-                {r.part} {r.done}/{r.target}
+                {bodyPartLabel(r.part)} {r.done}/{r.target}
               </button>
             );
           })}
@@ -95,15 +96,15 @@ export function Workout({ params }: { params: string[] }) {
       </div>
 
       <div className="wk-lifts">
-        <div className="tk-hd"><h2>{draft.slots.length} lift{draft.slots.length === 1 ? '' : 's'}</h2>{draft.slots.length > 0 && <span className="tk-hd-r"><span>about {minutes} min</span></span>}</div>
+        <div className="tk-hd"><h2>{draft.slots.length === 1 ? t('{n} lift', { n: 1 }) : t('{n} lifts', { n: draft.slots.length })}</h2>{draft.slots.length > 0 && <span className="tk-hd-r"><span>{t('about {n} min', { n: minutes })}</span></span>}</div>
         <DragList items={draft.slots} keyOf={s => s.slot.id} longPress onReorder={setSlots}
-          labelOf={s => exercises.find(e => e.id === s.slot.exerciseId)?.name ?? s.slot.exerciseId}
+          labelOf={s => tn(exercises.find(e => e.id === s.slot.exerciseId)?.name ?? s.slot.exerciseId)}
           render={(s, i) => {
             const sp = ready ? plan!.slots[i] : null;
             return (
               <button type="button" className="wk-lift" data-press="row" onClick={() => sp && setEditing(i)}>
                 <span className="wk-lift-main">
-                  <b>{sp?.exercise.name ?? exercises.find(e => e.id === s.slot.exerciseId)?.name ?? s.slot.exerciseId}</b>
+                  <b>{tn(sp?.exercise.name ?? exercises.find(e => e.id === s.slot.exerciseId)?.name ?? s.slot.exerciseId)}</b>
                   <span className="wk-rx">{sp ? planSummary(sp.target, sp.plannedSets) : '…'}</span>
                   {ready && <span className="wk-why">{plan!.reasons[i]}</span>}
                 </span>
@@ -113,12 +114,12 @@ export function Workout({ params }: { params: string[] }) {
           }} />
       </div>
 
-      <Button block className="wk-add" icon="plus" onClick={() => setPicker({})}>Add a lift</Button>
-      {draft.slots.length > 0 && <button type="button" className="link wk-clear" onClick={() => setDraft({ ...draft, focus: [], slots: [] })}>Clear and build my own</button>}
+      <Button block className="wk-add" icon="plus" onClick={() => setPicker({})}>{t('Add a lift')}</Button>
+      {draft.slots.length > 0 && <button type="button" className="link wk-clear" onClick={() => setDraft({ ...draft, focus: [], slots: [] })}>{t('Clear and build my own')}</button>}
 
       <div className="pin">
-        {open && <p className="quiet">Finish the session in progress first.</p>}
-        <Button variant="primary" block iconEnd="chevron" disabled={!canStart || busy} onClick={start}>Start workout</Button>
+        {open && <p className="quiet">{t('Finish the session in progress first.')}</p>}
+        <Button variant="primary" block iconEnd="chevron" disabled={!canStart || busy} onClick={start}>{t('Start workout')}</Button>
       </div>
 
       {editing !== null && ready && draft.slots[editing] && (
@@ -127,7 +128,7 @@ export function Workout({ params }: { params: string[] }) {
           onSwap={() => { setPicker({ swap: editing }); setEditing(null); }}
           onRemove={() => { setSlots(draft.slots.filter((_, j) => j !== editing)); setEditing(null); }} />
       )}
-      <ExercisePicker open={!!picker} exercises={exercises} title={picker?.swap !== undefined ? 'Swap lift' : 'Add a lift'}
+      <ExercisePicker open={!!picker} exercises={exercises} title={picker?.swap !== undefined ? t('Swap lift') : t('Add a lift')}
         onClose={() => setPicker(null)}
         onPick={ex => { if (picker?.swap !== undefined) swap(picker.swap, ex); else add(ex); setPicker(null); }} />
     </section>

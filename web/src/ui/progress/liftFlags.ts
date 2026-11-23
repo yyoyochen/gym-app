@@ -6,6 +6,7 @@
 //   never    in your targets or program, but never logged
 import type { ISODate } from '../../domain/types';
 import { addDays, daysBetween } from '../../app/dates';
+import { t } from '../../i18n';
 
 export type LiftFlag =
   | { kind: 'missing'; days: number }
@@ -50,10 +51,10 @@ export function liftFlag(series: { date: ISODate; e1rm: number }[], trained: ISO
 
 export function flagText(f: LiftFlag): string {
   switch (f.kind) {
-    case 'never': return 'Not trained yet';
-    case 'missing': return `Not trained in ${f.days} days`;
-    case 'down': return `Down ${f.pct}% in 4 wk`;
-    case 'flat': return `Flat for ${f.weeks} wk`;
+    case 'never': return t('Not trained yet');
+    case 'missing': return t('Not trained in {n} days', { n: f.days });
+    case 'down': return t('Down {pct}% in 4 wk', { pct: f.pct });
+    case 'flat': return t('Flat for {n} wk', { n: f.weeks });
   }
 }
 

@@ -14,6 +14,7 @@ import { DemoBanner } from '../app/DemoBanner';
 import { UpdateBanner } from '../app/parts/UpdateBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { TARGET_TYPE_LABELS } from '../app/labels';
+import { bodyPartLabel } from '../app/weekSets';
 import { useLive } from '../ui/useLive';
 import { readable } from '../ui/readable';
 import {
@@ -23,18 +24,19 @@ import { goalRows, loadConsistency, loadWeekBodyParts } from '../ui/progress/dat
 import { ReadinessCheck } from '../ui/session/Readiness';
 import { MonoNums, sessionNames, stripUnit, topWord } from '../ui/session/text';
 import { useNow, useScrollTop } from '../ui/session/useNow';
+import { t, te, tn } from '../i18n';
 
 /** The number a lift is about: its top set, else its working weight (reps for bodyweight). */
 function heroOf(sp: SlotPlan): { value: string; unit: string; caption: string } {
-  const t = sp.target;
-  if (t.model === 'topset' && t.topWeight !== undefined && t.topWeight > 0) {
-    const reps = t.topReps ?? sp.ghost[0]?.reps ?? t.targetReps;
-    return { value: kg(t.topWeight), unit: `kg × ${reps}`, caption: topWord(reps) };
+  const x = sp.target;
+  if (x.model === 'topset' && x.topWeight !== undefined && x.topWeight > 0) {
+    const reps = x.topReps ?? sp.ghost[0]?.reps ?? x.targetReps;
+    return { value: kg(x.topWeight), unit: `kg × ${reps}`, caption: topWord(reps) };
   }
-  const reps = sp.ghost[0]?.reps ?? t.targetReps;
-  if (t.weight === 0 && sp.exercise.bodyweightFactor > 0) return { value: String(reps), unit: 'reps', caption: `${sp.plannedSets} sets, bodyweight` };
-  if (t.weight === 0) return { value: '—', unit: `× ${reps}`, caption: 'first time: pick a weight' };
-  return { value: kg(t.weight), unit: `kg × ${reps}`, caption: `${sp.plannedSets} working sets` };
+  const reps = sp.ghost[0]?.reps ?? x.targetReps;
+  if (x.weight === 0 && sp.exercise.bodyweightFactor > 0) return { value: String(reps), unit: t('reps'), caption: t('{n} sets, bodyweight', { n: sp.plannedSets }) };
+  if (x.weight === 0) return { value: '—', unit: `× ${reps}`, caption: t('first time: pick a weight') };
+  return { value: kg(x.weight), unit: `kg × ${reps}`, caption: t('{n} working sets', { n: sp.plannedSets }) };
 }
 
 /** ["40 × 6", "90 × 3", "70 × 6, 6"] → its heaviest part, "90 × 3". */
@@ -48,8 +50,8 @@ const stripName = (name: string) => name.replace(/^(barbell|dumbbell|db|conventi
 
 function setsPair(sp: SlotPlan): LabelValueItem {
   const off = sp.ghost.filter(g => g.kind === 'backoff');
-  if (off.length) return { label: 'Back-offs', value: `${off.length} × ${off[0].reps} at ${kg(off[0].weight)}` };
-  return { label: 'Sets', value: `${sp.ghost.length} × ${sp.ghost[0]?.reps ?? sp.target.targetReps}` };
+  if (off.length) return { label: t('Back-offs'), value: t('{n} × {reps} at {w}', { n: off.length, reps: off[0].reps, w: kg(off[0].weight) }) };
+  return { label: t('Sets'), value: `${sp.ghost.length} × ${sp.ghost[0]?.reps ?? sp.target.targetReps}` };
 }
 
 export function Today(_props: { params: string[] }) {
@@ -114,14 +116,14 @@ export function Today(_props: { params: string[] }) {
   };
 
   const pairs: LabelValueItem[] = sp ? [
-    { label: 'Effort floor', value: sp.floorLabel },
+    { label: t('Effort floor'), value: te(sp.floorLabel) },
     setsPair(sp),
-    { label: 'Last time', value: lastTop(sp.lastTime) || 'First time' },
+    { label: t('Last time'), value: lastTop(sp.lastTime) || t('First time') },
   ] : [];
   if (open?.card) {
     pairs.splice(0, 0,
-      { label: 'Last set', value: `${kg(open.card.lastSet.weight)} × ${open.card.lastSet.reps}${open.card.lastSet.rir !== undefined ? ` @ ${formatEffort(open.card.lastSet.rir, scale)}` : ''}` },
-      { label: 'Rested', value: formatElapsed(open.card.restedMs + Math.max(0, clock - data.now)) });
+      { label: t('Last set'), value: `${kg(open.card.lastSet.weight)} × ${open.card.lastSet.reps}${open.card.lastSet.rir !== undefined ? ` @ ${formatEffort(open.card.lastSet.rir, scale)}` : ''}` },
+      { label: t('Rested'), value: formatElapsed(open.card.restedMs + Math.max(0, clock - data.now)) });
   }
   const paceBars = goals.filter(g => g.current !== null && g.target.value > 0 && g.target.subject !== 'sessions_per_week');
 
@@ -129,69 +131,72 @@ export function Today(_props: { params: string[] }) {
     <section className="screen today">
       <DemoBanner />
       {!open && <UpdateBanner />}
-      <Lockup mid={`Training log // ${open ? 'Live' : done && !showNext ? 'Done today' : names.short}`} />
+      <Lockup mid={t('Training log // {what}', { what: open ? t('Live') : done && !showNext ? t('Done today') : names.short })} />
 
       <div className="place">
         <div>
-          <h1 className="title">{done && !showNext ? sessionNames(done.session.nameSnapshot).title : showPlan ? names.title : 'Today'}</h1>
+          <h1 className="title">{done && !showNext ? sessionNames(done.session.nameSnapshot).title : showPlan ? names.title : t('Today')}</h1>
         </div>
       </div>
 
       {canStart && choices.length > 1 && plan.sessionKey && (
-        <Segmented<string> label="Session" value={plan.sessionKey} onChange={k => { setPick(k); setSel(null); setMinimum(false); }}
+        <Segmented<string> label={t('Session')} value={plan.sessionKey} onChange={k => { setPick(k); setSel(null); setMinimum(false); }}
           options={choices.map(c => ({ value: c.value, label: c.label }))} />
       )}
 
       {done && !showNext ? (
         <div className="stack">
           {done.total > 0
-            ? <BigNumber value={done.kept} unit={`of ${done.total}`} caption={`plan${done.total === 1 ? '' : 's'} met`} label={`${done.kept} of ${done.total} plans met`} />
-            : <BigNumber value="0" unit="graded" caption="logged, nothing to grade" />}
-          <LinkButton block className="split" iconEnd="chevron" href={`#/review/${done.session.id}`}>See the review</LinkButton>
+            ? <BigNumber value={done.kept} unit={t('of {n}', { n: done.total })} caption={done.total === 1 ? t('plan met') : t('plans met')} label={t('{kept} of {total} plans met', { kept: done.kept, total: done.total })} />
+            : <BigNumber value="0" unit={t('graded')} caption={t('logged, nothing to grade')} />}
+          <LinkButton block className="split" iconEnd="chevron" href={`#/review/${done.session.id}`}>{t('See the review')}</LinkButton>
         </div>
       ) : showPlan && sp && hero && (
         <>
           <BigNumber value={hero.value} unit={hero.unit} caption={hero.caption} />
           {plan.slots.length > 1 && (
-            <div className="lift-strip" role="tablist" aria-label="Lifts in this session">
+            <div className="lift-strip" role="tablist" aria-label={t('Lifts in this session')}>
               {plan.slots.map(s => (
                 <button key={s.target.slotId + s.slotOrder} type="button" role="tab" aria-selected={s === sp} data-press="dim"
                   className={`lift-cell${s === sp ? ' on' : ''}`} onClick={() => setSel(s.slotOrder)}>
-                  <span className="label">{stripName(s.exercise.name)}</span><b>{heroOf(s).value}</b><small>{stripUnit(heroOf(s).unit)}</small>
+                  <span className="label">{stripName(tn(s.exercise.name))}</span><b>{heroOf(s).value}</b><small>{stripUnit(heroOf(s).unit)}</small>
                 </button>
               ))}
             </div>
           )}
           <div className="promise">
-            <span className="label">{plan.status === 'committed' ? 'Locked in' : 'The plan'}: {sp.exercise.name}{sp.inMinimum && minimum ? ', minimum' : ''}</span>
+            <span className="label">{t('{label}: {name}', {
+              label: plan.status === 'committed' ? t('Locked in') : t('The plan'),
+              name: sp.inMinimum && minimum ? t('{name}, minimum', { name: tn(sp.exercise.name) }) : tn(sp.exercise.name),
+            })}</span>
             <p className="promise-text"><MonoNums text={sp.target.criterion} /></p>
-            <p className="quiet">Why: {readable(sp.target.why)}</p>
-            {sp.lastNote && <p className="quiet">Last note: {sp.lastNote}</p>}
+            <p className="quiet">{t('Why: {why}', { why: readable(sp.target.why) })}</p>
+            {sp.lastNote && <p className="quiet">{t('Last note: {note}', { note: sp.lastNote })}</p>}
           </div>
           <ScreenTip id="promise" shown={tip} />
-          {sp.pain?.painCheck && <p className="note">// Pain check: how does it feel warming up? {sp.pain.reasons[0]}</p>}
+          {sp.pain?.painCheck && <p className="note">{t('// Pain check: how does it feel warming up? {reason}', { reason: te(sp.pain.reasons[0] ?? '') })}</p>}
           <LabelValueGrid items={pairs} />
         </>
       )}
 
       {!open && !done && state.lastLine && !showPlan && <p className="quiet">{state.lastLine}</p>}
-      {!open && plan.reentryNote && showPlan && <p className="note">// Re-entry: {plan.reentryNote}</p>}
+      {!open && plan.reentryNote && showPlan && <p className="note">{t('// Re-entry: {note}', { note: te(plan.reentryNote) })}</p>}
 
       {plan.status === 'no_program' && !open && (
-        <LinkButton variant="primary" href="#/workout" block iconEnd="chevron">Plan today's workout</LinkButton>
+        <LinkButton variant="primary" href="#/workout" block iconEnd="chevron">{t("Plan today's workout")}</LinkButton>
       )}
       {plan.status === 'empty_session' && (
         <div className="banner stack">
-          <span>{plan.sessionName} has no lifts.</span>
-          <LinkButton href="#/profile/program" block>Edit the program</LinkButton>
-          <a className="link today-other" href="#/workout">Something else today</a>
+          <span>{t('{name} has no lifts.', { name: tn(plan.sessionName) })}</span>
+          <LinkButton href="#/profile/program" block>{t('Edit the program')}</LinkButton>
+          <a className="link today-other" href="#/workout">{t('Something else today')}</a>
         </div>
       )}
 
       <div className="bars">
-        <DitherBar label="This week" valueText={`${heat.thisWeek} of ${target}`} value={heat.thisWeek / Math.max(1, target)} />
+        <DitherBar label={t('This week')} valueText={t('{n} of {target}', { n: heat.thisWeek, target })} value={heat.thisWeek / Math.max(1, target)} />
         {paceBars.map(g => (
-          <DitherBar key={g.target.id} label={`${g.name}: ${TARGET_TYPE_LABELS[g.target.type].toLowerCase()} ${kg(g.target.value)} by ${formatDate(g.target.deadline, { weekday: false, year: false })}`}
+          <DitherBar key={g.target.id} label={t('{name}: {type} {value} by {date}', { name: g.name, type: TARGET_TYPE_LABELS[g.target.type].toLowerCase(), value: kg(g.target.value), date: formatDate(g.target.deadline, { weekday: false, year: false }) })}
             valueText={`${kg(Math.round(g.current! * 10) / 10)}, ${Math.round((g.current! / g.target.value) * 100)}%`} value={g.current! / g.target.value} />
         ))}
       </div>
@@ -199,7 +204,7 @@ export function Today(_props: { params: string[] }) {
       <ScreenTip id="goalNudge" shown={tip} />
 
       {done && !showNext && plan.status === 'planned' && (
-        <Button block iconEnd="chevron" className="split" onClick={() => setShowNext(true)}>Show the next session ({names.short})</Button>
+        <Button block iconEnd="chevron" className="split" onClick={() => setShowNext(true)}>{t('Show the next session ({name})', { name: names.short })}</Button>
       )}
 
       {canStart && (
@@ -207,19 +212,19 @@ export function Today(_props: { params: string[] }) {
           <ReadinessCheck answers={answers} onChange={setAnswers} readiness={readiness} />
           <ScreenTip id="readiness" shown={tip} />
           {(minimum || plan.slots.some(s => s.inMinimum)) && (
-            <Toggle label="Short on time" checked={minimum} onChange={setMinimum}
-              hint={minimum ? 'Only the main lifts today. The session still counts toward your week.' : `Do only the main lifts (${plan.slots.filter(s => s.inMinimum).length} of ${plan.slots.length}). The session still counts toward your week.`} />
+            <Toggle label={t('Short on time')} checked={minimum} onChange={setMinimum}
+              hint={minimum ? t('Only the main lifts today. The session still counts toward your week.') : t('Do only the main lifts ({n} of {m}). The session still counts toward your week.', { n: plan.slots.filter(s => s.inMinimum).length, m: plan.slots.length })} />
           )}
         </>
       )}
 
       <div className="stack">
         <div className="spread">
-          <span className="label">Last 4 weeks</span>
-          <InfoButton label="About the last 4 weeks">
-            <p>Shading shows how many working sets you did that day, compared with your busiest day in the last year: sparse dots for a light day, denser dots for more, solid for your biggest days. An empty day is a rest day.</p>
-            <p>The outlined box is today. Tap a shaded day to open that session.</p>
-            <p>Week is sessions done that week out of your target of {target} a week. It turns bold when you hit it.</p>
+          <span className="label">{t('Last 4 weeks')}</span>
+          <InfoButton label={t('About the last 4 weeks')}>
+            <p>{t('Shading shows how many working sets you did that day, compared with your busiest day in the last year: sparse dots for a light day, denser dots for more, solid for your biggest days. An empty day is a rest day.')}</p>
+            <p>{t('The outlined box is today. Tap a shaded day to open that session.')}</p>
+            <p>{t('Week is sessions done that week out of your target of {n} a week. It turns bold when you hit it.', { n: target })}</p>
           </InfoButton>
         </div>
         <RecentWeeks counts={counts} end={today} weekTarget={target}
@@ -227,38 +232,38 @@ export function Today(_props: { params: string[] }) {
       </div>
 
       {parts.length > 0 && (
-        <div className="stack today-parts" aria-label="This week's sets by body part">
-          <span className="label">This week (sets)</span>
+        <div className="stack today-parts" aria-label={t("This week's sets by body part")}>
+          <span className="label">{t('This week (sets)')}</span>
           {parts.map(r => (
-            <DitherBar key={r.part} label={r.part}
+            <DitherBar key={r.part} label={bodyPartLabel(r.part)}
               value={r.planned > 0 ? Math.min(r.done, r.planned) / r.planned : 1}
-              valueText={r.planned > 0 ? `${r.done}/${r.planned}` : `${r.done}, unplanned`} />
+              valueText={r.planned > 0 ? `${r.done}/${r.planned}` : t('{n}, unplanned', { n: r.done })} />
           ))}
         </div>
       )}
 
       {canStart && (
-        <ConfirmButton className="quiet block" confirmLabel={`Skip ${names.short}?`} confirmText={`Skip ${names.short}`}
-          message="It counts as a choice, not a gap: the rotation moves on." onConfirm={() => skipSession(getDb(), plan, Date.now())}>
-          Skip this session
+        <ConfirmButton className="quiet block" confirmLabel={t('Skip {name}?', { name: names.short })} confirmText={t('Skip {name}', { name: names.short })}
+          message={t('It counts as a choice, not a gap: the rotation moves on.')} onConfirm={() => skipSession(getDb(), plan, Date.now())}>
+          {t('Skip this session')}
         </ConfirmButton>
       )}
 
       {backup.due && !demo && (
         <p className="quiet">
-          {backup.days === null ? 'No backup yet.' : `Last backup ${backup.days} days ago.`}{' '}
-          <a className="link" href="#/profile/settings">Export</a>
+          {backup.days === null ? t('No backup yet.') : t('Last backup {n} days ago.', { n: backup.days })}{' '}
+          <a className="link" href="#/profile/settings">{t('Export')}</a>
         </p>
       )}
 
       {(canStart || open) && (
         <div className="pin">
           {open ? (
-            <LinkButton variant="primary" block iconEnd="chevron" href={`#/session/${open.session.id}`}>Resume {names.short}</LinkButton>
+            <LinkButton variant="primary" block iconEnd="chevron" href={`#/session/${open.session.id}`}>{t('Resume {name}', { name: names.short })}</LinkButton>
           ) : (
             <>
-              <Button variant="primary" block iconEnd="chevron" disabled={busy} onClick={start}>Start {names.short}</Button>
-              <a className="link today-other" href={readiness === 'green' ? '#/workout' : `#/workout/${readiness}`}>Something else today</a>
+              <Button variant="primary" block iconEnd="chevron" disabled={busy} onClick={start}>{t('Start {name}', { name: names.short })}</Button>
+              <a className="link today-other" href={readiness === 'green' ? '#/workout' : `#/workout/${readiness}`}>{t('Something else today')}</a>
             </>
           )}
         </div>

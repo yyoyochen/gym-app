@@ -16,7 +16,8 @@ import { goalRows } from '../ui/progress/data';
 import { pickTip } from '../app/tips';
 import { ScreenTip, useTipsSeen } from '../app/parts/ScreenTip';
 import { BigNumber, DitherBar, DitherNumber, LinkButton, Lockup, Parts, Verdict, prefersReducedMotion } from '../ui/kit';
-import { MonoNums, sessionNames } from '../ui/session/text';
+import { MonoNums, painWhere, sessionNames } from '../ui/session/text';
+import { t, te, tn } from '../i18n';
 import { priorFromHistory, sessionPrs } from '../ui/session/prs';
 import { useScrollTop } from '../ui/session/useNow';
 
@@ -29,20 +30,29 @@ function alreadySeen(id: string): boolean {
 function markSeen(id: string) { try { sessionStorage.setItem(seenKey(id), '1'); } catch { /* ignore */ } }
 
 function sentence(g: SessionGrade): string {
-  if (!g.total) return g.added.length ? 'Nothing graded: every lift was added or swapped.' : 'No committed targets.';
-  const missed = g.slots.filter(s => !s.ungraded && s.result.verdict === 'missed').map(s => s.target.exerciseName);
+  if (!g.total) return g.added.length ? t('Nothing graded: every lift was added or swapped.') : t('No committed targets.');
+  const missed = g.slots.filter(s => !s.ungraded && s.result.verdict === 'missed').map(s => tn(s.target.exerciseName));
   const beat = g.slots.filter(s => s.result.verdict === 'beat').length;
-  if (!missed.length) return beat ? `Every plan met, ${beat} beaten.` : 'Every plan met.';
-  return `${missed.join(', ')} ${missed.length === 1 ? 'was' : 'were'} short of the plan.`;
+  if (!missed.length) return beat ? t('Every plan met, {n} beaten.', { n: beat }) : t('Every plan met.');
+  const names = missed.join(t(', '));
+  return missed.length === 1 ? t('{names} was short of the plan.', { names }) : t('{names} were short of the plan.', { names });
 }
 
 function safetyEvents(g: SessionGrade, scale: EffortScale): string[] {
   const out: string[] = [];
   for (const s of g.slots) {
     for (const x of s.sets) {
-      if (x.pain) out.push(`${x.exerciseNameSnapshot}: pain flagged (${x.pain.side !== 'na' && x.pain.side !== 'both' ? `${x.pain.side} ` : ''}${x.pain.area.replace('_', ' ')}, severity ${x.pain.severity})${x.pain.severity >= 2 ? ' — the lift stopped; next session holds the load and asks a pain check' : ' — next session holds the load'}.`);
-      if (x.failed && x.kind !== 'warmup') out.push(`${x.exerciseNameSnapshot}: rep failure at ${x.weight} kg — don't repeat it until next session.`);
-      if (x.kind === 'top' && x.rir !== undefined && x.rir < s.target.rirFloor) out.push(`${x.exerciseNameSnapshot}: top set at ${formatEffort(x.rir, scale)}, past the ${formatEffort(s.target.rirFloor, scale)} floor — next time comes down one increment.`);
+      const name = tn(x.exerciseNameSnapshot);
+      if (x.pain) {
+        const v = { name, where: painWhere(x.pain, false), n: x.pain.severity };
+        out.push(x.pain.severity >= 2
+          ? t('{name}: pain flagged ({where}, severity {n}) — the lift stopped; next session holds the load and asks a pain check.', v)
+          : t('{name}: pain flagged ({where}, severity {n}) — next session holds the load.', v));
+      }
+      if (x.failed && x.kind !== 'warmup') out.push(t("{name}: rep failure at {w} kg — don't repeat it until next session.", { name, w: x.weight }));
+      if (x.kind === 'top' && x.rir !== undefined && x.rir < s.target.rirFloor) {
+        out.push(t('{name}: top set at {effort}, past the {floor} floor — next time comes down one increment.', { name, effort: formatEffort(x.rir, scale), floor: formatEffort(s.target.rirFloor, scale) }));
+      }
     }
   }
   return out;
@@ -79,7 +89,7 @@ export function Review({ params }: { params: string[] }) {
   }, [id, !!data?.grade]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (data === undefined) return <section className="screen review" aria-busy="true" />;
-  if (data === null) return <section className="screen review"><LinkButton variant="quiet" href="#/today" icon="back">Today</LinkButton><p className="quiet">This session doesn’t exist.</p></section>;
+  if (data === null) return <section className="screen review"><LinkButton variant="quiet" href="#/today" icon="back">{t('Today')}</LinkButton><p className="quiet">{t('This session doesn’t exist.')}</p></section>;
   const { session, grade, next, pace, prs, scale } = data;
   const safety = grade ? safetyEvents(grade, scale) : [];
   const n = grade?.slots.length ?? 0;
@@ -89,91 +99,91 @@ export function Review({ params }: { params: string[] }) {
 
   return (
     <section className="screen review">
-      <Lockup mid={`Review // ${names.short}`} />
+      <Lockup mid={t('Review // {name}', { name: names.short })} />
       <div className="place">
         <div>
           <h1 className="title">{names.title}</h1>
-          <p className="quiet">{formatDate(session.date)}{session.edited ? ', edited' : ''}</p>
+          <p className="quiet">{session.edited ? t('{date}, edited', { date: formatDate(session.date) }) : formatDate(session.date)}</p>
         </div>
       </div>
       {!session.sealed && (
-        <div className="banner spread"><span>Still open.</span><LinkButton href={`#/session/${id}`}>Back to the session</LinkButton></div>
+        <div className="banner spread"><span>{t('Still open.')}</span><LinkButton href={`#/session/${id}`}>{t('Back to the session')}</LinkButton></div>
       )}
 
       {grade ? (
         <>
           <header className="kept">
-            <BigNumber value={grade.kept} unit={`of ${grade.total}`} caption={`plan${grade.total === 1 ? '' : 's'} met`}
-              label={`${grade.kept} of ${grade.total} plans met`} />
+            <BigNumber value={grade.kept} unit={t('of {n}', { n: grade.total })} caption={grade.total === 1 ? t('plan met') : t('plans met')}
+              label={t('{kept} of {total} plans met', { kept: grade.kept, total: grade.total })} />
             <p className="quiet kept-line">{sentence(grade)}</p>
           </header>
           <div className={`rv-ledger${reveal ? ' reveal' : ''}`} role="list">
             {grade.slots.map((s, i) => {
               const v = s.ungraded ? 'new' : s.result.verdict;
-              const swappedName = s.sets[0] && s.sets[0].exerciseNameSnapshot !== s.target.exerciseName ? `${s.sets[0].exerciseNameSnapshot}: ` : '';
+              const swappedName = s.sets[0] && s.sets[0].exerciseNameSnapshot !== s.target.exerciseName ? t('{name}: ', { name: tn(s.sets[0].exerciseNameSnapshot) }) : '';
               return (
                 <article key={s.slotOrder} role="listitem" className={`led ${v}`} style={{ ['--i' as string]: i, ['--n' as string]: n }}>
-                  <span className="led-l label">{s.target.exerciseName}</span>
+                  <span className="led-l label">{tn(s.target.exerciseName)}</span>
                   <p className="led-p"><MonoNums text={s.target.criterion} /></p>
                   <p className="led-r">{swappedName}<SetsDone parts={setsParts(s.sets, scale)} warmups={s.sets.length} /></p>
-                  <p className="led-d">{s.result.detail}</p>
-                  <Verdict kind={v} className="led-v">{s.ungraded ? 'Ungraded' : undefined}</Verdict>
+                  <p className="led-d">{te(s.result.detail)}</p>
+                  <Verdict kind={v} className="led-v">{s.ungraded ? t('Ungraded') : undefined}</Verdict>
                 </article>
               );
             })}
             {grade.added.map((a, i) => (
               <article key={a.slotOrder} role="listitem" className="led new" style={{ ['--i' as string]: n + i, ['--n' as string]: n }}>
-                <span className="led-l label">{a.name}</span>
-                <p className="led-p">Added during the session</p>
+                <span className="led-l label">{tn(a.name)}</span>
+                <p className="led-p">{t('Added during the session')}</p>
                 <p className="led-r"><SetsDone parts={setsParts(a.sets, scale)} warmups={a.sets.length} /></p>
-                <Verdict kind="new" className="led-v">Ungraded</Verdict>
+                <Verdict kind="new" className="led-v">{t('Ungraded')}</Verdict>
               </article>
             ))}
           </div>
           <ScreenTip id="grade" shown={pickTip({ grade: session.sealed && grade.slots.some(s => !s.ungraded && s.result.verdict !== 'new') }, tipsSeen)} />
         </>
-      ) : <p className="quiet">This session had no locked-in plan, so there is nothing to grade.</p>}
+      ) : <p className="quiet">{t('This session had no locked-in plan, so there is nothing to grade.')}</p>}
 
       {top && (
-        <section className="pr-inline" aria-label="New bests">
-          <span className="label">[PR] // {top.lift}</span>
+        <section className="pr-inline" aria-label={t('New bests')}>
+          <span className="label">[PR] // {tn(top.lift)}</span>
           {reveal && !prefersReducedMotion()
             ? <DitherNumber text={top.moment.value} height={110} className="accent" />
             : <BigNumber value={top.moment.value} size="display" accent />}
           <p className="pr-inline-sub"><b>{top.moment.unit}</b> {top.moment.caption}</p>
-          {prs.length > 1 && <p className="quiet">Also: {prs.slice(1).map(p => `${p.lift} ${p.moment.value} ${p.moment.unit}`).join(', ')}</p>}
+          {prs.length > 1 && <p className="quiet">{t('Also: {list}', { list: prs.slice(1).map(p => `${tn(p.lift)} ${p.moment.value} ${p.moment.unit}`).join(t(', ')) })}</p>}
         </section>
       )}
 
       {safety.length > 0 && (
-        <section className="stack" aria-label="Safety">
-          <span className="label">Safety</span>
-          {safety.map((x, i) => <p key={i} className="note">// Stop: {x}</p>)}
+        <section className="stack" aria-label={t('Safety')}>
+          <span className="label">{t('Safety')}</span>
+          {safety.map((x, i) => <p key={i} className="note">{t('// Stop: {text}', { text: x })}</p>)}
         </section>
       )}
 
       {pace.some(p => p.paceLine) && (
-        <section className="bars" aria-label="Targets touched">
+        <section className="bars" aria-label={t('Targets touched')}>
           {pace.filter(p => p.paceLine).map(p => (
             <div key={p.target.id} className="stack tight">
-              <DitherBar label={`${p.name}: ${TARGET_TYPE_LABELS[p.target.type].toLowerCase()} ${kg(p.target.value)} by ${formatDate(p.target.deadline, { weekday: false, year: false })}`}
+              <DitherBar label={t('{name}: {type} {value} by {date}', { name: p.name, type: TARGET_TYPE_LABELS[p.target.type].toLowerCase(), value: kg(p.target.value), date: formatDate(p.target.deadline, { weekday: false, year: false }) })}
                 valueText={p.current !== null && p.target.value > 0 ? `${kg(Math.round(p.current * 10) / 10)}, ${Math.round((p.current / p.target.value) * 100)}%` : p.evidence}
                 value={p.current !== null && p.target.value > 0 ? p.current / p.target.value : 0} />
-              <p className="quiet">{p.paceLine}{p.pace ? `, ${feasibilityWord(p.pace.feasibility)}` : ''}</p>
+              <p className="quiet">{p.pace ? t('{line}, {word}', { line: p.paceLine, word: feasibilityWord(p.pace.feasibility) }) : p.paceLine}</p>
             </div>
           ))}
         </section>
       )}
 
       {next && next.status === 'planned' && nextNames && (
-        <section className="stack" aria-label="Next session">
-          <p className="note">// Next: {nextNames.title}. Preview only, the plan locks when you start it.</p>
+        <section className="stack" aria-label={t('Next session')}>
+          <p className="note">{t('// Next: {name}. Preview only, the plan locks when you start it.', { name: nextNames.title })}</p>
           <div className="next-list">
             {next.slots.map(sp => (
               <div key={sp.target.slotId} className="next-item">
-                <span className="label">{sp.target.exerciseName}</span>
+                <span className="label">{tn(sp.target.exerciseName)}</span>
                 <p className="promise-text"><MonoNums text={sp.target.criterion} /></p>
-                <p className="quiet">Why: {readable(sp.target.why)}</p>
+                <p className="quiet">{t('Why: {why}', { why: readable(sp.target.why) })}</p>
               </div>
             ))}
           </div>
@@ -181,7 +191,7 @@ export function Review({ params }: { params: string[] }) {
       )}
 
       <div className="pin">
-        <LinkButton variant="primary" block href="#/today" iconEnd="chevron">Done</LinkButton>
+        <LinkButton variant="primary" block href="#/today" iconEnd="chevron">{t('Done')}</LinkButton>
       </div>
     </section>
   );
@@ -190,5 +200,5 @@ export function Review({ params }: { params: string[] }) {
 /** What was done for a slot: the set parts; "warm-ups only" when only warm-ups were saved; a dash when nothing was logged. */
 function SetsDone({ parts, warmups }: { parts: string[]; warmups: number }) {
   if (parts.length) return <Parts items={parts} />;
-  return warmups ? <>Warm-ups only ({warmups})</> : <>—</>;
+  return warmups ? <>{t('Warm-ups only ({n})', { n: warmups })}</> : <>—</>;
 }

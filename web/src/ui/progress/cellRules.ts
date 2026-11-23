@@ -3,6 +3,7 @@
 // a set before the day's heaviest set and lighter than 80% of it. Nothing is
 // written back.
 import { kg } from '../../app/coach';
+import { t } from '../../i18n';
 
 export type CellRole = 'top' | 'work' | 'ramp';
 
@@ -23,7 +24,7 @@ export function classifySets(sets: { weight: number; kind: string }[], bodyweigh
 export function setCountsText(sets: { weight: number; kind: string }[], bodyweightFactor = 0): string {
   const ramp = classifySets(sets, bodyweightFactor).filter(r => r === 'ramp').length;
   const work = sets.length - ramp;
-  return ramp ? `${work} working, ${ramp} ramp` : `${work} working`;
+  return ramp ? t('{work} working, {ramp} ramp', { work, ramp }) : t('{work} working', { work });
 }
 
 /** Weight split for the slots: "82" + ".5"; bodyweight lifts read "BW" or "+10". */

@@ -5,7 +5,7 @@ import type { GymStandardsData } from '../../benchmarks/gymStandards';
 import { rateValue } from '../../benchmarks/liftRating';
 import { defaultProfile } from '../../db/repo';
 import {
-  STANDARDS_CAVEAT, confidenceWord, contextText, levelTableText, sourceMeta, missingForStandards, nextText, ordinal, ratedValueText, standardsContext, standingText,
+  standardsCaveat, confidenceWord, contextText, levelTableText, sourceMeta, missingForStandards, nextText, ordinal, ratedValueText, standardsContext, standingText,
 } from './standards';
 
 const data: GymStandardsData = JSON.parse(readFileSync(fileURLToPath(new URL('../../../public/standards/gym-standards.json', import.meta.url)), 'utf8'));
@@ -48,8 +48,8 @@ describe('plain-language strings', () => {
   });
 
   it('the caveat names the population and the level percentiles', () => {
-    expect(STANDARDS_CAVEAT).toMatch(/everyday gym lifters .*not competitors/);
-    expect(STANDARDS_CAVEAT).toMatch(/Intermediate ≈ 50th/);
+    expect(standardsCaveat()).toMatch(/everyday gym lifters .*not competitors/);
+    expect(standardsCaveat()).toMatch(/Intermediate ≈ 50th/);
   });
 });
 

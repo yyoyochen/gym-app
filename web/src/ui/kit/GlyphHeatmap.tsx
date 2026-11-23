@@ -1,6 +1,7 @@
 import { Legend } from './Display';
 import { InfoButton } from './InfoButton';
-import { HEATMAP_INFO } from './heatmapInfo';
+import { heatmapInfo } from './heatmapInfo';
+import { t, tr } from '../../i18n';
 import { useLayoutEffect, useMemo, useRef } from 'react';
 import { WEEK_MARK, heatGlyph, heatmapGrid, SHADES, EMPTY } from './dither';
 
@@ -10,7 +11,7 @@ import { WEEK_MARK, heatGlyph, heatmapGrid, SHADES, EMPTY } from './dither';
  * sits in its own 1ch grid cell, so fallback fonts for the block glyphs can't
  * misalign columns. Scrolls horizontally and opens at the most recent week.
  */
-export function GlyphHeatmap({ counts, weeks, end, thresholds, weekTarget, onSelect, label = 'Training days', legend = false, className = '' }: {
+export function GlyphHeatmap({ counts, weeks, end, thresholds, weekTarget, onSelect, label = t('Training days'), legend = false, className = '' }: {
   /** ISO date → count (sessions or sets); 0/missing = nothing logged. */
   counts: Record<string, number>;
   weeks: number;
@@ -34,7 +35,7 @@ export function GlyphHeatmap({ counts, weeks, end, thresholds, weekTarget, onSel
   return (
     <div className={`gheat ${className}`}>
       <div className="gheat-scroll" ref={wrap}>
-        <div className="gheat-grid" style={cols} role="img" aria-label={`${label}: ${trained} days in the last ${weeks} weeks`}>
+        <div className="gheat-grid" style={cols} role="img" aria-label={t('{label}: {n} days in the last {weeks} weeks', { label, n: trained, weeks })}>
           {g.months.map(m => (
             <span key={`m${m.week}`} className="gheat-month" style={{ gridColumn: `${m.week + 2} / span 3`, gridRow: 1 }}>{m.text}</span>
           ))}
@@ -49,7 +50,7 @@ export function GlyphHeatmap({ counts, weeks, end, thresholds, weekTarget, onSel
             }),
           ])}
           {g.weekMarks && [
-            <span key="wl" className="gheat-day wk" style={{ gridColumn: 1, gridRow: 9 }}>Wk</span>,
+            <span key="wl" className="gheat-day wk" style={{ gridColumn: 1, gridRow: 9 }}>{t('Wk')}</span>,
             ...g.weekMarks.map((m, w) => (
               <span key={`w${w}`} className={`gheat-c wk ${m}`} style={{ gridColumn: w + 2, gridRow: 9 }}>{WEEK_MARK[m]}</span>
             )),
@@ -58,8 +59,8 @@ export function GlyphHeatmap({ counts, weeks, end, thresholds, weekTarget, onSel
       </div>
       {legend && (
         <div className="legend-row">
-          <Legend className="gheat-legend">Less <span className="accent">{EMPTY} {SHADES.join(' ')}</span> More</Legend>
-          <InfoButton label="About the heatmap">{HEATMAP_INFO}</InfoButton>
+          <Legend className="gheat-legend">{tr('Less {scale} More', { scale: <span className="accent">{EMPTY} {SHADES.join(' ')}</span> })}</Legend>
+          <InfoButton label={t('About the heatmap')}>{heatmapInfo()}</InfoButton>
         </div>
       )}
     </div>

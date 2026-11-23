@@ -6,6 +6,7 @@ import type { PlannedSet } from '../../engine';
 import { setMeetsPlan, type LiveSlot } from '../../app/coach';
 import { isUnloaded } from '../../app/labels';
 import { loadText } from './text';
+import { t } from '../../i18n';
 
 export type RowState = 'logged' | 'next' | 'todo';
 
@@ -97,20 +98,25 @@ export function sessionCount(slots: readonly LiveSlot[]): { done: number; planne
 export const UNDO_MS = 10_000;
 export const undoable = (last: { loggedAt: number } | null, now: number): boolean => !!last && now - last.loggedAt <= UNDO_MS;
 
-const KIND_WORD: Partial<Record<SetKind, string>> = { top: 'top set', backoff: 'back-off', drop: 'drop set' };
+const kindWord = (k: SetKind): string => (k === 'top' ? t('top set') : k === 'backoff' ? t('back-off') : k === 'drop' ? t('drop set') : '');
 
 /** "Next: set 2 of 4, back-off", "Next: warm-up 1 of 3". */
 export function nextLabel(r: SheetRow): string {
-  if (r.warm) return `Next: warm-up ${r.n} of ${r.of}`;
-  const k = KIND_WORD[r.kind];
-  return `Next: set ${r.n} of ${r.of}${k ? `, ${k}` : ''}`;
+  if (r.warm) return t('Next: warm-up {n} of {of}', { n: r.n, of: r.of });
+  const kind = kindWord(r.kind);
+  return kind ? t('Next: set {n} of {of}, {kind}', { n: r.n, of: r.of, kind }) : t('Next: set {n} of {of}', { n: r.n, of: r.of });
+}
+
+/** A row's key as shown: "W1", "Top", "2" (the stored label stays English; the logic compares it). */
+export function shownLabel(r: Pick<SheetRow, 'label' | 'warm' | 'n'>): string {
+  return r.warm ? t('W{n}', { n: r.n }) : r.label === 'Top' ? t('Top') : r.label;
 }
 
 /** The row label of a logged set, for "rested … since set 2". */
 export function rowLabelOf(slots: readonly LiveSlot[], setId: string): { lift: string; label: string } | null {
   for (const s of slots) {
     const r = liftRows(s).rows.find(x => x.set?.id === setId);
-    if (r) return { lift: s.exercise.name, label: r.warm ? `warm-up ${r.n}` : r.label === 'Top' ? 'the top set' : `set ${r.label}` };
+    if (r) return { lift: s.exercise.name, label: r.warm ? t('warm-up {n}', { n: r.n }) : r.label === 'Top' ? t('the top set') : t('set {n}', { n: r.label }) };
   }
   return null;
 }
@@ -132,8 +138,8 @@ export function nextAction(r: Pick<SheetRow, 'weight'>, bodyweightFactor: number
   return {
     needsWeight,
     hero: loadText(r.weight, bodyweightFactor),
-    caption: needsWeight ? 'set the weight' : null,
-    primaryLabel: needsWeight ? 'Set weight' : 'Log as planned',
+    caption: needsWeight ? t('set the weight') : null,
+    primaryLabel: needsWeight ? t('Set weight') : t('Log as planned'),
   };
 }
 

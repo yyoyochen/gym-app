@@ -2,22 +2,23 @@
 import { platesPerSide, kg } from '../../app/coach';
 import type { PlateSettings } from '../../app/prefs';
 import { BigNumber, LabelValueGrid, Sheet } from '../kit';
+import { t } from '../../i18n';
 
 export function PlateSheet({ weight, plates, onClose }: { weight: number | null; plates: PlateSettings; onClose: () => void }) {
   if (weight === null) return null;
   const load = platesPerSide(weight, plates.barKg, plates.platesKg);
   const max = Math.max(...plates.platesKg, 25);
   return (
-    <Sheet open title="Plates" onClose={onClose}>
+    <Sheet open title={t('Plates')} onClose={onClose}>
       <BigNumber size="lg" value={kg(weight)} unit="kg" />
       {load.belowBar ? (
-        <p className="quiet">Lighter than the {kg(plates.barKg)} kg bar.</p>
+        <p className="quiet">{t('Lighter than the {bar} kg bar.', { bar: kg(plates.barKg) })}</p>
       ) : (
         <>
           <LabelValueGrid items={[
-            { label: 'Each side', value: load.perSide.length ? load.perSide.map(kg).join(' + ') : 'Empty bar', accent: true },
-            { label: 'Bar', value: `${kg(plates.barKg)} kg` },
-            ...(load.remainder > 0 ? [{ label: 'Can’t be made', value: `${kg(load.remainder)} kg` }] : []),
+            { label: t('Each side'), value: load.perSide.length ? load.perSide.map(kg).join(' + ') : t('Empty bar'), accent: true },
+            { label: t('Bar'), value: `${kg(plates.barKg)} kg` },
+            ...(load.remainder > 0 ? [{ label: t('Can’t be made'), value: `${kg(load.remainder)} kg` }] : []),
           ]} />
           <div className="plate-strip" aria-hidden="true">
             <span className="bar" />
@@ -27,7 +28,7 @@ export function PlateSheet({ weight, plates, onClose }: { weight: number | null;
           </div>
         </>
       )}
-      <p className="quiet">Bar and plates are set in Profile → Settings.</p>
+      <p className="quiet">{t('Bar and plates are set in Profile → Settings.')}</p>
     </Sheet>
   );
 }

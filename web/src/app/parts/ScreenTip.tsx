@@ -3,7 +3,8 @@
 import { getDb } from '../../db';
 import { Tip, tipFooter } from '../../ui/kit';
 import { useLive } from '../../ui/useLive';
-import { GOAL_NUDGE_TEXT, TIP_IDS, TIP_TEXT, getTipsSeen, markTipSeen, pickTip, tipNumber, type CardId } from '../tips';
+import { TIP_IDS, TIP_TEXT, getTipsSeen, goalNudgeText, markTipSeen, pickTip, tipNumber, type CardId } from '../tips';
+import { t } from '../../i18n';
 
 /** The tips already seen, live (null until startup has decided). */
 export function useTipsSeen(): string[] | null {
@@ -20,8 +21,8 @@ export function ScreenTip({ id, shown }: { id: CardId; shown: CardId | null }) {
   const dismiss = () => { void markTipSeen(getDb(), id); };
   if (id === 'goalNudge') {
     return (
-      <Tip text={GOAL_NUDGE_TEXT} onDismiss={dismiss}>
-        <a className="link tip-link" href="#/profile/targets" onClick={dismiss}>Set a goal</a>
+      <Tip text={goalNudgeText()} onDismiss={dismiss}>
+        <a className="link tip-link" href="#/profile/targets" onClick={dismiss}>{t('Set a goal')}</a>
       </Tip>
     );
   }

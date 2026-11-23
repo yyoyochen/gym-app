@@ -1,26 +1,27 @@
 // Gym-goer standards in the Ink & Dither idiom: the level is a glyph dither bar
 // (percentile of gym-goers), the level word is mono caps, the confidence is a
 // small outlined letter. No tier colours: one accent only.
-import { CONFIDENCE_LABEL, type Confidence } from '../../benchmarks/gymStandards';
+import { confidenceLabel, type Confidence } from '../../benchmarks/gymStandards';
+import { t, tr } from '../../i18n';
 import type { LiftRating } from '../../benchmarks/liftRating';
 import { DitherBar } from '../kit';
 import { confidenceWord, levelWord, nextText, ordinal, ratedValueText } from './standards';
 
 /** "Intermediate · 55th" — the bar's value text. */
 export function levelValueText(r: Pick<LiftRating, 'level' | 'percentile'>): string {
-  return `${levelWord(r)}, ${ordinal(r.percentile)}`;
+  return t('{level}, {nth}', { level: levelWord(r), nth: ordinal(r.percentile) });
 }
 
 /** One lift's level as a dither bar: label left, "Intermediate · 55th" right, percentile as the fill. */
 export function LevelBar({ rating, label, cells }: { rating: Pick<LiftRating, 'level' | 'percentile'>; label: string; cells?: number }) {
   return (
     <DitherBar value={rating.percentile / 100} cells={cells} label={label} valueText={levelValueText(rating)}
-      ariaLabel={`${label}: ${levelWord(rating)}, ${ordinal(rating.percentile)} percentile of lifters like you`} />
+      ariaLabel={t('{label}: {level}, {nth} percentile of lifters like you', { label, level: levelWord(rating), nth: ordinal(rating.percentile) })} />
   );
 }
 
 export function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
-  return <span className="std-conf" title={`Confidence ${confidence}: ${CONFIDENCE_LABEL[confidence]}`}>{confidence}</span>;
+  return <span className="std-conf" title={t('Confidence {c}: {label}', { c: confidence, label: confidenceLabel(confidence) })}>{confidence}</span>;
 }
 
 export function LevelWord({ rating }: { rating: Pick<LiftRating, 'level'> }) {
@@ -38,7 +39,7 @@ export function StandardSummary({ rating, label, showNext = true }: { rating: Li
       </p>
       {showNext && (
         <p className="std-next">
-          {rating.next ? <>Next: <ValueText text={nextText(rating.next, rating.loadType === 'dumbbell_each')} /></> : 'Top level'}
+          {rating.next ? tr('Next: {next}', { next: <ValueText text={nextText(rating.next, rating.loadType === 'dumbbell_each')} /> }) : t('Top level')}
         </p>
       )}
     </div>

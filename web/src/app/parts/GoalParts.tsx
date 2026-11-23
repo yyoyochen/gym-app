@@ -14,12 +14,18 @@ import {
 import { validateTarget, type TargetDraft } from '../validate';
 import { rateTarget, type RateContext } from '../../benchmarks/liftRating';
 import type { GymStandardsData } from '../../benchmarks/gymStandards';
-import { levelWord, ordinal, standardsContext, useGymStandards } from '../../ui/progress/standards';
+import { levelWord, ordinal, standardsContext, standingText, useGymStandards } from '../../ui/progress/standards';
+import { t, tn } from '../../i18n';
 
 type Edit = (p: Profile) => void;
 
 /** Short goal words for the Segmented (the full labels overflow four segments). */
-export const GOAL_SHORT: Record<GoalKind, string> = { strength: 'Strength', maintain: 'Maintain', hypertrophy: 'Size', bodycomp: 'Body comp' };
+export const GOAL_SHORT: Record<GoalKind, string> = {
+  get strength() { return t('Strength'); },
+  get maintain() { return t('Maintain'); },
+  get hypertrophy() { return t('Size'); },
+  get bodycomp() { return t('Body comp'); },
+};
 
 export function GoalsEditor({ profile, onChange }: { profile: Profile; onChange: Edit }) {
   const toggle = (g: GoalKind) => {
@@ -38,10 +44,10 @@ export function GoalsEditor({ profile, onChange }: { profile: Profile; onChange:
         ))}
       </div>
       {profile.goals.length > 1 && (
-        <Segmented label="Primary goal" value={profile.primaryGoal} onChange={v => onChange({ ...profile, primaryGoal: v })}
+        <Segmented label={t('Primary goal')} value={profile.primaryGoal} onChange={v => onChange({ ...profile, primaryGoal: v })}
           options={profile.goals.map(g => ({ value: g, label: GOAL_SHORT[g] }))} />
       )}
-      <p className="quiet">The primary goal sets the default prescription for each lift. Other goals add their targets to the goal board.</p>
+      <p className="quiet">{t('The primary goal sets the default prescription for each lift. Other goals add their targets to the goal board.')}</p>
     </div>
   );
 }
@@ -53,14 +59,14 @@ export function TargetLevelBar({ gym, ctx, ex, value }: { gym: GymStandardsData 
   if (!gym || !ctx || !ex || !(value > 0)) return null;
   const r = rateTarget(gym, ex, value, ctx);
   if (!r) return null;
-  const text = `${levelWord(r)}, ${ordinal(r.percentile)}`;
-  return <DitherBar label={r.basis === 'weighted' ? 'Level at target (added load)' : 'Level at target'} valueText={text} value={r.percentile / 100}
-    ariaLabel={`Level at target: ${levelWord(r)}, ${ordinal(r.percentile)} percentile of lifters like you`} />;
+  const text = t('{level}, {ordinal}', { level: levelWord(r), ordinal: ordinal(r.percentile) });
+  return <DitherBar label={r.basis === 'weighted' ? t('Level at target (added load)') : t('Level at target')} valueText={text} value={r.percentile / 100}
+    ariaLabel={t('Level at target: {standing}', { standing: standingText(r) })} />;
 }
 
 /** "Hold 120 kg by 31 Dec" */
-export function targetLine(t: GoalTarget): string {
-  return `${TARGET_TYPE_LABELS[t.type]} ${t.value} ${subjectUnit(t.subject)} by ${formatDate(t.deadline, { weekday: false })}`;
+export function targetLine(tg: GoalTarget): string {
+  return t('{type} {value} {unit} by {date}', { type: TARGET_TYPE_LABELS[tg.type], value: tg.value, unit: subjectUnit(tg.subject), date: formatDate(tg.deadline, { weekday: false }) });
 }
 
 export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { profile: Profile; onChange: Edit; exercises: Exercise[]; bodyweightKg?: number }) {
@@ -78,8 +84,8 @@ export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { 
     const v = validateTarget(draft, today);
     setErrors(v.errors);
     if (v.errors.length || v.value === undefined) return;
-    const t: GoalTarget = { id: newId('tgt'), subject: draft.subject, value: v.value, type: draft.type, deadline: draft.deadline };
-    onChange({ ...profile, targets: [...profile.targets, t] });
+    const tg: GoalTarget = { id: newId('tgt'), subject: draft.subject, value: v.value, type: draft.type, deadline: draft.deadline };
+    onChange({ ...profile, targets: [...profile.targets, tg] });
     setDraft(blankDraft());
   };
 
@@ -87,14 +93,14 @@ export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { 
     <div className="form-group">
       {profile.targets.length > 0 && (
         <div className="sheetblk">
-          <div className="sheetblk-hd"><span>Targets</span><span>{profile.targets.length}</span></div>
-          <DragList items={profile.targets} keyOf={t => t.id} labelOf={t => subjectLabel(t.subject, names)}
+          <div className="sheetblk-hd"><span>{t('Targets')}</span><span>{profile.targets.length}</span></div>
+          <DragList items={profile.targets} keyOf={tg => tg.id} labelOf={tg => subjectLabel(tg.subject, names)}
             onReorder={targets => onChange({ ...profile, targets })}
-            render={(t, i, grip) => (
-              <ValueRow k={String(i + 1)} value={subjectLabel(t.subject, names)} sub={targetLine(t)}>
+            render={(tg, i, grip) => (
+              <ValueRow k={String(i + 1)} value={subjectLabel(tg.subject, names)} sub={targetLine(tg)}>
                 <span className="row-actions">
-                  <button type="button" className="icon-btn" aria-label={`Remove ${subjectLabel(t.subject, names)} target`} data-press="dim"
-                    onClick={() => onChange({ ...profile, targets: profile.targets.filter(x => x.id !== t.id) })}><PixelIcon name="trash" /></button>
+                  <button type="button" className="icon-btn" aria-label={t('Remove {name} target', { name: subjectLabel(tg.subject, names) })} data-press="dim"
+                    onClick={() => onChange({ ...profile, targets: profile.targets.filter(x => x.id !== tg.id) })}><PixelIcon name="trash" /></button>
                   {grip}
                 </span>
               </ValueRow>
@@ -102,25 +108,25 @@ export function TargetsEditor({ profile, onChange, exercises, bodyweightKg }: { 
         </div>
       )}
       <div className="form-group">
-        <Select<string> label={profile.targets.length ? 'Another target for' : 'Target for'} value={draft.subject} onChange={v => setDraft({ ...draft, subject: v })}
+        <Select<string> label={profile.targets.length ? t('Another target for') : t('Target for')} value={draft.subject} onChange={v => setDraft({ ...draft, subject: v })}
           options={[
-            ...main.map(e => ({ value: e.id, label: e.name, group: 'Main lifts' })),
-            { value: SUBJECT_BODYWEIGHT, label: 'Bodyweight', group: 'Other' },
-            { value: SUBJECT_SESSIONS, label: 'Sessions per week', group: 'Other' },
-            ...rest.map(e => ({ value: e.id, label: e.name, group: 'All exercises' })),
+            ...main.map(e => ({ value: e.id, label: tn(e.name), group: t('Main lifts') })),
+            { value: SUBJECT_BODYWEIGHT, label: t('Bodyweight'), group: t('Other') },
+            { value: SUBJECT_SESSIONS, label: t('Sessions per week'), group: t('Other') },
+            ...rest.map(e => ({ value: e.id, label: tn(e.name), group: t('All exercises') })),
           ]} />
-        <Segmented<TargetType> label="Type" value={draft.type} onChange={v => setDraft({ ...draft, type: v })}
+        <Segmented<TargetType> label={t('Type')} value={draft.type} onChange={v => setDraft({ ...draft, type: v })}
           options={(['reach', 'hold', 'at_least'] as TargetType[]).map(v => ({ value: v, label: TARGET_TYPE_LABELS[v] }))} />
         <div className="grid2">
           <label className="field-wrap">
-            <span className="label">Value ({draft.subject ? subjectUnit(draft.subject) : 'kg'})</span>
+            <span className="label">{t('Value ({unit})', { unit: draft.subject ? subjectUnit(draft.subject) : 'kg' })}</span>
             <input className="field tnum" inputMode="decimal" value={draft.value} onChange={e => setDraft({ ...draft, value: e.target.value })} />
           </label>
-          <DateField label="Deadline" value={draft.deadline} min={today} confirmLabel="Set date" onChange={v => setDraft({ ...draft, deadline: v })} />
+          <DateField label={t('Deadline')} value={draft.deadline} min={today} confirmLabel={t('Set date')} onChange={v => setDraft({ ...draft, deadline: v })} />
         </div>
         <TargetLevelBar gym={gym} ctx={ctx} ex={byId.get(draft.subject)} value={Number(draft.value)} />
         <Errors errors={errors} />
-        <button type="button" className="btn block split" onClick={add}><span>Add target</span><PixelIcon name="plus" /></button>
+        <button type="button" className="btn block split" onClick={add}><span>{t('Add target')}</span><PixelIcon name="plus" /></button>
       </div>
     </div>
   );
@@ -130,24 +136,24 @@ export function CheckpointsEditor({ profile, onChange }: { profile: Profile; onC
   const [d, setD] = useState<ISODate | ''>('');
   return (
     <div className="form-group">
-      <p className="quiet">Dates that show up on Today and on the goal board.</p>
+      <p className="quiet">{t('Dates that show up on Today and on the goal board.')}</p>
       {profile.checkpoints.length > 0 && (
         <div className="sheetblk">
           {profile.checkpoints.map((c, i) => (
             <ValueRow key={c} k={String(i + 1)} value={formatDate(c)}>
-              <button type="button" className="icon-btn" aria-label={`Remove checkpoint ${formatDate(c)}`} data-press="dim"
+              <button type="button" className="icon-btn" aria-label={t('Remove checkpoint {date}', { date: formatDate(c) })} data-press="dim"
                 onClick={() => onChange({ ...profile, checkpoints: profile.checkpoints.filter(x => x !== c) })}><PixelIcon name="trash" /></button>
             </ValueRow>
           ))}
         </div>
       )}
       <div className="row end-row">
-        <div className="grow"><DateField label="Add checkpoint" value={d} confirmLabel="Set date" onChange={setD} /></div>
+        <div className="grow"><DateField label={t('Add checkpoint')} value={d} confirmLabel={t('Set date')} onChange={setD} /></div>
         <button type="button" className="btn" disabled={!d || profile.checkpoints.includes(d)} onClick={() => {
           if (!d) return;
           onChange({ ...profile, checkpoints: [...profile.checkpoints, d].sort() });
           setD('');
-        }}>Add</button>
+        }}>{t('Add')}</button>
       </div>
     </div>
   );

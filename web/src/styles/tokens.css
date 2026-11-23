@@ -14,6 +14,24 @@
   unicode-range: U+2588, U+2591-2593;
 }
 
+/* Chinese (中文 mode): Noto Sans TC behind Schibsted Grotesk, Cubic 11 (pixel)
+   behind Sometype Mono, both cut to the app's own characters by
+   tools/fonts/build-zh-fonts.py. unicode-range keeps English pages from ever
+   downloading them; Latin letters and digits always come from the English fonts. */
+@font-face {
+  font-family: 'Gym Sans TC';
+  src: url('./fonts/zh-sans.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+}
+@font-face {
+  font-family: 'Gym Pixel TC';
+  src: url('./fonts/zh-pixel.woff2') format('woff2');
+  font-display: swap;
+  unicode-range: U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF;
+}
+
 :root {
   /* ---------- colour (dark, default) ---------- */
   --paper:  #1c1724;                 /* plum grey */
@@ -32,8 +50,8 @@
      shorthand) and --track-<role> (letter spacing); caps roles also need
      text-transform: uppercase. type.css turns each into a .t-<role> class.
      Nothing else may set a font: tools/check-styles.mjs enforces it. */
-  --font-sans: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Sometype Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-sans: 'Schibsted Grotesk Variable', 'Schibsted Grotesk', 'Gym Sans TC', 'PingFang TC', 'Noto Sans TC', 'Microsoft JhengHei', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Sometype Mono', 'Gym Pixel TC', 'Gym Sans TC', 'PingFang TC', ui-monospace, 'SF Mono', Menlo, monospace;
   /* Block glyphs (░▒▓█) come from GymBro Glyph; Sometype Mono covers the rest (·, →). */
   --font-strong: 700; /* emphasis inside running text (a number in a sentence), never a role */
   --font-glyph: 'GymBro Glyph', 'Sometype Mono', ui-monospace, 'Noto Sans Mono', 'DejaVu Sans Mono', Menlo, monospace;
@@ -124,4 +142,18 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-fast: 0ms; --dur-press: 0ms; --dur-base: 0ms; --dur-slow: 0ms; }
+}
+
+/* ---------- Chinese (<html lang="zh-Hant-TW">) ----------
+   Chinese needs no tight tracking: the word roles go to 0 (hero and display
+   hold numbers and keep theirs). The pixel font has one weight, so no faked
+   bold: bold mono roles stay crisp regular in Chinese. */
+:root:lang(zh) {
+  --track-num-xl: 0;
+  --track-title-lg: 0;
+  --track-num-lg: 0;
+  --track-num-md: 0;
+  --track-title: 0;
+  --track-value: 0;
+  font-synthesis: none;
 }

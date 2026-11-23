@@ -5,6 +5,8 @@ const VERSION = '__VERSION__';
 const APP_VERSION = '__APP_VERSION__';
 const CACHE = `gymbro-${VERSION}`;
 const PRECACHE = __PRECACHE__;
+// Fetched on first use and kept (the Chinese fonts): see LAZY_ASSET in plugin.ts.
+const LAZY = new RegExp(__LAZY__);
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)));
@@ -31,6 +33,12 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request, { ignoreSearch: true }).then((hit) => {
       if (hit) return hit;
       if (event.request.mode === 'navigate') return caches.match('./');
+      if (LAZY.test(url.pathname)) {
+        return fetch(event.request).then((res) => {
+          if (res.ok) { const copy = res.clone(); event.waitUntil(caches.open(CACHE).then((c) => c.put(event.request, copy))); }
+          return res;
+        });
+      }
       return fetch(event.request);
     }),
   );

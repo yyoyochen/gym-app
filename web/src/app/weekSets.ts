@@ -8,9 +8,23 @@
 import type { Exercise, ISODate, Program, Session, SetEntry, Slot } from '../domain/types';
 import { effectiveSlot } from './coach';
 import { addDays, weekday } from './dates';
+import { getLang, t } from '../i18n';
 
 export const BODY_PARTS = ['Legs', 'Chest', 'Back', 'Shoulders', 'Arms', 'Core'] as const;
 export type BodyPart = typeof BODY_PARTS[number];
+
+/** A body part as shown. BODY_PARTS stay English: they are ids too (rows, focus, ordering). */
+export function bodyPartLabel(part: BodyPart): string {
+  switch (part) {
+    case 'Legs': return t('Legs');
+    case 'Chest': return t('Chest');
+    // 'Back' is also the back button (返回), and one key has one Chinese.
+    case 'Back': return getLang() === 'zh' ? '背部' : 'Back';
+    case 'Shoulders': return t('Shoulders');
+    case 'Arms': return t('Arms');
+    case 'Core': return t('Core');
+  }
+}
 
 const GROUP: Record<string, BodyPart> = {
   quads: 'Legs', glutes: 'Legs', hamstrings: 'Legs', adductors: 'Legs', calves: 'Legs',

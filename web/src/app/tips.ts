@@ -6,21 +6,23 @@
 import { getMeta, setMeta, type GymDb } from '../db';
 import { daysBetween } from '../engine/dates';
 import type { ISODate } from '../domain/types';
+import { t } from '../i18n';
 
 export const TIP_IDS = ['promise', 'log', 'undo', 'grade', 'readiness', 'progress'] as const;
 export type TipId = typeof TIP_IDS[number];
 export type CardId = TipId | 'goalNudge';
 const ALL_CARDS: CardId[] = [...TIP_IDS, 'goalNudge'];
 
+// Getters, so each read follows the current language.
 export const TIP_TEXT: Record<TipId, string> = {
-  promise: "This is today's plan: the numbers to hit, with the reason under them. It locks when you start, and the session is graded against it.",
-  log: 'Did exactly what it says? Log as planned. Different weight or reps? Adjust. Warm-ups are listed first and count separately.',
-  undo: 'Logged. Undo is there for 10 seconds; after that, tap any set in the list to edit it. Back keeps the session running.',
-  grade: "Beat means more than planned, hit means exactly it, missed means short. Next time's plan is built from today, so a beat moves you up.",
-  readiness: "Three quick taps before you start. A bad night or sore legs eases today's targets; skip them and they count as good.",
-  progress: "Each lift's trend and level. Tap a lift for its chart, its next level and your best weight at each rep count.",
+  get promise() { return t("This is today's plan: the numbers to hit, with the reason under them. It locks when you start, and the session is graded against it."); },
+  get log() { return t('Did exactly what it says? Log as planned. Different weight or reps? Adjust. Warm-ups are listed first and count separately.'); },
+  get undo() { return t('Logged. Undo is there for 10 seconds; after that, tap any set in the list to edit it. Back keeps the session running.'); },
+  get grade() { return t("Beat means more than planned, hit means exactly it, missed means short. Next time's plan is built from today, so a beat moves you up."); },
+  get readiness() { return t("Three quick taps before you start. A bad night or sore legs eases today's targets; skip them and they count as good."); },
+  get progress() { return t("Each lift's trend and level. Tap a lift for its chart, its next level and your best weight at each rep count."); },
 };
-export const GOAL_NUDGE_TEXT = "Have a target in mind? Set a goal and its date in Profile, and the app will tell you if you're on pace.";
+export const goalNudgeText = () => t("Have a target in mind? Set a goal and its date in Profile, and the app will tell you if you're on pace.");
 export const GOAL_NUDGE_DAYS = 7;
 
 export const tipNumber = (id: TipId): number => TIP_IDS.indexOf(id) + 1;

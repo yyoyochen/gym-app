@@ -2,7 +2,8 @@
 // context from Profile, and the plain-language strings (docs/STANDARDS-METHODOLOGY.md).
 import { useEffect, useState } from 'react';
 import type { Profile } from '../../domain/types';
-import { CONFIDENCE_LABEL, LEVEL_LABEL, type GymStandardsData } from '../../benchmarks/gymStandards';
+import { LEVEL_LABEL, confidenceLabel, levelLabel, type GymStandardsData } from '../../benchmarks/gymStandards';
+import { t } from '../../i18n';
 import type { LiftRating, NextStep, RateContext } from '../../benchmarks/liftRating';
 
 /** Plain number, at most 2 decimals (same as app/coach kg()). */
@@ -62,6 +63,12 @@ export function missingForStandards(inp: StandardsInput): string[] {
   return miss;
 }
 
+/** The missing fields as words for a sentence: "sex and bodyweight". */
+export function missingText(miss: string[]): string {
+  const sex = miss.includes('sex'), bw = miss.includes('bodyweight');
+  return sex && bw ? t('sex and bodyweight') : sex ? t('sex') : t('bodyweight');
+}
+
 export function standardsContext(inp: StandardsInput): RateContext | null {
   if (missingForStandards(inp).length) return null;
   const by = inp.profile!.birthYear;
@@ -70,49 +77,53 @@ export function standardsContext(inp: StandardsInput): RateContext | null {
 
 export function ordinal(n: number): string {
   const r = Math.round(n);
-  const suf = r % 100 >= 11 && r % 100 <= 13 ? 'th' : r % 10 === 1 ? 'st' : r % 10 === 2 ? 'nd' : r % 10 === 3 ? 'rd' : 'th';
-  return `${r}${suf}`;
+  if (r % 100 >= 11 && r % 100 <= 13) return t('{n}th', { n: r });
+  return r % 10 === 1 ? t('{n}st', { n: r }) : r % 10 === 2 ? t('{n}nd', { n: r }) : r % 10 === 3 ? t('{n}rd', { n: r }) : t('{n}th', { n: r });
 }
 
-export const levelWord = (r: Pick<LiftRating, 'level'>) => LEVEL_LABEL[r.level];
+export const levelWord = (r: Pick<LiftRating, 'level'>) => levelLabel(r.level);
 export const confidenceWord = (r: Pick<LiftRating, 'confidence'> & Partial<Pick<LiftRating, 'source'>>) =>
-  r.source === 'table' ? 'Strength Level table' : CONFIDENCE_LABEL[r.confidence];
+  r.source === 'table' ? t('Strength Level table') : confidenceLabel(r.confidence);
 
 /** Subtitle for a set of ratings: Strength Level when any of them came from its table. */
 export const sourceMeta = (ratings: Pick<LiftRating, 'source'>[]) =>
-  ratings.some(r => r.source === 'table') ? 'vs Strength Level' : 'vs lifters like you';
+  ratings.some(r => r.source === 'table') ? t('vs Strength Level') : t('vs lifters like you');
 
 const half = (x: number) => kg(Math.round(x * 2) / 2);
 
 /** The evidence that was rated: "e1RM 120 kg", "+20 kg added e1RM", "12 reps · best set, not a max test". */
 export function ratedValueText(r: LiftRating): string {
   switch (r.basis) {
-    case 'e1rm': return `e1RM ${half(r.value)} kg${r.loadType === 'dumbbell_each' ? ' per dumbbell' : ''}`;
-    case 'weighted': return `+${half(r.addedKg ?? 0)} kg added e1RM`;
-    case 'reps': return `${kg(r.value)} reps, best set, not a max test`;
-    case 'seconds': return `${kg(r.value)} s, best set (reps read as seconds)`;
+    case 'e1rm': return r.loadType === 'dumbbell_each' ? t('e1RM {kg} kg per dumbbell', { kg: half(r.value) }) : t('e1RM {kg} kg', { kg: half(r.value) });
+    case 'weighted': return t('+{kg} kg added e1RM', { kg: half(r.addedKg ?? 0) });
+    case 'reps': return t('{n} reps, best set, not a max test', { n: kg(r.value) });
+    case 'seconds': return t('{n} s, best set (reps read as seconds)', { n: kg(r.value) });
   }
 }
 
 /** "Advanced at 130 kg e1RM" / "Advanced at +35 kg added" / "Advanced at 16 reps". */
 export function nextText(n: NextStep, perDumbbell = false): string {
-  const lvl = LEVEL_LABEL[n.level];
-  if (n.unit === 'kg') return n.added ? `${lvl} at +${kg(n.value)} kg added` : `${lvl} at ${kg(n.value)} kg${perDumbbell ? ' per dumbbell' : ''} e1RM`;
-  return `${lvl} at ${kg(n.value)} ${n.unit === 'reps' ? 'reps' : 's'}`;
+  const v = { level: levelLabel(n.level), kg: kg(n.value), n: kg(n.value) };
+  if (n.unit === 'kg') {
+    if (n.added) return t('{level} at +{kg} kg added', v);
+    return perDumbbell ? t('{level} at {kg} kg per dumbbell e1RM', v) : t('{level} at {kg} kg e1RM', v);
+  }
+  return n.unit === 'reps' ? t('{level} at {n} reps', v) : t('{level} at {n} s', v);
 }
 
 /** "Intermediate, 54th percentile of lifters like you". */
 export function standingText(r: LiftRating): string {
-  return `${levelWord(r)}, ${ordinal(r.percentile)} percentile of lifters like you`;
+  return t('{level}, {nth} percentile of lifters like you', { level: levelWord(r), nth: ordinal(r.percentile) });
 }
 
 export function contextText(ctx: RateContext): string {
-  return `${ctx.sex}, ${kg(ctx.bodyweightKg)} kg${ctx.age !== undefined ? `, age ${ctx.age}` : ', no birth year (20–29 table)'}`;
+  const v = { sex: ctx.sex === 'female' ? t('female') : t('male'), kg: kg(ctx.bodyweightKg), age: ctx.age ?? '' };
+  return ctx.age !== undefined ? t('{sex}, {kg} kg, age {age}', v) : t('{sex}, {kg} kg, no birth year (20–29 table)', v);
 }
 
-export const STANDARDS_CAVEAT =
-  'Compared with everyday gym lifters of your sex, age and bodyweight (modeled from self-reported numbers), not competitors. Beginner ≈ 5th, Novice ≈ 20th, Intermediate ≈ 50th, Advanced ≈ 80th, Elite ≈ 95th percentile. ' +
-  'Self-reported numbers run generous, and B/C lifts are ratio estimates from the squat, bench and deadlift anchors.';
+/** What the levels compare you with (the levels (i) sheet). */
+export const standardsCaveat = (): string =>
+  t('Compared with everyday gym lifters of your sex, age and bodyweight (modeled from self-reported numbers), not competitors. Beginner ≈ 5th, Novice ≈ 20th, Intermediate ≈ 50th, Advanced ≈ 80th, Elite ≈ 95th percentile. Self-reported numbers run generous, and B/C lifts are ratio estimates from the squat, bench and deadlift anchors.');
 
 const rnd = (x: number) => (x >= 10 ? Math.round(x * 2) / 2 : Math.round(x * 4) / 4); // the model's rounding
 
@@ -122,7 +133,8 @@ export function levelTableText(r: LiftRating, bodyweightKg: number): string {
   const fmt = (v: number) => (unit === 'kg' ? kg(rnd(v)) : unit === 'bw_fraction' ? `+${kg(rnd(v * bodyweightKg))}` : kg(v));
   const parts = (Object.keys(LEVEL_LABEL) as (keyof typeof LEVEL_LABEL)[])
     .filter(k => k !== 'below beginner')
-    .map(k => `${LEVEL_LABEL[k]} ${fmt(values[k as Exclude<typeof k, 'below beginner'>])}`);
-  const tail = unit === 'kg' ? `kg e1RM${r.loadType === 'dumbbell_each' ? ' per dumbbell' : ''}` : unit === 'bw_fraction' ? 'kg added (1RM)' : unit === 'reps' ? 'reps' : 's';
-  return `${parts.join(', ')} ${tail}`;
+    .map(k => `${levelLabel(k)} ${fmt(values[k as Exclude<typeof k, 'below beginner'>])}`);
+  const levels = parts.join(t(', '));
+  if (unit === 'kg') return r.loadType === 'dumbbell_each' ? t('{levels} kg e1RM per dumbbell', { levels }) : t('{levels} kg e1RM', { levels });
+  return unit === 'bw_fraction' ? t('{levels} kg added (1RM)', { levels }) : unit === 'reps' ? t('{levels} reps', { levels }) : t('{levels} s', { levels });
 }

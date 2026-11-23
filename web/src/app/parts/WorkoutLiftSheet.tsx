@@ -7,6 +7,7 @@ import { useState } from 'react';
 import type { SlotPlan } from '../coach';
 import { Button, ConfirmButton, DragList, PixelIcon, Sheet } from '../../ui/kit';
 import type { DraftSlot } from '../suggest';
+import { t, tn } from '../../i18n';
 
 export interface SetRow { weight: number; reps: number }
 
@@ -42,29 +43,30 @@ export function WorkoutLiftSheet({ item, plan, onDone, onSwap, onRemove, onClose
   const [rows, setRows] = useState(() => withIds(planned));
   const edit = (i: number, patch: Partial<SetRow>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const bw = plan.exercise.bodyweightFactor > 0;
+  const name = tn(plan.exercise.name);
 
   return (
-    <Sheet open title={plan.exercise.name} onClose={onClose}>
-      <div className="set-list" role="list" aria-label="Sets in order">
-        <div className="set-row set-row-hd" aria-hidden="true"><span /><span className="label">{bw ? 'Added kg' : 'kg'}</span><span /><span className="label">Reps</span><span /></div>
-        <DragList items={rows} keyOf={r => String(r.id)} labelOf={r => `set ${rows.indexOf(r) + 1}`} onReorder={setRows} render={(r, i, grip) => (
+    <Sheet open title={name} onClose={onClose}>
+      <div className="set-list" role="list" aria-label={t('Sets in order')}>
+        <div className="set-row set-row-hd" aria-hidden="true"><span /><span className="label">{bw ? t('Added kg') : 'kg'}</span><span /><span className="label">{t('Reps')}</span><span /></div>
+        <DragList items={rows} keyOf={r => String(r.id)} labelOf={r => t('set {n}', { n: rows.indexOf(r) + 1 })} onReorder={setRows} render={(r, i, grip) => (
           <div className="set-row" role="listitem">
             <span className="set-h">{grip}<span className="set-n">{i + 1}</span></span>
-            <input className="field tnum" inputMode="decimal" aria-label={`Set ${i + 1} weight`} value={r.weight || ''} placeholder="0"
+            <input className="field tnum" inputMode="decimal" aria-label={t('Set {n} weight', { n: i + 1 })} value={r.weight || ''} placeholder="0"
               onChange={e => edit(i, { weight: num(e.target.value) })} />
             <span className="set-x" aria-hidden="true">×</span>
-            <input className="field tnum" inputMode="numeric" aria-label={`Set ${i + 1} reps`} value={r.reps || ''} placeholder="0"
+            <input className="field tnum" inputMode="numeric" aria-label={t('Set {n} reps', { n: i + 1 })} value={r.reps || ''} placeholder="0"
               onChange={e => edit(i, { reps: Math.round(num(e.target.value)) })} />
-            <button type="button" className="icon-btn" aria-label={`Remove set ${i + 1}`} data-press="dim" onClick={() => setRows(rows.filter((_, j) => j !== i))}><PixelIcon name="close" scale={1} /></button>
+            <button type="button" className="icon-btn" aria-label={t('Remove set {n}', { n: i + 1 })} data-press="dim" onClick={() => setRows(rows.filter((_, j) => j !== i))}><PixelIcon name="close" scale={1} /></button>
           </div>
         )} />
       </div>
-      <Button block icon="plus" onClick={() => setRows([...rows, ...withIds(addSetRow(rows).slice(rows.length))])}>Add a set</Button>
-      <p className="note">// Last time: {plan.lastTime.length ? plan.lastTime.join(', ') : 'first time'}</p>
-      <Button variant="primary" block iconEnd="check" onClick={() => onDone(sheetResult(item, planned, rows.filter(r => r.reps > 0).map(({ weight, reps }) => ({ weight, reps }))))}>Done</Button>
+      <Button block icon="plus" onClick={() => setRows([...rows, ...withIds(addSetRow(rows).slice(rows.length))])}>{t('Add a set')}</Button>
+      <p className="note">{t('// Last time: {sets}', { sets: plan.lastTime.length ? plan.lastTime.join(', ') : t('first time') })}</p>
+      <Button variant="primary" block iconEnd="check" onClick={() => onDone(sheetResult(item, planned, rows.filter(r => r.reps > 0).map(({ weight, reps }) => ({ weight, reps }))))}>{t('Done')}</Button>
       <div className="grid2">
-        <Button block onClick={onSwap}>Swap lift</Button>
-        <ConfirmButton danger className="block" confirmLabel={`Remove ${plan.exercise.name}?`} confirmText="Remove" onConfirm={onRemove}>Remove</ConfirmButton>
+        <Button block onClick={onSwap}>{t('Swap lift')}</Button>
+        <ConfirmButton danger className="block" confirmLabel={t('Remove {name}?', { name })} confirmText={t('Remove')} onConfirm={onRemove}>{t('Remove')}</ConfirmButton>
       </div>
     </Sheet>
   );

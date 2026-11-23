@@ -39,6 +39,14 @@ describe('tn', () => {
   });
 });
 
+describe('stored session names', () => {
+  it('reads a default session name and a minimum version in Chinese', () => {
+    applyLang('zh');
+    expect(tn('Session B')).toBe('課表 B');
+    expect(tn("Today's workout (minimum)")).toBe('今天的訓練（精簡版）');
+  });
+});
+
 describe('tr', () => {
   it('places React parts where the translation puts them', () => {
     const link = createElement('a', { href: '#/profile' }, 'Profile');
@@ -58,6 +66,13 @@ describe('engine sentence table', () => {
   it('translates a sentence inside a sentence', () => {
     expect(translateWith(table, 'top double at 100kg failed — down 5kg — held for a red readiness day'))
       .toBe('最重雙次 100kg 失敗，下調 5kg，狀態差的日子維持重量');
+  });
+  it('skips a match whose values would stay in English and tries the next template', () => {
+    const t2 = compileTable({
+      'top at {w}kg — add {inc}kg': '最重 {w}kg，加 {inc}kg',
+      '{a}; back-offs at {w}kg': '{a}；遞減組 {w}kg',
+    });
+    expect(translateWith(t2, 'top at 100kg — add 2.5kg; back-offs at 60kg')).toBe('最重 100kg，加 2.5kg；遞減組 60kg');
   });
   it('leaves a sentence it does not know as it is', () => {
     expect(translateWith(table, 'something new the engine says')).toBe('something new the engine says');

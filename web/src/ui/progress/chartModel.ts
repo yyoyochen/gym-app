@@ -3,6 +3,7 @@
 // to the ceiling lane), the step runs, and the gap text. LiftChart only paints.
 import type { ISODate } from '../../domain/types';
 import { addDays, daysBetween } from '../../app/dates';
+import { t } from '../../i18n';
 
 export const CEILING = 1.2;
 export const FLOOR = 0.9;
@@ -73,6 +74,6 @@ export function fillWeeks(points: { date: ISODate; value: number }[]): { date: I
 /** "+35.5" to go, or "reached" when the target is at or under the current value. */
 export function gapText(target: number, current: number): string {
   const d = Math.round((target - current) * 10) / 10;
-  return d <= 0 ? 'reached' : `+${d}`;
+  return d <= 0 ? t('reached') : `+${d}`;
 }
 

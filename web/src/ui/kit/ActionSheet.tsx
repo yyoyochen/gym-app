@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { SPRINGS, animateSpring, type SpringHandle } from './motion/spring';
 import { isTopModal, popModal, pushModal, trapTab } from './modal';
 import { pushSheetEntry } from './sheetHistory';
+import { t } from '../../i18n';
 
 export interface ActionSheetAction {
   label: string;
@@ -30,7 +31,7 @@ export function ActionSheet(props: ActionSheetProps) {
   return createPortal(<ActionPanel {...props} onGone={() => setMounted(false)} />, document.body);
 }
 
-function ActionPanel({ open, title, message, actions, cancelLabel = 'Cancel', onClose, onGone }: ActionSheetProps & { onGone: () => void }) {
+function ActionPanel({ open, title, message, actions, cancelLabel = t('Cancel'), onClose, onGone }: ActionSheetProps & { onGone: () => void }) {
   const root = useRef<HTMLDivElement>(null), panel = useRef<HTMLDivElement>(null), dim = useRef<HTMLDivElement>(null);
   const anim = useRef<SpringHandle | null>(null);
   const y = useRef(0);
@@ -130,13 +131,13 @@ function ActionPanel({ open, title, message, actions, cancelLabel = 'Cancel', on
  * Same props as the old two-tap ConfirmButton. `confirmLabel` is the
  * question; legacy "Tap again to …" wording is turned into "… ?".
  */
-export function ConfirmButton({ children, confirmLabel = 'Are you sure?', confirmText, message, onConfirm, danger, className = '', disabled }: {
+export function ConfirmButton({ children, confirmLabel = t('Are you sure?'), confirmText, message, onConfirm, danger, className = '', disabled }: {
   children: ReactNode; confirmLabel?: string; /** Text of the confirming action (default: the button's own text). */ confirmText?: string;
   message?: ReactNode; onConfirm: () => void | Promise<void>; danger?: boolean; className?: string; disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const actionText = confirmText ?? (typeof children === 'string' ? children : 'Confirm');
+  const actionText = confirmText ?? (typeof children === 'string' ? children : t('Confirm'));
   return (
     <>
       <button type="button" disabled={disabled || busy} className={`btn ${danger ? 'danger' : ''} ${className}`} onClick={() => setOpen(true)}>{children}</button>

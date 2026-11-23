@@ -4,10 +4,11 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { PixelIcon } from './PixelIcon';
 import { Sheet } from './Sheet';
+import { t } from '../../i18n';
 
 export interface SelectOption<T extends string> { value: T; label: string; group?: string }
 
-export function Select<T extends string>({ label, value, options, onChange, placeholder = 'Choose…' }: {
+export function Select<T extends string>({ label, value, options, onChange, placeholder = t('Choose…') }: {
   label: string; value: T; options: SelectOption<T>[]; onChange: (v: T) => void; placeholder?: string;
 }) {
   const [open, setOpen] = useState(false);

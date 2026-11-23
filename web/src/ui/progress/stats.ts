@@ -3,6 +3,7 @@
 // No db, no React: everything here is unit-tested with synthetic fixtures.
 import type { ISODate } from '../../domain/types';
 import { addDays, daysBetween, weekday } from '../../app/dates';
+import { getLang, t, tn } from '../../i18n';
 
 export interface StatSession { id: string; date: ISODate }
 export interface StatSet { sessionId: string; exerciseId: string; kind: string; weight: number; reps: number }
@@ -22,8 +23,6 @@ export interface TrainingStats {
   first: ISODate | null;
   last: ISODate | null;
 }
-
-export const WEEKDAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export function trainingStats(sessions: StatSession[], sets: StatSet[]): TrainingStats {
   const known = new Set(sessions.map(s => s.id));
@@ -60,9 +59,9 @@ export function tonnage(sets: StatSet[], exerciseIds: ReadonlySet<string>): numb
 }
 
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
-/** "ten", "fourteen" → digits past twelve ("14"), thousands separated. */
+/** "ten", "fourteen" → digits past twelve ("14"), thousands separated. Chinese always uses digits. */
 export function countWord(n: number): string {
-  return n >= 0 && n < WORDS.length ? WORDS[n] : n.toLocaleString('en-GB');
+  return n >= 0 && n < WORDS.length && getLang() !== 'zh' ? WORDS[n] : n.toLocaleString('en-GB');
 }
 
 /** What the tonnage weighs about as much as: the biggest thing it covers at least once. */
@@ -85,11 +84,36 @@ export function funComparison(kgMoved: number): FunComparison | null {
 
 /** "Your squats since 1 Jan add up to about 42 tonnes: roughly seven elephants (at 6 t each)." */
 export function funLine(liftPlural: string, since: string, c: FunComparison): string {
-  return `Your ${liftPlural} since ${since} add up to about ${c.tonnes.toLocaleString('en-GB')} tonne${c.tonnes === 1 ? '' : 's'}: roughly ${countWord(c.count)} ${c.thing} (${c.note}).`;
+  const n = c.tonnes.toLocaleString('en-GB');
+  return t('Your {lifts} since {since} add up to about {tonnes}: roughly {things} ({note}).', {
+    lifts: liftPlural, since, tonnes: c.tonnes === 1 ? t('{n} tonne', { n }) : t('{n} tonnes', { n }), things: thingText(c.thing, countWord(c.count)), note: noteText(c.note),
+  });
 }
 
-/** "Back Squat" → "back squats"; a name already ending in s stays. */
+function thingText(thing: string, n: string): string {
+  switch (thing) {
+    case 'elephant': return t('{n} elephant', { n });
+    case 'elephants': return t('{n} elephants', { n });
+    case 'small car': return t('{n} small car', { n });
+    case 'small cars': return t('{n} small cars', { n });
+    case 'grand piano': return t('{n} grand piano', { n });
+    case 'grand pianos': return t('{n} grand pianos', { n });
+  }
+  return `${n} ${thing}`;
+}
+
+function noteText(note: string): string {
+  switch (note) {
+    case 'at 6 t each': return t('at 6 t each');
+    case 'at 1.2 t each': return t('at 1.2 t each');
+    case 'at 400 kg each': return t('at 400 kg each');
+  }
+  return note;
+}
+
+/** "Back Squat" → "back squats"; a name already ending in s stays. In Chinese, the lift's name (no plural). */
 export function pluralLift(name: string): string {
+  if (getLang() === 'zh') return tn(name);
   const n = name.trim().toLowerCase();
   return /s$/.test(n) ? n : `${n}s`;
 }

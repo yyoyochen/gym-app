@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import type { ISODate } from '../../domain/types';
 import type { Consistency } from './consistency';
+import { t } from '../../i18n';
 
 interface Props {
   data: Consistency;
@@ -40,7 +41,9 @@ export function Heatmap({ data, today, cell = 12, selected, onSelect, label }: P
                 const sessionId = data.sessionByDate[c.date];
                 return (
                   <g key={c.date} className={sessionId && onSelect ? 'cell-hit' : undefined} onClick={onSelect ? () => onSelect(c.date) : undefined}>
-                    <title>{`${c.date}: ${c.count} working set${c.count === 1 ? '' : 's'}${skip ? ', skipped' : ''}`}</title>
+                    <title>{skip
+                      ? c.count === 1 ? t('{date}: {n} working set, skipped', { date: c.date, n: c.count }) : t('{date}: {n} working sets, skipped', { date: c.date, n: c.count })
+                      : c.count === 1 ? t('{date}: {n} working set', { date: c.date, n: c.count }) : t('{date}: {n} working sets', { date: c.date, n: c.count })}</title>
                     {skip
                       ? <rect className="skip" x={x + 0.5} y={y + 0.5} width={cell - 1} height={cell - 1} />
                       : <rect className={`c${c.bucket}`} x={x} y={y} width={cell} height={cell} />}
@@ -51,7 +54,7 @@ export function Heatmap({ data, today, cell = 12, selected, onSelect, label }: P
               })}
               <rect className={`wk-${wm}`} x={x + cell + gap} y={wm === 'half' ? top + 3.5 * (cell + gap) : top}
                 width={mark} height={wm === 'half' ? 3.5 * (cell + gap) - gap : 7 * (cell + gap) - gap}>
-                <title>{`${data.weekSessions[i]} session${data.weekSessions[i] === 1 ? '' : 's'}`}</title>
+                <title>{data.weekSessions[i] === 1 ? t('{n} session', { n: 1 }) : t('{n} sessions', { n: data.weekSessions[i] })}</title>
               </rect>
             </g>
           );

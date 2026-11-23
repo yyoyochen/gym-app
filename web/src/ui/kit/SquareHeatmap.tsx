@@ -1,6 +1,7 @@
 import { Legend } from './Display';
 import { InfoButton } from './InfoButton';
-import { HEATMAP_INFO } from './heatmapInfo';
+import { heatmapInfo } from './heatmapInfo';
+import { t } from '../../i18n';
 import { useMemo } from 'react';
 import { heatmapGrid } from './dither';
 
@@ -56,7 +57,7 @@ export function cellPixels(level: number, shape: CellShape = 'glyph'): [number, 
  * weekday (Mon → Sun, all seven named down the left), filling the container width. Cell shade is a
  * tiny ordered dither in the accent colour; empty days are a faint dot.
  */
-export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget, onSelect, label = 'Training days', legend = false, className = '', shape = 'glyph' }: {
+export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget, onSelect, label = t('Training days'), legend = false, className = '', shape = 'glyph' }: {
   counts: Record<string, number>;
   weeks?: number;
   /** Last day shown (today), ISO. */
@@ -91,7 +92,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
           <span key={r.day} style={{ top: `${((d * STEP_Y + CELL_H / 2) / H) * 100}%` }}>{r.day}</span>
         ))}
       </div>
-      <svg className="sqheat-grid" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${label}: ${trained} days in the last ${weeks} weeks`} shapeRendering="crispEdges">
+      <svg className="sqheat-grid" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t('{label}: {n} days in the last {weeks} weeks', { label, n: trained, weeks })} shapeRendering="crispEdges">
         {g.rows.map((r, d) => r.cells.map((c, w) => {
           const x = w * STEP_X, y = d * STEP_Y;
           if (c.future) return null;
@@ -119,16 +120,16 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
       {legend && (
         <div className="legend-row">
         <Legend className="sqheat-legend">
-          <span>Less</span>
+          <span>{t('Less')}</span>
           {[0, 1, 2, 3].map(l => (
             <svg key={l} viewBox={`0 0 ${CELL_W} ${CELL_H}`} className="sqheat-key" shapeRendering="crispEdges">
               {cellPixels(l, shape).map(([px, py]) => <rect key={`${px},${py}`} className="sqheat-on" x={px} y={py} width={SUB} height={SUB} />)}
             </svg>
           ))}
-          <span>More</span>
-          {g.weekMarks && <span className="sqheat-legend-wk"><i /> week at target</span>}
+          <span>{t('More')}</span>
+          {g.weekMarks && <span className="sqheat-legend-wk"><i /> {t('week at target')}</span>}
         </Legend>
-        <InfoButton label="About the heatmap">{HEATMAP_INFO}</InfoButton>
+        <InfoButton label={t('About the heatmap')}>{heatmapInfo()}</InfoButton>
         </div>
       )}
     </div>

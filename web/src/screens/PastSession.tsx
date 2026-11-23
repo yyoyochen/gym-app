@@ -7,7 +7,9 @@ import { getDb, startSession } from '../db';
 import { DateField } from '../ui/common';
 import { Button, NavBar, go } from '../ui/kit';
 import { addDays, formatDate, todayISO } from '../app/dates';
+import { t } from '../i18n';
 
+/** Saved as the session's name (English, like every stored name); shown through tn(). */
 export const PAST_SESSION_NAME = 'Past session';
 
 export function PastSession(_props: { params: string[] }) {
@@ -25,11 +27,11 @@ export function PastSession(_props: { params: string[] }) {
   };
   return (
     <section className="screen setup">
-      <NavBar title="Log past session" backLabel="Calendar" fallback="history" />
-      <DateField label="Day trained" value={date} max={today} confirmLabel="Use this day" onChange={setDate} />
-      <p className="note">// Note: Past sessions are logged ungraded: add each lift and its sets. No plan is set for them.</p>
+      <NavBar title={t('Log past session')} backLabel={t('Calendar')} fallback="history" />
+      <DateField label={t('Day trained')} value={date} max={today} confirmLabel={t('Use this day')} onChange={setDate} />
+      <p className="note">{t('// Note: Past sessions are logged ungraded: add each lift and its sets. No plan is set for them.')}</p>
       <Button variant="primary" block iconEnd="chevron" disabled={!valid || busy} onClick={start}>
-        {valid ? `Start logging: ${formatDate(date as ISODate)}` : 'Pick a day'}
+        {valid ? t('Start logging: {date}', { date: formatDate(date as ISODate) }) : t('Pick a day')}
       </Button>
     </section>
   );

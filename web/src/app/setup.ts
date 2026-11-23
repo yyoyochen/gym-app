@@ -5,6 +5,7 @@ import { getExerciseHistory, type GymDb } from '../db';
 import { EX } from '../domain/catalog';
 import { daysBetween } from '../engine/dates';
 import type { ISODate, Profile, Program, StartingSet } from '../domain/types';
+import { t } from '../i18n';
 
 /** Squat, bench, deadlift and overhead press: the lifts setup asks about. */
 export const MAIN_LIFT_IDS: readonly string[] = [EX.squat, EX.bench, EX.deadlift, EX.ohp];
@@ -72,6 +73,11 @@ export async function pendingStartingSets(db: GymDb, profile: Profile | undefine
 
 /** The setup screens, in order (screens/Onboarding.tsx routes onboarding/1…4). */
 export const SETUP_STEPS = ['About you', 'Program', 'Your numbers', 'How it works'] as const;
+
+/** A setup step's name as shown, in the app's language. */
+export function setupStepLabel(i: number): string {
+  return [t('About you'), t('Program'), t('Your numbers'), t('How it works')][i] ?? SETUP_STEPS[i];
+}
 
 /** Fix a typo in a starting set: new weight and reps (1–12), same date. */
 export function editStartingSet(list: StartingSet[], exerciseId: string, weight: number, reps: number): StartingSet[] {

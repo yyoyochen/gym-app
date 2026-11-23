@@ -10,6 +10,7 @@
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
+import { t } from '../../i18n';
 import { PLOT_PX, chartScale, fillWeeks, gapText, stepRuns, type ChartTarget } from './chartModel';
 
 export interface LinePoint { date: ISODate; value: number; pr?: boolean }
@@ -19,7 +20,7 @@ const ev = (v: number) => 2 * Math.round(v / 2);
 const fmtTick = (v: number) => (Math.abs(v) >= 10_000 ? `${Math.round(v / 1000)}k` : Math.abs(v) >= 1000 ? `${Math.round(v / 100) / 10}k` : String(Math.round(v * 10) / 10));
 
 /** `current` is what target gaps are measured from (the lift page passes its best e1RM in 90 days); defaults to the last point. */
-export function LiftChart({ points, label, kind = 'step', targets = [], current, empty = 'Two sessions or more draw the line.' }: {
+export function LiftChart({ points, label, kind = 'step', targets = [], current, empty = t('Two sessions or more draw the line.') }: {
   points: LinePoint[]; label: string; kind?: 'step' | 'bars'; targets?: ChartTarget[]; current?: number | null; empty?: string;
 }) {
   if (points.length < 2) return <p className="tk-quiet">{empty}</p>;
@@ -36,7 +37,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
   const last = data[data.length - 1];
   const step = (W - L - R - 6) / data.length, bw = ev(Math.min(20, step * 0.7));
   const allTargets = [...s.pinned, ...s.inRange].sort((a, b) => b.value - a.value);
-  const aria = s.pinned.length ? `${label}. Above the chart: ${s.pinned.map(t => `${t.name} ${kg(t.value)} kg, ${gapText(t.value, now)}`).join('; ')}.` : label;
+  const aria = s.pinned.length ? t('{label}. Above the chart: {targets}.', { label, targets: s.pinned.map(p => t('{name} {kg} kg, {gap}', { name: p.name, kg: kg(p.value), gap: gapText(p.value, now) })).join(t('; ')) }) : label;
 
   return (
     <figure className="tk-chart">

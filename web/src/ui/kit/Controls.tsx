@@ -5,6 +5,7 @@ import { PixelIcon } from './PixelIcon';
 import type { IconName } from './icons';
 import { SPRINGS, animateSpring, type SpringHandle } from './motion/spring';
 import { prefersReducedMotion } from './motion/reduced';
+import { t } from '../../i18n';
 
 // ---------------------------------------------------------------- Button
 
@@ -88,10 +89,10 @@ export function Stepper({ label, value, onChange, step = 1, min, max, unit, deci
     <div className="stepper" data-no-drag>
       <span className="label">{label}{unit && <span className="stepper-unit"> ({unit})</span>}</span>
       <div className="stepper-row">
-        <RepeatButton label={`${label} minus ${step}`} icon="minus" disabled={min !== undefined && value <= min} onStep={() => bump(-1)} />
+        <RepeatButton label={t('{label} minus {step}', { label, step })} icon="minus" disabled={min !== undefined && value <= min} onStep={() => bump(-1)} />
         <input className="field stepper-input" inputMode="decimal" aria-label={unit ? `${label} (${unit})` : label} value={text}
           onChange={e => setText(e.target.value)} onBlur={commit} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
-        <RepeatButton label={`${label} plus ${step}`} icon="plus" disabled={max !== undefined && value >= max} onStep={() => bump(1)} />
+        <RepeatButton label={t('{label} plus {step}', { label, step })} icon="plus" disabled={max !== undefined && value >= max} onStep={() => bump(1)} />
       </div>
     </div>
   );
@@ -237,7 +238,7 @@ export function Toggle({ label, checked, onChange, hint, disabled }: {
       <button type="button" role="switch" aria-checked={checked} disabled={disabled} className={`toggle${held ? ' held' : ''}`}
         onPointerDown={() => setHeld(true)} onPointerUp={() => setHeld(false)} onPointerCancel={() => setHeld(false)} onPointerLeave={() => setHeld(false)}
         onClick={() => onChange(!checked)}>
-        <span className="toggle-word" aria-hidden="true">{checked ? 'On' : 'Off'}</span>
+        <span className="toggle-word" aria-hidden="true">{checked ? t('On') : t('Off')}</span>
         <span className="toggle-knob" />
       </button>
     </label>

@@ -3,6 +3,7 @@
 // a week mark always sits next to its own column.
 import type { ISODate } from '../../domain/types';
 import { addDaysIso, buildHeatmap, isoToEpochDays, mondayIndex, type HeatmapGrid } from '../../lib/heatmap';
+import { t } from '../../i18n';
 
 export type WeekMark = 'full' | 'half' | 'none';
 
@@ -94,5 +95,7 @@ export function yearSummary(sessions: { date: ISODate }[], today: ISODate, targe
 }
 
 export function summaryLine(s: YearSummary): string {
-  return `This year: ${s.sessions} session${s.sessions === 1 ? '' : 's'}, ${s.weeksAtTarget} of ${s.weeks} weeks at target, longest run ${s.longestRun} week${s.longestRun === 1 ? '' : 's'}`;
+  const sessions = s.sessions === 1 ? t('{n} session', { n: s.sessions }) : t('{n} sessions', { n: s.sessions });
+  const run = s.longestRun === 1 ? t('{n} week', { n: s.longestRun }) : t('{n} weeks', { n: s.longestRun });
+  return t('This year: {sessions}, {at} of {weeks} weeks at target, longest run {run}', { sessions, at: s.weeksAtTarget, weeks: s.weeks, run });
 }

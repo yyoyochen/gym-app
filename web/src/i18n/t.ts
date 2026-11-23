@@ -3,6 +3,7 @@
 // literal strings (tools/check-i18n.mjs and i18n/keys.test.ts read them).
 import { getLang } from './lang';
 import { ZH, ZH_NAMES } from './zh';
+import { te } from './engine';
 
 export type Vars = Record<string, string | number>;
 
@@ -15,8 +16,9 @@ export function t(en: string, vars?: Vars): string {
   return fill(getLang() === 'zh' ? ZH[en] ?? en : en, vars);
 }
 
-/** A stored name (a built-in lift, a template session): translated when known, else as typed. */
+/** A stored name (a built-in lift, a template session, "Session B", "… (minimum)"):
+ *  translated when known, else as typed. */
 export function tn(name: string): string {
   if (getLang() !== 'zh') return name;
-  return ZH_NAMES[name] ?? ZH[name] ?? name;
+  return ZH_NAMES[name] ?? ZH[name] ?? te(name);
 }

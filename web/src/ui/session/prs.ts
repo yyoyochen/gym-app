@@ -7,6 +7,7 @@ import { isNewBest, type BestSet, type NewBest } from '../../app/bests';
 import { e1rm } from '../../engine/progress';
 import { kg } from '../../app/coach';
 import { formatDate } from '../../app/dates';
+import { t, tn } from '../../i18n';
 
 /** An earlier set of the same lift, with the date it was logged on. */
 export interface PriorSet extends BestSet { id?: string; date: ISODate }
@@ -29,14 +30,14 @@ export function prMomentFor(set: BestSet, prior: readonly PriorSet[], lift: stri
   const bestE1 = Math.max(...prior.filter(counts).map(s => e1rm(s.weight, s.reps)));
   const mine = e1rm(set.weight, set.reps);
   const pairs = [
-    ...(prev ? [{ label: 'Previous best', value: `${kg(prev.weight)} × ${prev.reps}, ${formatDate(prev.date, { weekday: false, year: false })}` }] : []),
+    ...(prev ? [{ label: t('Previous best'), value: `${kg(prev.weight)} × ${prev.reps}, ${formatDate(prev.date, { weekday: false, year: false })}` }] : []),
     { label: 'e1RM', value: `${one(bestE1)} → ${one(Math.max(mine, bestE1))}` },
   ];
   return {
     value: kg(set.weight),
     unit: `kg × ${set.reps}`,
-    caption: best.kind === 'weight' ? 'heaviest set yet' : 'best e1RM yet',
-    lift,
+    caption: best.kind === 'weight' ? t('heaviest set yet') : t('best e1RM yet'),
+    lift: tn(lift),
     pairs,
   };
 }

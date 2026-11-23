@@ -9,6 +9,7 @@ import {
 } from '../../engine';
 import { consistency, type Consistency } from './consistency';
 import { kg } from '../../app/coach';
+import { t, tn } from '../../i18n';
 
 export async function loadConsistency(db: GymDb, today: ISODate, weeks: number, profile?: Profile): Promise<Consistency> {
   const from = addDays(today, -weeks * 7 - 7);
@@ -67,7 +68,7 @@ export async function liftVerdicts(db: GymDb, st: LiftStats): Promise<{ date: IS
   const out: { date: ISODate; sessionId: string; verdict: Verdict; detail: string }[] = [];
   for (const d of [...st.days].reverse()) {
     const c = await getCommit(db, d.sessionId);
-    const i = c?.targets.findIndex(t => t.exerciseId === st.exercise.id) ?? -1;
+    const i = c?.targets.findIndex(x => x.exerciseId === st.exercise.id) ?? -1;
     if (!c || i < 0) continue;
     const r = grade(c.targets[i], d.sets.filter(s => s.slotOrder === i + 1), 'rir');
     out.push({ date: d.date, sessionId: d.sessionId, verdict: r.verdict, detail: r.detail });
@@ -101,31 +102,34 @@ export async function goalRows(db: GymDb, profile: Profile, today: ISODate, only
   const exercises = new Map((await listExercises(db, { includeArchived: true })).map(e => [e.id, e]));
   const bw = await latestBodyweight(db, today);
   const out: GoalRow[] = [];
-  for (const t of profile.targets) {
-    if (only && !only.has(t.subject)) continue;
-    if (t.subject === 'sessions_per_week') {
+  for (const tg of profile.targets) {
+    if (only && !only.has(tg.subject)) continue;
+    if (tg.subject === 'sessions_per_week') {
       const from = addDays(today, -28);
       const n = (await listSessions(db, { from, to: today })).length;
       const avg = Math.round((n / 4) * 10) / 10;
-      out.push({ target: t, name: 'Sessions per week', current: avg, pace: null, evidence: `${kg(avg)}/wk (last 4 weeks)`,
-        paceLine: avg >= t.value ? 'at target' : `${kg(t.value - avg)}/wk short` });
+      out.push({ target: tg, name: t('Sessions per week'), current: avg, pace: null, evidence: t('{n}/wk (last 4 weeks)', { n: kg(avg) }),
+        paceLine: avg >= tg.value ? t('at target') : t('{n}/wk short', { n: kg(tg.value - avg) }) });
       continue;
     }
-    if (t.subject === 'bodyweight') {
-      out.push({ target: t, name: 'Bodyweight', current: bw ?? null, pace: null, evidence: bw !== undefined ? `${kg(bw)} kg` : 'no entries',
-        paceLine: bw !== undefined ? `${signed(t.value - bw)} kg to go` : '' });
+    if (tg.subject === 'bodyweight') {
+      out.push({ target: tg, name: t('Bodyweight'), current: bw ?? null, pace: null, evidence: bw !== undefined ? `${kg(bw)} kg` : t('no entries'),
+        paceLine: bw !== undefined ? t('{kg} kg to go', { kg: signed(tg.value - bw) }) : '' });
       continue;
     }
-    const ex = exercises.get(t.subject);
+    const ex = exercises.get(tg.subject);
     if (!ex) continue;
     const st = await liftStats(db, ex, today, bw);
     const current = st.best90;
-    const p = current !== null ? pace({ current, target: t.value, type: t.type, today, deadline: t.deadline, actualPerWeek: st.rate }) : null;
+    const p = current !== null ? pace({ current, target: tg.value, type: tg.type, today, deadline: tg.deadline, actualPerWeek: st.rate }) : null;
     out.push({
-      target: t, name: ex.name, current, pace: p,
-      evidence: current !== null ? `e1RM ~${kg(Math.round(current * 2) / 2)} kg` : 'no sets in 90 days',
+      target: tg, name: tn(ex.name), current, pace: p,
+      evidence: current !== null ? t('e1RM ~{kg} kg', { kg: kg(Math.round(current * 2) / 2) }) : t('no sets in 90 days'),
       paceLine: p
-        ? `${t.type === 'hold' && (current ?? 0) >= t.value ? 'hold' : `needs ${signed(p.neededPerWeek)} kg/wk`}, actual ${p.actualPerWeek === null ? 'not enough data' : `${signed(p.actualPerWeek)} kg/wk`}`
+        ? t('{need}, actual {actual}', {
+          need: tg.type === 'hold' && (current ?? 0) >= tg.value ? t('hold') : t('needs {kg} kg/wk', { kg: signed(p.neededPerWeek) }),
+          actual: p.actualPerWeek === null ? t('not enough data') : t('{kg} kg/wk', { kg: signed(p.actualPerWeek) }),
+        })
         : '',
     });
   }

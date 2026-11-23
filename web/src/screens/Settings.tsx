@@ -15,6 +15,7 @@ import { formatDate, todayISO } from '../app/dates';
 import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import { LanguageControl } from '../i18n/LanguageControl';
+import { t, tr } from '../i18n';
 
 
 export function Settings(_props: { params: string[] }) {
@@ -33,48 +34,48 @@ export function Settings(_props: { params: string[] }) {
   return (
     <section className="screen setup">
       <DemoBanner />
-      <NavBar title="Settings" backLabel="Profile" fallback="profile" />
+      <NavBar title={t('Settings')} backLabel={t('Profile')} fallback="profile" />
 
       <Appearance />
 
       {profile && (
-        <Group label="Training">
-          <Segmented<EffortScale> label="Effort scale" value={profile.effortScale} onChange={v => setProfile({ effortScale: v })}
+        <Group label={t('Training')}>
+          <Segmented<EffortScale> label={t('Effort scale')} value={profile.effortScale} onChange={v => setProfile({ effortScale: v })}
             options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
-          <p className="quiet">How you rate a set’s effort. RIR is reps left in the tank: 2 means two more were possible. RPE is the 1–10 scale, where RPE 8 is 2 RIR. Switch any time; past sets show in the scale you pick.</p>
+          <p className="quiet">{t('How you rate a set’s effort. RIR is reps left in the tank: 2 means two more were possible. RPE is the 1–10 scale, where RPE 8 is 2 RIR. Switch any time; past sets show in the scale you pick.')}</p>
         </Group>
       )}
 
-      <Group label="Backup">
+      <Group label={t('Backup')}>
         <LabelValueGrid items={[
-          { label: 'Last export', value: lastExport ? formatDate(todayISO(lastExport)) : 'Never' },
-          { label: 'Lives on', value: 'This device only' },
+          { label: t('Last export'), value: lastExport ? formatDate(todayISO(lastExport)) : t('Never') },
+          { label: t('Lives on'), value: t('This device only') },
         ]} />
         <Button variant="primary" block iconEnd="export" onClick={async () => {
           const text = await exportBackupJson(getDb());
           downloadText(`gym-app-backup-${todayISO()}.json`, text, 'application/json');
-          showHud({ text: 'Backup saved', icon: 'export' });
-        }}>Export backup (JSON)</Button>
-        <Button block iconEnd="export" onClick={async () => downloadText(`gym-app-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>Export sets (CSV)</Button>
+          showHud({ text: t('Backup saved'), icon: 'export' });
+        }}>{t('Export backup (JSON)')}</Button>
+        <Button block iconEnd="export" onClick={async () => downloadText(`gym-app-sets-${todayISO()}.csv`, await exportSetsCsv(getDb()), 'text/csv')}>{t('Export sets (CSV)')}</Button>
       </Group>
 
-      <Group label="Restore from backup">
+      <Group label={t('Restore from backup')}>
         <RestorePanel />
       </Group>
 
-      <Group label="Import a CSV">
-        {demo ? <p className="quiet">You’re looking at demo data. Tap “Start my log” first so the import doesn’t mix with it.</p> : <ImportCsvPanel />}
+      <Group label={t('Import a CSV')}>
+        {demo ? <p className="quiet">{t('You’re looking at demo data. Tap “Start my log” first so the import doesn’t mix with it.')}</p> : <ImportCsvPanel />}
       </Group>
 
       <Storage />
 
-      <Group label="Wipe all data">
-        <p className="quiet">Deletes every session, set, program and setting on this device. It can’t be undone. Export a backup first if you want a copy.</p>
-        <ConfirmButton danger className="block" confirmLabel="Wipe all data on this device?"
-          message="Every session, set, program and setting is deleted. This can’t be undone." confirmText="Wipe everything" onConfirm={async () => {
+      <Group label={t('Wipe all data')}>
+        <p className="quiet">{t('Deletes every session, set, program and setting on this device. It can’t be undone. Export a backup first if you want a copy.')}</p>
+        <ConfirmButton danger className="block" confirmLabel={t('Wipe all data on this device?')}
+          message={t('Every session, set, program and setting is deleted. This can’t be undone.')} confirmText={t('Wipe everything')} onConfirm={async () => {
             await wipeAll(getDb());
             go('onboarding', { replace: true });
-          }}>Wipe all data…</ConfirmButton>
+          }}>{t('Wipe all data…')}</ConfirmButton>
       </Group>
 
       <About />
@@ -85,11 +86,11 @@ export function Settings(_props: { params: string[] }) {
 function Appearance() {
   const { theme, setTheme } = useTheme();
   return (
-    <Group label="Appearance">
-      <Segmented<ThemePref> label="Theme" value={theme} onChange={v => { void setTheme(v); }}
-        options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
+    <Group label={t('Appearance')}>
+      <Segmented<ThemePref> label={t('Theme')} value={theme} onChange={v => { void setTheme(v); }}
+        options={[{ value: 'dark', label: t('Dark') }, { value: 'light', label: t('Light') }]} />
       <LanguageControl />
-      <Button block onClick={async () => { await resetTips(getDb()); showHud({ text: 'Tips will show again', icon: 'check' }); }}>Show tips again</Button>
+      <Button block onClick={async () => { await resetTips(getDb()); showHud({ text: t('Tips will show again'), icon: 'check' }); }}>{t('Show tips again')}</Button>
     </Group>
   );
 }
@@ -105,11 +106,11 @@ function Storage() {
   const installed = (() => { try { return matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true; } catch { return false; } })();
   const note = persisted === null ? null : storageNote({ persisted, installed, platform: detectPlatform(navigator.userAgent), denied });
   return (
-    <Group label="Storage">
-      <LabelValueGrid columns={1} items={[{ label: 'Persistent storage', value: persisted === null ? '…' : persisted ? 'Granted' : 'Not granted' }]} />
+    <Group label={t('Storage')}>
+      <LabelValueGrid columns={1} items={[{ label: t('Persistent storage'), value: persisted === null ? '…' : persisted ? t('Granted') : t('Not granted') }]} />
       {note && <p className="quiet">{note.text}</p>}
       {note?.offerRequest && (
-        <Button block onClick={async () => { const ok = await requestPersist(getDb()); setPersisted(ok); if (!ok) setDenied(true); }}>Ask the browser to keep my data</Button>
+        <Button block onClick={async () => { const ok = await requestPersist(getDb()); setPersisted(ok); if (!ok) setDenied(true); }}>{t('Ask the browser to keep my data')}</Button>
       )}
     </Group>
   );
@@ -117,15 +118,17 @@ function Storage() {
 
 function About() {
   return (
-    <Group label="About">
+    <Group label={t('About')}>
       <LabelValueGrid variant="stats" items={[
-        { label: 'Version:', value: __APP_VERSION__ },
-        { label: 'Account:', value: 'None, local-first' },
-        { label: 'Network:', value: 'Never sees your data' },
-        { label: 'Code:', value: 'MIT licence' },
+        { label: t('Version:'), value: __APP_VERSION__ },
+        { label: t('Account:'), value: t('None, local-first') },
+        { label: t('Network:'), value: t('Never sees your data') },
+        { label: t('Code:'), value: t('MIT licence') },
       ]} />
-      <span className="label">Data credits</span>
-      <p className="quiet">Strength benchmarks: modeled standards for everyday gym lifters. Squat, bench and deadlift anchors are self-reported gym percentiles from the Symmetric Strength dataset, as published by <a className="link" href="https://fitnessvolt.com/strength-standards/" target="_blank" rel="noopener">Strength Standards data by FitnessVolt</a> (CC BY 4.0). Everything else is modeled by this app; neither site endorses these figures.</p>
+      <span className="label">{t('Data credits')}</span>
+      <p className="quiet">{tr('Strength benchmarks: modeled standards for everyday gym lifters. Squat, bench and deadlift anchors are self-reported gym percentiles from the Symmetric Strength dataset, as published by {link} (CC BY 4.0). Everything else is modeled by this app; neither site endorses these figures.', {
+        link: <a className="link" href="https://fitnessvolt.com/strength-standards/" target="_blank" rel="noopener">{t('Strength Standards data by FitnessVolt')}</a>,
+      })}</p>
     </Group>
   );
 }

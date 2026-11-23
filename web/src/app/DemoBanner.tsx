@@ -4,6 +4,7 @@ import { useLive } from '../ui/useLive';
 import { ConfirmButton } from '../ui/common';
 import { go } from '../ui/router';
 import { exitDemo } from './demo';
+import { t } from '../i18n';
 
 export function useDemoMode(): boolean {
   return useLive(db => getMeta(db, 'demoMode'), []) === true;
@@ -14,12 +15,12 @@ export function DemoBanner() {
   if (!demo) return null;
   return (
     <div className="demo-bar" role="status">
-      <span>Demo data — start my log wipes it</span>
-      <ConfirmButton danger className="demo-bar-btn" confirmLabel="Wipe the demo data and start your own log?"
-        message="Every demo session, set and setting is deleted." confirmText="Wipe demo and start" onConfirm={async () => {
+      <span>{t('Demo data — start my log wipes it')}</span>
+      <ConfirmButton danger className="demo-bar-btn" confirmLabel={t('Wipe the demo data and start your own log?')}
+        message={t('Every demo session, set and setting is deleted.')} confirmText={t('Wipe demo and start')} onConfirm={async () => {
           await exitDemo(getDb());
           go('onboarding', { replace: true });
-        }}>Start my log</ConfirmButton>
+        }}>{t('Start my log')}</ConfirmButton>
     </div>
   );
 }

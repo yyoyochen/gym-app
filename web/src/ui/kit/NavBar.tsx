@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { PixelIcon } from './PixelIcon';
 import { back as navBack } from './navigation';
+import { t } from '../../i18n';
 
 export function NavBar({ title, backLabel, onBack, fallback = 'today', right, titleAction, large = true, children }: {
   title: string;
@@ -42,7 +43,7 @@ export function NavBar({ title, backLabel, onBack, fallback = 'today', right, ti
       <div className={`navbar${collapsed ? ' collapsed' : ''}${measured ? '' : ' measuring'}`}>
         <div className="navbar-side">
           {backLabel !== undefined && (
-            <button type="button" className="navbar-back" data-press="dim" onClick={() => (onBack ? onBack() : navBack(fallback))} aria-label={`Back to ${backLabel}`}>
+            <button type="button" className="navbar-back" data-press="dim" onClick={() => (onBack ? onBack() : navBack(fallback))} aria-label={t('Back to {page}', { page: backLabel })}>
               <PixelIcon name="back" />{backLabel}
             </button>
           )}

@@ -5,17 +5,18 @@ import { useState } from 'react';
 import { applyUpdate, useUpdate } from '../../sw/register';
 import { updateText } from '../../sw/version';
 import { PixelIcon } from '../../ui/kit';
+import { t } from '../../i18n';
 
 export function UpdateBanner() {
   const { ready, version } = useUpdate();
   const [busy, setBusy] = useState(false);
   if (!ready) return null;
-  const t = updateText(version, __APP_VERSION__);
+  const text = updateText(version, __APP_VERSION__, t);
   return (
     <button type="button" className="update-banner" data-press="dim" disabled={busy} onClick={() => { setBusy(true); applyUpdate(); }}>
       <span className="update-banner-txt">
-        <b>{busy ? 'Updating…' : t.title}</b>
-        <span>{t.action}</span>
+        <b>{busy ? t('Updating…') : text.title}</b>
+        <span>{text.action}</span>
       </span>
       <PixelIcon name="chevron" />
     </button>

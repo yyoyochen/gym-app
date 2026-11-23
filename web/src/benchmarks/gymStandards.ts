@@ -9,6 +9,7 @@
 // Bodyweight lifts: a per-sex table of reps / seconds / added-load fraction at
 // each level, interpolated linearly between levels.
 import { normCdf, normInv } from './normal';
+import { t } from '../i18n';
 
 export type StdSex = 'male' | 'female';
 export type BaseLift = 'squat' | 'bench' | 'deadlift' | 'ohp';
@@ -78,6 +79,23 @@ export const LEVEL_LABEL: Record<Level, string> = {
   'below beginner': 'Below beginner', beginner: 'Beginner', novice: 'Novice', intermediate: 'Intermediate', advanced: 'Advanced', elite: 'Elite',
 };
 export const CONFIDENCE_LABEL: Record<Confidence, string> = { A: 'data-anchored', B: 'coaching ratio', C: 'rough' };
+
+/** LEVEL_LABEL in the app's language (LEVEL_LABEL itself stays English). */
+export function levelLabel(level: Level): string {
+  switch (level) {
+    case 'below beginner': return t('Below beginner');
+    case 'beginner': return t('Beginner');
+    case 'novice': return t('Novice');
+    case 'intermediate': return t('Intermediate');
+    case 'advanced': return t('Advanced');
+    case 'elite': return t('Elite');
+  }
+}
+
+/** CONFIDENCE_LABEL in the app's language. */
+export function confidenceLabel(c: Confidence): string {
+  return c === 'A' ? t('data-anchored') : c === 'B' ? t('coaching ratio') : t('rough');
+}
 
 export interface Rating { level: Level; /** 0–100, one decimal, like the model. */ percentile: number }
 

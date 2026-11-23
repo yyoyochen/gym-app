@@ -8,10 +8,14 @@ export function appVersion(pkgVersion: string, build?: string): string {
   return `${major}.${minor}.${build}`;
 }
 
+type Translate = (en: string, vars?: Record<string, string>) => string;
+// vite.config.ts imports this file, so the translator is passed in (the banner passes i18n's t()).
+const asIs: Translate = (en, vars) => en.replace(/\{(\w+)\}/g, (m, k: string) => vars?.[k] ?? m);
+
 /** The update banner's two lines. `next` is null when the new worker didn't say its version. */
-export function updateText(next: string | null, current: string): { title: string; action: string } {
+export function updateText(next: string | null, current: string, t: Translate = asIs): { title: string; action: string } {
   return {
-    title: next ? `Version ${next} is ready` : 'A new version is ready',
-    action: `Tap to update (you have ${current})`,
+    title: next ? t('Version {next} is ready', { next }) : t('A new version is ready'),
+    action: t('Tap to update (you have {current})', { current }),
   };
 }

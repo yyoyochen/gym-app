@@ -19,6 +19,7 @@ import { prefersReducedMotion } from './motion/reduced';
 import { cancelPress } from './motion/press';
 import { isTopModal, popModal, pushModal, setPresentingProgress, trapTab } from './modal';
 import { pushSheetEntry } from './sheetHistory';
+import { t } from '../../i18n';
 
 export type Detent = 'medium' | 'large';
 
@@ -81,9 +82,9 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
       panel.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
       const first = g.medium ?? g.large;
       back.style.opacity = String(y >= first ? Math.max(0, Math.min(1, 1 - (y - first) / (g.hidden - first))) : 1);
-      let t = 0;
-      if (g.large < 40) t = g.medium !== null ? (g.medium - y) / (g.medium - g.large) : 1 - (y - g.large) / (g.hidden - g.large);
-      setPresentingProgress(Math.max(0, Math.min(1, t)));
+      let prog = 0;
+      if (g.large < 40) prog = g.medium !== null ? (g.medium - y) / (g.medium - g.large) : 1 - (y - g.large) / (g.hidden - g.large);
+      setPresentingProgress(Math.max(0, Math.min(1, prog)));
       updateScrolls();
     };
     // The body scrolls at every detent. At medium its lower part is below the screen edge,
@@ -150,10 +151,10 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
     let suppressClick = false;
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0 || !isTopModal(root)) return;
-      const t = e.target as Element;
-      if (t.closest(NO_DRAG)) return;
+      const tgt = e.target as Element;
+      if (tgt.closest(NO_DRAG)) return;
       // In a scrolling body the content owns the gesture, unless it is at the top and the finger goes down.
-      const fromBody = body.contains(t) && panel.classList.contains('scrolls');
+      const fromBody = body.contains(tgt) && panel.classList.contains('scrolls');
       if (fromBody && body.scrollTop > 0) return;
       drag = { y0: e.clientY, sy: s.y, id: e.pointerId, moved: false, fromBody };
       vt.reset(); vt.add(e.clientY, e.timeStamp);
@@ -193,9 +194,9 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
     // Focusing a field inside the medium detent expands to large (iOS behaviour).
     const onFocusIn = (e: FocusEvent) => {
       if (s.stop !== 'medium' || s.geo!.medium === null) return;
-      const t = e.target as HTMLElement;
-      const r = t.getBoundingClientRect();
-      if (r.bottom > window.innerHeight - 8 || t.matches('input, textarea, select')) goStop('large');
+      const tgt = e.target as HTMLElement;
+      const r = tgt.getBoundingClientRect();
+      if (r.bottom > window.innerHeight - 8 || tgt.matches('input, textarea, select')) goStop('large');
     };
     panel.addEventListener('pointerdown', onDown);
     panel.addEventListener('pointermove', onMove);
@@ -230,7 +231,7 @@ function SheetPanel({ title, onClose, children, detents = ['medium', 'large'], i
         <div className="sheet-head">
           <span className="sheet-grabber" aria-hidden="true" />
           {title ? <h2 className="sheet-title">{title}</h2> : <span />}
-          <button type="button" className="sheet-x" data-press="dim" aria-label="Close"><PixelIcon name="close" /></button>
+          <button type="button" className="sheet-x" data-press="dim" aria-label={t('Close')}><PixelIcon name="close" /></button>
         </div>
         <div className="sheet-body" ref={bodyRef}><div className="sheet-content">{children}</div></div>
       </div>

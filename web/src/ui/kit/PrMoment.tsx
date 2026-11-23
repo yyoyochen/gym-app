@@ -9,6 +9,7 @@ import { isTopModal, popModal, pushModal } from './modal';
 import { deferNav, pushSheetEntry } from './sheetHistory';
 import { stampDate } from './Display';
 import { Parts } from './Parts';
+import { t } from '../../i18n';
 
 export const BAYER4 = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]];
 /** Block sizes per frame, coarse → solid (0 = solid type). */
@@ -42,9 +43,9 @@ export function DitherNumber({ text, playKey = 0, height = 170, className = '', 
       const off = document.createElement('canvas'); off.width = W; off.height = H;
       const o = off.getContext('2d')!;
       let size = 200 * dpr;
-      o.font = `800 ${size}px 'Schibsted Grotesk Variable', system-ui, sans-serif`;
+      o.font = `800 ${size}px 'Schibsted Grotesk Variable', 'Gym Sans TC', system-ui, sans-serif`;
       size = Math.floor(Math.min(size * (W - 4 * dpr) / Math.max(1, o.measureText(text).width), H * 1.1));
-      o.font = `800 ${size}px 'Schibsted Grotesk Variable', system-ui, sans-serif`;
+      o.font = `800 ${size}px 'Schibsted Grotesk Variable', 'Gym Sans TC', system-ui, sans-serif`;
       o.fillStyle = '#000'; o.textBaseline = 'alphabetic';
       o.fillText(text, 0, H - 16 * dpr);
       const data = o.getImageData(0, 0, W, H).data;
@@ -136,9 +137,9 @@ export function PrMoment({ data, onClose }: { data: PrMomentData; onClose: () =>
     return () => { document.removeEventListener('keydown', onKey); popModal(el); };
   }, [onClose]);
   return (
-    <div className="pr-moment" ref={root} role="dialog" aria-modal="true" aria-label={`New best: ${data.value} ${data.unit ?? ''}`} tabIndex={-1} onClick={onClose}>
+    <div className="pr-moment" ref={root} role="dialog" aria-modal="true" aria-label={t('New best: {value} {unit}', { value: data.value, unit: data.unit ?? '' })} tabIndex={-1} onClick={onClose}>
       <div className="pr-inner">
-        <div className="label"><Parts items={[`[PR] // ${data.lift ?? 'New best'}`, stampDate()]} /></div>
+        <div className="label"><Parts items={[`[PR] // ${data.lift ?? t('New best')}`, stampDate()]} /></div>
         <DitherNumber text={data.value} className="accent" />
         {(data.unit || data.caption) && <div className="pr-sub">{data.unit}{data.caption && <span>{data.caption}</span>}</div>}
         {data.pairs && data.pairs.length > 0 && (
@@ -146,7 +147,7 @@ export function PrMoment({ data, onClose }: { data: PrMomentData; onClose: () =>
             {data.pairs.map(p => <div key={p.label} className="lv"><span className="lv-l">{p.label}</span><b className="lv-v">{p.value}</b></div>)}
           </div>
         )}
-        <span className="label pr-hint">Tap to close</span>
+        <span className="label pr-hint">{t('Tap to close')}</span>
       </div>
     </div>
   );

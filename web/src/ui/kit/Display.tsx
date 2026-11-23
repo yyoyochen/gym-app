@@ -3,13 +3,14 @@
 import type { ReactNode } from 'react';
 import { PixelIcon } from './PixelIcon';
 import { ditherBar } from './dither';
+import { formatDate } from '../../app/dates';
+import { t } from '../../i18n';
 
-const STAMP_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const STAMP_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
-/** "Sun 22 Nov": the date in the header lockup and the PR moment label. */
+/** "Sun 22 Nov" (Chinese "11月22日 週日"): the date in the header lockup and the PR moment label. */
 export function stampDate(d: Date = new Date()): string {
-  return `${STAMP_DAYS[d.getDay()]} ${d.getDate()} ${STAMP_MONTHS[d.getMonth()]}`;
+  return formatDate(`${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`, { year: false });
 }
 
 /**
@@ -82,11 +83,11 @@ export function LabelValueGrid({ items, columns = 2, variant = 'pairs', classNam
 }
 
 export type VerdictKind = 'beat' | 'hit' | 'missed' | 'new';
-const VERDICT_TEXT: Record<VerdictKind, string> = { beat: 'Beat', hit: 'Hit', missed: 'Missed', new: 'New' };
+const verdictText = (k: VerdictKind) => (k === 'beat' ? t('Beat') : k === 'hit' ? t('Hit') : k === 'missed' ? t('Missed') : t('New'));
 
 /** Verdict chip without colour: BEAT solid ink, HIT outline, MISSED dashed + faded. */
 export function Verdict({ kind, children, className = '' }: { kind: VerdictKind; children?: ReactNode; className?: string }) {
-  return <span className={`verdict ${kind} ${className}`}>{children ?? VERDICT_TEXT[kind]}</span>;
+  return <span className={`verdict ${kind} ${className}`}>{children ?? verdictText(kind)}</span>;
 }
 
 /**

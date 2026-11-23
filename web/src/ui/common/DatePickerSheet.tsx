@@ -4,14 +4,14 @@
 // Arrow keys move the focused day, Page keys change month, Enter picks.
 import { useEffect, useRef, useState } from 'react';
 import type { ISODate } from '../../domain/types';
-import { monthLabel, shiftMonth, todayISO } from '../../app/dates';
+import { dayInitials, monthLabel, shiftMonth, todayISO } from '../../app/dates';
+import { t, tr } from '../../i18n';
 import { MonthYearHeader } from './MonthYearHeader';
 import { ymOf } from './monthYear';
 import { Button, InfoButton, Sheet } from '../kit';
 import { MARKER_H, MARKER_W, canConfirm, clampDate, dayLabel, markerRects, monthGrid, moveDay, sameDayIn, tabbableDay, type CalKey, type DayLevel } from './calendarModel';
 
 const KEYS = new Set<string>(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
-const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 export function DatePickerSheet({ open, value, min, max, levels, title, confirmLabel, requireChange, onPick, onClear, onClose }: {
   open: boolean; value: ISODate | ''; min?: ISODate; max?: ISODate; levels?: ReadonlyMap<ISODate, DayLevel>;
@@ -62,7 +62,7 @@ export function DatePickerSheet({ open, value, min, max, levels, title, confirmL
         const d = (n.year - ym.year) * 12 + (n.month - ym.month);
         if (d) go(d);
       }} />
-      <div className="cal-dow" aria-hidden="true">{DOW.map((d, i) => <span key={i}>{d}</span>)}</div>
+      <div className="cal-dow" aria-hidden="true">{dayInitials().map((d, i) => <span key={i}>{d}</span>)}</div>
       <div className="cal-grid" role="grid" aria-label={monthLabel(ym.year, ym.month)} ref={grid} onKeyDown={onKey}>
         {weeks.map((w, i) => (
           <div key={i} role="row" className="cal-week">
@@ -79,14 +79,14 @@ export function DatePickerSheet({ open, value, min, max, levels, title, confirmL
         ))}
       </div>
       <div className="legend-row cal-legend">
-        <span className="cal-legend-in" aria-hidden="true">Less {([0, 1, 2] as const).map(l => <Marker key={l} level={l} />)} More</span>
-        <InfoButton label="About the day markers">A strip under a day means you trained. Denser and more solid means more working sets that day, in three steps compared with your busiest day.</InfoButton>
+        <span className="cal-legend-in" aria-hidden="true">{tr('Less {scale} More', { scale: <>{([0, 1, 2] as const).map(l => <Marker key={l} level={l} />)}</> })}</span>
+        <InfoButton label={t('About the day markers')}>{t('A strip under a day means you trained. Denser and more solid means more working sets that day, in three steps compared with your busiest day.')}</InfoButton>
       </div>
       <div className="tk-btnrow">
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('Cancel')}</Button>
         <Button variant="primary" className="grow" disabled={!canConfirm({ sel, value, ...(min ? { min } : {}), ...(max ? { max } : {}), ...(requireChange ? { requireChange } : {}) })} onClick={() => sel && onPick(sel)}>{confirmLabel}</Button>
       </div>
-      {onClear && value && <Button variant="quiet" block onClick={onClear}>No date</Button>}
+      {onClear && value && <Button variant="quiet" block onClick={onClear}>{t('No date')}</Button>}
     </Sheet>
   );
 }

@@ -25,6 +25,7 @@ import {
 } from '../engine';
 import { getPlateSettings, type PlateSettings } from './prefs';
 import { displayName } from './labels';
+import { t, te, tn } from '../i18n';
 import { startingSetFor } from './setup';
 
 const EPS = 1e-9;
@@ -411,8 +412,8 @@ export function gradeCommit(commit: Commit, sets: SetEntry[], scale: EffortScale
     const other = work.length > 0 && work.every(s => s.exerciseId !== target.exerciseId);
     if (other) {
       const name = work[0].exerciseNameSnapshot;
-      return { slotOrder: i + 1, target, sets: mine, ungraded: `swapped to ${name}`,
-        result: { slotId: target.slotId, exerciseId: target.exerciseId, verdict: 'new', detail: `swapped to ${name} — logged, not graded` } };
+      return { slotOrder: i + 1, target, sets: mine, ungraded: t('swapped to {name}', { name: tn(name) }),
+        result: { slotId: target.slotId, exerciseId: target.exerciseId, verdict: 'new', detail: t('swapped to {name} — logged, not graded', { name: tn(name) }) } };
     }
     const result = grade(target, mine.filter(s => s.exerciseId === target.exerciseId), scale);
     return { slotOrder: i + 1, target, sets: mine, result };
@@ -476,8 +477,10 @@ export async function todayState(db: GymDb, today: ISODate, now: Millis): Promis
   if (gap.kind === 'in_progress') return { gap, open: { session: last, card: resumeCard(sets, now) }, last };
   const g = await gradeSession(db, last.id);
   const d = daysBetween(last.date, today);
-  const ago = d === 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`;
-  const lastLine = g && g.total ? lastSessionLine(displayName(last.nameSnapshot), last.date, today, g.kept, g.total) : `Last session: ${displayName(last.nameSnapshot)}, ${ago}`;
+  const ago = d === 0 ? t('today') : d === 1 ? t('yesterday') : t('{n} days ago', { n: d });
+  const lastLine = g && g.total
+    ? te(lastSessionLine(displayName(last.nameSnapshot), last.date, today, g.kept, g.total))
+    : t('Last session: {name}, {ago}', { name: tn(displayName(last.nameSnapshot)), ago });
   const doneToday = last.sealed && last.date === today ? { session: last, kept: g?.kept ?? 0, total: g?.total ?? 0 } : undefined;
   return { gap, lastLine, last, ...(doneToday ? { doneToday } : {}) };
 }

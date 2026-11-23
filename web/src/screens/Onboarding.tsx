@@ -16,13 +16,14 @@ import { loadDemo } from '../app/demo';
 import { todayISO } from '../app/dates';
 import { commitSession, planToday } from '../app/coach';
 import { initTips } from '../app/tips';
-import { SETUP_STEPS, START_REPS, hasLoggedWork, mainLifts, startingSetsFromRows, startingSetsOf, type NumberRow } from '../app/setup';
+import { SETUP_STEPS, START_REPS, setupStepLabel, hasLoggedWork, mainLifts, startingSetsFromRows, startingSetsOf, type NumberRow } from '../app/setup';
 import { parseNum, validateBirthYear, validateBodyweight } from '../app/validate';
 import { sessionNames } from '../ui/session/text';
 import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import { TemplateList } from '../app/parts/TemplatePicker';
 import { LanguageControl } from '../i18n/LanguageControl';
+import { t, tn } from '../i18n';
 
 const COUNT = SETUP_STEPS.length;
 
@@ -53,8 +54,8 @@ export function Onboarding({ params }: { params: string[] }) {
 
   return (
     <section className="screen onb">
-      <Lockup left={<span className="tnum">{step + 1}/{COUNT}</span>} mid={`Setup // ${SETUP_STEPS[step]}`} />
-      <DitherBar cells={40} value={(step + 1) / COUNT} label="Setup" valueText={`Step ${step + 1} of ${COUNT}`} />
+      <Lockup left={<span className="tnum">{step + 1}/{COUNT}</span>} mid={t('Setup // {step}', { step: setupStepLabel(step) })} />
+      <DitherBar cells={40} value={(step + 1) / COUNT} label={t('Setup')} valueText={t('Step {n} of {count}', { n: step + 1, count: COUNT })} />
       {step === 0 && <StepAbout onNext={next} />}
       {step === 1 && <StepProgram onNext={next} onBack={prev} />}
       {step === 2 && <StepNumbers onNext={next} onBack={prev} />}
@@ -76,7 +77,7 @@ function Question({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
 function Foot({ children, onBack }: { children: ReactNode; onBack?: () => void }) {
   return (
     <div className="onb-foot">
-      {onBack && <button type="button" className="btn quiet onb-back" onClick={onBack} aria-label="Previous step"><PixelIcon name="back" /></button>}
+      {onBack && <button type="button" className="btn quiet onb-back" onClick={onBack} aria-label={t('Previous step')}><PixelIcon name="back" /></button>}
       {children}
     </div>
   );
@@ -92,8 +93,8 @@ function StepAbout({ onNext }: { onNext: () => void }) {
   const [errors, setErrors] = useState<string[]>([]);
   const [history, setHistory] = useState(false);
   const save = async () => {
-    const y = parseNum(birthYear, { integer: true, name: 'Birth year' });
-    const w = parseNum(bw, { name: 'Bodyweight' });
+    const y = parseNum(birthYear, { integer: true, name: t('Birth year') });
+    const w = parseNum(bw, { name: t('Bodyweight') });
     const errs = [
       ...(y.ok ? validateBirthYear(y.value, new Date().getFullYear()) : [y.error]),
       ...(w.ok ? validateBodyweight(w.value) : [w.error]),
@@ -107,26 +108,26 @@ function StepAbout({ onNext }: { onNext: () => void }) {
   };
   return (
     <>
-      <Question sub="How you rate effort, and what you weigh.">About you</Question>
+      <Question sub={t('How you rate effort, and what you weigh.')}>{t('About you')}</Question>
       <div className="stack">
         <LanguageControl />
-        <Segmented<EffortScale> label="Effort scale" value={scale} onChange={setScale}
+        <Segmented<EffortScale> label={t('Effort scale')} value={scale} onChange={setScale}
           options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
-        <p className="quiet">RIR: reps left in the tank. RPE: 10 minus that.</p>
+        <p className="quiet">{t('RIR: reps left in the tank. RPE: 10 minus that.')}</p>
       </div>
-      <label className="field-wrap"><span className="label">Bodyweight (kg)</span>
+      <label className="field-wrap"><span className="label">{t('Bodyweight (kg)')}</span>
         <input className="field big tnum" inputMode="decimal" placeholder="80" value={bw} onChange={e => setBw(e.target.value)} /></label>
-      <Group label="For strength levels (optional)">
-        <Segmented<Sex | 'none'> label="Sex" value={sex} onChange={setSex}
-          options={[{ value: 'M', label: 'Male' }, { value: 'F', label: 'Female' }, { value: 'none', label: 'Not set' }]} />
-        <label className="field-wrap"><span className="label">Birth year</span>
+      <Group label={t('For strength levels (optional)')}>
+        <Segmented<Sex | 'none'> label={t('Sex')} value={sex} onChange={setSex}
+          options={[{ value: 'M', label: t('Male') }, { value: 'F', label: t('Female') }, { value: 'none', label: t('Not set') }]} />
+        <label className="field-wrap"><span className="label">{t('Birth year')}</span>
           <input className="field big tnum" inputMode="numeric" placeholder="1990" value={birthYear} onChange={e => setBirthYear(e.target.value)} /></label>
       </Group>
-      <button type="button" className="link onb-link" onClick={() => setHistory(true)}>Have a log already? Import or restore</button>
+      <button type="button" className="link onb-link" onClick={() => setHistory(true)}>{t('Have a log already? Import or restore')}</button>
       <Errors errors={errors} />
       <Foot>
-        <Button variant="quiet" onClick={onNext}>Skip</Button>
-        <Button variant="primary" className="grow" iconEnd="chevron" onClick={save}>Next</Button>
+        <Button variant="quiet" onClick={onNext}>{t('Skip')}</Button>
+        <Button variant="primary" className="grow" iconEnd="chevron" onClick={save}>{t('Next')}</Button>
       </Foot>
       <HistorySheet open={history} onClose={() => setHistory(false)} />
     </>
@@ -141,22 +142,22 @@ function HistorySheet({ open, onClose }: { open: boolean; onClose: () => void })
   const [error, setError] = useState('');
   const pick = (m: 'csv' | 'restore') => setMode(mode === m ? '' : m);
   return (
-    <Sheet open={open} title="Bring your log" onClose={onClose}>
+    <Sheet open={open} title={t('Bring your log')} onClose={onClose}>
       <div className="choice-list">
-        <Choice title="Import a CSV" sub="App template, Hevy or Strong" open={mode === 'csv'} onClick={() => pick('csv')} />
+        <Choice title={t('Import a CSV')} sub={t('App template, Hevy or Strong')} open={mode === 'csv'} onClick={() => pick('csv')} />
         {mode === 'csv' && <div className="choice-body">
           <ImportCsvPanel onDone={r => setImported(r.sessionsAdded > 0 || r.sessionsUnchanged > 0)} />
-          {imported && <Button variant="primary" block iconEnd="chevron" onClick={onClose}>Continue setup</Button>}
+          {imported && <Button variant="primary" block iconEnd="chevron" onClick={onClose}>{t('Continue setup')}</Button>}
         </div>}
-        <Choice title="Restore a backup" sub="A .json backup from this app" open={mode === 'restore'} onClick={() => pick('restore')} />
+        <Choice title={t('Restore a backup')} sub={t('A .json backup from this app')} open={mode === 'restore'} onClick={() => pick('restore')} />
         {mode === 'restore' && <div className="choice-body">
           <RestorePanel onRestored={finish} />
-          <p className="quiet">A restore brings back your profile and program too, so it goes straight to Today.</p>
+          <p className="quiet">{t('A restore brings back your profile and program too, so it goes straight to Today.')}</p>
         </div>}
-        <Choice title={demoBusy ? 'Loading demo…' : 'Explore with demo data'} sub="A sample log you can wipe later" disabled={demoBusy} onClick={async () => {
+        <Choice title={demoBusy ? t('Loading demo…') : t('Explore with demo data')} sub={t('A sample log you can wipe later')} disabled={demoBusy} onClick={async () => {
           setDemoBusy(true); setError('');
           try { await loadDemo(getDb()); finish(); }
-          catch (e) { setError(e instanceof Error ? e.message : 'Could not load the demo'); setDemoBusy(false); }
+          catch (e) { setError(e instanceof Error ? e.message : t('Could not load the demo')); setDemoBusy(false); }
         }} />
       </div>
       {error && <span className="field-error" role="alert">{error}</span>}
@@ -184,7 +185,7 @@ function StepProgram({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
   useEffect(() => { if (active?.templateId && TEMPLATES.some(t => t.id === active.templateId)) setSel(active.templateId); }, [active?.templateId]);
   return (
     <>
-      <Question sub="Start from an example program. Change anything in it later under Profile, Program.">Program</Question>
+      <Question sub={t('Start from an example program. Change anything in it later under Profile, Program.')}>{t('Program')}</Question>
       <TemplateList exercises={exercises} selected={sel} onSelect={setSel} />
       {error && <span className="field-error" role="alert">{error}</span>}
       <Foot onBack={onBack}>
@@ -195,9 +196,9 @@ function StepProgram({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
             if (!existing || existing.templateId !== sel) await saveProgram(getDb(), programFromTemplate(sel));
             onNext();
           } catch (e) {
-            setError(`Could not save the program: ${e instanceof Error ? e.message : 'unknown error'}. Try again.`);
+            setError(t('Could not save the program: {error}. Try again.', { error: e instanceof Error ? e.message : t('unknown error') }));
           } finally { setBusy(false); }
-        }}>Next</Button>
+        }}>{t('Next')}</Button>
       </Foot>
     </>
   );
@@ -219,7 +220,7 @@ async function loadRows(): Promise<Row[]> {
     if (await hasLoggedWork(db, id)) continue;
     const s = saved.find(x => x.exerciseId === id);
     const ex = byId.get(id);
-    rows.push({ exerciseId: id, name: ex?.name ?? id, step: ex?.increment ?? 2.5,
+    rows.push({ exerciseId: id, name: tn(ex?.name ?? id), step: ex?.increment ?? 2.5,
       weight: s?.weight ?? null, text: s ? String(s.weight) : '', reps: s?.reps ?? 5, skipped: false });
   }
   return rows;
@@ -235,7 +236,7 @@ function StepNumbers({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
     const errs: string[] = [];
     const parsed = rows.map(r => {
       if (r.skipped) return r;
-      const w = parseNum(r.text, { name: `${r.name} weight`, min: 0, max: 500 });
+      const w = parseNum(r.text, { name: t('{name} weight', { name: r.name }), min: 0, max: 500 });
       if (!w.ok) { errs.push(w.error); return r; }
       return { ...r, weight: w.value ?? null };
     });
@@ -249,8 +250,8 @@ function StepNumbers({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
   };
   return (
     <>
-      <Question sub="Your best set in the last month for each lift. Your first targets come from these.">Your numbers</Question>
-      {rows && !rows.length && <p className="quiet">Your log already covers these lifts. The app plans from it.</p>}
+      <Question sub={t('Your best set in the last month for each lift. Your first targets come from these.')}>{t('Your numbers')}</Question>
+      {rows && !rows.length && <p className="quiet">{t('Your log already covers these lifts. The app plans from it.')}</p>}
       {rows && rows.length > 0 && (
         <div className="num-rows">
           {rows.map((r, i) => (
@@ -258,25 +259,25 @@ function StepNumbers({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
               <div className="num-row-hd">
                 <span className="label">{r.name}</span>
                 <button type="button" className="link num-skip" aria-pressed={r.skipped} onClick={() => patch(i, { skipped: !r.skipped })}>
-                  {r.skipped ? 'Add it back' : 'Skip'}
+                  {r.skipped ? t('Add it back') : t('Skip')}
                 </button>
               </div>
-              {r.skipped ? <p className="quiet">Skipped: the first session sets the baseline.</p> : (
+              {r.skipped ? <p className="quiet">{t('Skipped: the first session sets the baseline.')}</p> : (
                 <div className="grid2">
-                  <label className="field-wrap"><span className="label">Weight (kg)</span>
+                  <label className="field-wrap"><span className="label">{t('Weight (kg)')}</span>
                     <input className="field big tnum" inputMode="decimal" placeholder="100" value={r.text}
-                      aria-label={`${r.name} weight in kilograms`} onChange={e => patch(i, { text: e.target.value })} /></label>
-                  <Stepper label="Reps" value={r.reps} min={START_REPS.min} max={START_REPS.max} onChange={v => patch(i, { reps: v })} />
+                      aria-label={t('{name} weight in kilograms', { name: r.name })} onChange={e => patch(i, { text: e.target.value })} /></label>
+                  <Stepper label={t('Reps')} value={r.reps} min={START_REPS.min} max={START_REPS.max} onChange={v => patch(i, { reps: v })} />
                 </div>
               )}
             </div>
           ))}
         </div>
       )}
-      {rows && rows.length > 0 && <p className="quiet">Skip a lift and its first session is a baseline: you log, it measures.</p>}
+      {rows && rows.length > 0 && <p className="quiet">{t('Skip a lift and its first session is a baseline: you log, it measures.')}</p>}
       <Errors errors={errors} />
       <Foot onBack={onBack}>
-        <Button variant="primary" className="grow" iconEnd="chevron" disabled={!rows} onClick={save}>Next</Button>
+        <Button variant="primary" className="grow" iconEnd="chevron" disabled={!rows} onClick={save}>{t('Next')}</Button>
       </Foot>
     </>
   );
@@ -284,10 +285,10 @@ function StepNumbers({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
 
 // ---------------------------------------------------------------- 04 how GymBro works
 
-const HOW: readonly [string, string][] = [
-  ['Before you lift', 'A plan for each session: the numbers to hit, and why.'],
-  ['Each set', 'Two taps. Did what it says? Log as planned. If not, adjust.'],
-  ['After', 'A grade: beat, hit or missed. The next plan follows from it.'],
+const how = (): [string, string][] => [
+  [t('Before you lift'), t('A plan for each session: the numbers to hit, and why.')],
+  [t('Each set'), t('Two taps. Did what it says? Log as planned. If not, adjust.')],
+  [t('After'), t('A grade: beat, hit or missed. The next plan follows from it.')],
 ];
 
 function StepHow({ onBack }: { onBack?: () => void }) {
@@ -304,24 +305,24 @@ function StepHow({ onBack }: { onBack?: () => void }) {
       const s = await commitSession(getDb(), p, 'green', now);
       go(`session/${s.id}`, { replace: true, transition: 'push' });
     } catch (e) {
-      setError(`Could not start the session: ${e instanceof Error ? e.message : 'unknown error'}. Try again, or look around first.`);
+      setError(t('Could not start the session: {error}. Try again, or look around first.', { error: e instanceof Error ? e.message : t('unknown error') }));
     } finally { setBusy(false); }
   };
   return (
     <>
-      <Question>How it works</Question>
+      <Question>{t('How it works')}</Question>
       <ol className="onb-how">
-        {HOW.map(([when, line]) => (
+        {how().map(([when, line]) => (
           <li key={when}><b className="onb-how-k">{when}</b><span>{line}</span></li>
         ))}
       </ol>
-      <p className="quiet">Small tips will point things out the first time you meet them.</p>
+      <p className="quiet">{t('Small tips will point things out the first time you meet them.')}</p>
       {error && <span className="field-error" role="alert">{error}</span>}
-      {short && <Button variant="quiet" className="onb-link" onClick={finish}>Look around first</Button>}
+      {short && <Button variant="quiet" className="onb-link" onClick={finish}>{t('Look around first')}</Button>}
       <Foot onBack={onBack}>
         {short
-          ? <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={start}>Start {short}</Button>
-          : <Button variant="primary" className="grow" iconEnd="chevron" onClick={finish}>Look around</Button>}
+          ? <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={start}>{t('Start {name}', { name: short })}</Button>
+          : <Button variant="primary" className="grow" iconEnd="chevron" onClick={finish}>{t('Look around')}</Button>}
       </Foot>
     </>
   );

@@ -1,6 +1,8 @@
 import { useId, useMemo } from 'react';
 import { heatmapGrid, type HeatCell, type HeatGrid } from './dither';
 import { shadeOn } from './SquareHeatmap';
+import { dayInitials } from '../../app/dates';
+import { t } from '../../i18n';
 
 /**
  * The last `n` week columns of a heatmap grid as calendar rows, oldest first,
@@ -18,7 +20,6 @@ export function recentWeeks(g: HeatGrid, n = 4): { days: HeatCell[][]; marks: ('
 }
 
 const PX = 2; // one shade sub-pixel, in CSS px
-const HEAD = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 /** Today's near-term calendar: 4 rolling weeks of shaded day tiles; each row ends with "trained/target" for that week. */
 export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
@@ -32,7 +33,7 @@ export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
   const { days, marks, trained } = recentWeeks(g, weeks);
   const uid = useId().replace(/:/g, '');
   return (
-    <div className="rweeks" role="grid" aria-label={`Last ${weeks} weeks`}>
+    <div className="rweeks" role="grid" aria-label={t('Last {n} weeks', { n: weeks })}>
       <svg width="0" height="0" className="rweeks-defs" aria-hidden="true">
         <defs>
           {[0, 1, 2].map(l => (
@@ -43,15 +44,15 @@ export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
           ))}
         </defs>
       </svg>
-      {HEAD.map((d, i) => <span key={i} className="rweeks-h" aria-hidden="true">{d}</span>)}
-      <span className="rweeks-h rweeks-h-wk" aria-hidden="true">Week</span>
+      {dayInitials().map((d, i) => <span key={i} className="rweeks-h" aria-hidden="true">{d}</span>)}
+      <span className="rweeks-h rweeks-h-wk" aria-hidden="true">{t('Week')}</span>
       {days.map((week, w) => [
         ...week.map(c => {
           const on = c.level >= 0 && !c.future;
           return (
             <button key={c.date} type="button" disabled={!on || !onSelect}
               className={`rweeks-d${on ? ' on' : ''}${c.future ? ' future' : ''}${c.isEnd ? ' today' : ''}`}
-              aria-label={`${c.date}${on ? `, ${c.count} working set${c.count === 1 ? '' : 's'}` : ''}`}
+              aria-label={!on ? c.date : c.count === 1 ? t('{date}, {n} working set', { date: c.date, n: c.count }) : t('{date}, {n} working sets', { date: c.date, n: c.count })}
               onClick={() => on && onSelect?.(c.date)}>
               {on && (
                 <svg className="rweeks-fill" aria-hidden="true" shapeRendering="crispEdges">
@@ -62,7 +63,7 @@ export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
             </button>
           );
         }),
-        <span key={`m${w}`} className={`rweeks-wk ${marks[w]}`} role="gridcell" aria-label={`${trained[w]} of ${weekTarget} sessions that week`}>{trained[w]}/{weekTarget}</span>,
+        <span key={`m${w}`} className={`rweeks-wk ${marks[w]}`} role="gridcell" aria-label={t('{n} of {target} sessions that week', { n: trained[w], target: weekTarget })}>{trained[w]}/{weekTarget}</span>,
       ])}
     </div>
   );

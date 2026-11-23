@@ -2,6 +2,7 @@
 // components (DitherBar, GlyphHeatmap) only lay these strings out.
 //   bar:     █████▓▒░·········   solid run, a three-step tail, a dotted track
 //   heatmap: · empty, ░ ▒ ▓ █ rising, Monday-first columns, Mon/Wed/Fri labels
+import { monthShort, weekdayShort } from '../../app/dates';
 
 export const SHADES = ['░', '▒', '▓', '█'] as const;
 export const EMPTY = '·';
@@ -57,9 +58,10 @@ export interface HeatGrid {
 }
 
 const DAY_MS = 86_400_000;
-const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-export const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
-const ROW_LABEL = ['Mon', '', 'Wed', '', 'Fri', '', ''];
+/** Row d (0 = Monday) as a weekday name: "Mon" / "週一". */
+const dayName = (d: number) => weekdayShort((d + 1) % 7);
+/** Rows with a text label: Mon, Wed, Fri. */
+const LABELLED_ROWS = [0, 2, 4];
 const iso = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 const parse = (d: string) => Date.parse(d + 'T00:00:00Z');
 
@@ -90,20 +92,20 @@ export function heatmapGrid({ counts, weeks, end, thresholds, weekTarget }: Heat
   const startMon = endMs - (((new Date(endMs).getUTCDay() + 6) % 7) + (weeks - 1) * 7) * DAY_MS;
   let max = 0;
   for (let i = 0; i < weeks * 7; i++) {
-    const t = startMon + i * DAY_MS;
-    if (t <= endMs) max = Math.max(max, counts[iso(t)] ?? 0);
+    const ms = startMon + i * DAY_MS;
+    if (ms <= endMs) max = Math.max(max, counts[iso(ms)] ?? 0);
   }
   const rows: HeatGrid['rows'] = [];
   for (let d = 0; d < 7; d++) {
     const cells: HeatCell[] = [];
     for (let w = 0; w < weeks; w++) {
-      const t = startMon + (w * 7 + d) * DAY_MS;
-      const date = iso(t);
+      const ms = startMon + (w * 7 + d) * DAY_MS;
+      const date = iso(ms);
       const count = counts[date] ?? 0;
-      const future = t > endMs;
-      cells.push({ date, count, level: future ? -1 : heatLevel(count, max, thresholds), future, isEnd: t === endMs });
+      const future = ms > endMs;
+      cells.push({ date, count, level: future ? -1 : heatLevel(count, max, thresholds), future, isEnd: ms === endMs });
     }
-    rows.push({ label: ROW_LABEL[d], day: DAY_NAMES[d], cells });
+    rows.push({ label: LABELLED_ROWS.includes(d) ? dayName(d) : '', day: dayName(d), cells });
   }
   // A month is labelled at its first week. The first column only gets a label
   // when the next month isn't about to start (it would crowd it out).
@@ -115,8 +117,9 @@ export function heatmapGrid({ counts, weeks, end, thresholds, weekTarget }: Heat
     if (w > 0 && m === monthOf(w - 1)) continue;
     if (w === 0 && [1, 2, 3].some(k => k < weeks && monthOf(k) !== m)) continue;
     if (w < freeFrom) continue;
-    months.push({ week: w, text: MON[m] });
-    freeFrom = w + MON[m].length + 1;
+    const text = monthShort(m + 1);
+    months.push({ week: w, text });
+    freeFrom = w + text.length + 1;
   }
   const grid: HeatGrid = { weeks, months, rows };
   if (weekTarget && weekTarget > 0) {

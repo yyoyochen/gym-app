@@ -3,6 +3,7 @@
 import type { Exercise, ModelKind, Program, ProgramSession, Slot, SlotParams } from '../domain/types';
 import { RIR_FLOOR } from '../domain/templates';
 import { newId } from '../db/util';
+import { t } from '../i18n';
 
 export function moveItem<T>(arr: T[], from: number, to: number): T[] {
   if (from < 0 || from >= arr.length || to < 0 || to >= arr.length || from === to) return arr.slice();
@@ -119,11 +120,12 @@ export function toggleMinimum(p: Program, key: string, slotId: string): Program 
   }));
 }
 
+// Getters, so each read follows the current language.
 export const MODEL_LABELS: Record<ModelKind, string> = {
-  double: 'Double progression',
-  linear5x5: 'Linear 5 × 5',
-  topset: 'Top set + back-offs',
-  fixed: 'Fixed',
+  get double() { return t('Double progression'); },
+  get linear5x5() { return t('Linear 5 × 5'); },
+  get topset() { return t('Top set + back-offs'); },
+  get fixed() { return t('Fixed'); },
 };
 
 const range = (a: number, b: number) => (a === b ? `${a}` : `${a}–${b}`);
@@ -132,7 +134,7 @@ const range = (a: number, b: number) => (a === b ? `${a}` : `${a}–${b}`);
 export function describeSlot(s: Slot): string {
   const p = s.params;
   if (s.model === 'topset') {
-    const top = `top ${p.topReps ?? 1}`;
+    const top = t('top {n}', { n: p.topReps ?? 1 });
     return p.backoffSets ? `${top} + ${p.backoffSets}×${range(p.repMin, p.repMax)} @ ${p.backoffPct ?? 85}%` : top;
   }
   return `${p.sets}×${range(p.repMin, p.repMax)}`;

@@ -41,16 +41,30 @@ export function translateWith(table: Table, input: string, depth = 0): string {
   const s = normalize(input);
   if (s in table.words) return table.words[s];
   if (NO_WORDS.test(s) || depth > 6) return s;
+  // The most literal template that matches wins, unless one of its values would
+  // stay in English (it swallowed a piece another template owns): then the next
+  // match is tried, and the first match is the fallback.
+  let fallback: string | null = null;
   for (const r of table.rules) {
     const m = r.re.exec(s);
     if (!m) continue;
-    return r.zh.replace(/\{(\w+)\}/g, (all, k: string) => {
+    let clean = true;
+    const out = r.zh.replace(/\{(\w+)\}/g, (all, k: string) => {
       const i = r.keys.indexOf(k);
-      return i < 0 ? all : translateWith(table, m[i + 1], depth + 1);
+      if (i < 0) return all;
+      const v = translateWith(table, m[i + 1], depth + 1);
+      if (hasEnglish(v)) clean = false;
+      return v;
     });
+    if (clean) return out;
+    fallback ??= out;
   }
-  return s;
+  return fallback ?? s;
 }
+
+/** Words left in English, ignoring the ones that stay in Latin letters. */
+export const hasEnglish = (s: string) => (s.match(/[A-Za-z][A-Za-z0-9]*/g) ?? []).some(w => w.length > 1 && !KEEP.has(w));
+const KEEP = new Set(['kg', 'RPE', 'RIR', 'e1RM', 'PR', '1RM']);
 
 let table: Table | null = null;
 const cache = new Map<string, string>();

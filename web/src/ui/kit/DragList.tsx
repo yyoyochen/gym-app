@@ -7,6 +7,7 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { PixelIcon } from './PixelIcon';
 import { LONG_PRESS_MS, dropIndex, moveTo, pressOutcome, shiftFor } from './reorder';
+import { t } from '../../i18n';
 
 interface Drag { from: number; to: number; startY: number; dy: number; heights: number[] }
 
@@ -108,7 +109,7 @@ export function DragList<T>({ items, keyOf, labelOf, onReorder, render, longPres
         const moving = drag?.from === i;
         const y = !drag ? 0 : moving ? drag.dy : shiftFor(i, drag.from, drag.to, drag.heights[drag.from]);
         const grip = (
-          <button type="button" className="drag-grip" data-no-drag="" aria-label={`Move ${labelOf(item)}: drag, or press up and down`}
+          <button type="button" className="drag-grip" data-no-drag="" aria-label={t('Move {name}: drag, or press up and down', { name: labelOf(item) })}
             onPointerDown={e => start(i, e)} onKeyDown={e => key(i, e)}>
             <PixelIcon name="grip" />
           </button>

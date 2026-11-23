@@ -5,7 +5,8 @@
 import type { Exercise, GoalKind, ISODate, Slot } from '../domain/types';
 import { RIR_FLOOR } from '../domain/templates';
 import { daysBetween } from './dates';
-import { BODY_PARTS, bodyPartOf, type BodyPart } from './weekSets';
+import { BODY_PARTS, bodyPartLabel, bodyPartOf, type BodyPart } from './weekSets';
+import { t } from '../i18n';
 
 /** Weekly working sets per body part when no program sets them. */
 const STRENGTH: Record<BodyPart, number> = { Legs: 12, Back: 10, Chest: 8, Shoulders: 6, Arms: 4, Core: 3 };
@@ -90,10 +91,11 @@ export function suggestWorkout(i: {
 /** "Legs 0 of 15 sets this week, last squat 6 days ago". `lift` is the lift's name in lower case. */
 export function reasonLine(row: PartWeek | null, liftLast: ISODate | null, isGoal: boolean, today: ISODate, lift: string): string {
   const days = liftLast ? daysBetween(liftLast, today) : null;
-  const since = days === null ? 'first time' : `last ${lift} ${days === 1 ? 'yesterday' : `${days} days ago`}`;
+  const since = days === null ? t('first time') : days === 1 ? t('last {lift} yesterday', { lift }) : t('last {lift} {n} days ago', { lift, n: days });
   if (!row) return since.charAt(0).toUpperCase() + since.slice(1);
-  if (isGoal) return `${row.part} ${row.done} of ${row.target}, Goal Board lift`;
-  return `${row.part} ${row.done} of ${row.target} sets this week, ${since}`;
+  const part = bodyPartLabel(row.part);
+  if (isGoal) return t('{part} {done} of {target}, Goal Board lift', { part, done: row.done, target: row.target });
+  return t('{part} {done} of {target} sets this week, {since}', { part, done: row.done, target: row.target, since });
 }
 
 export { BODY_PARTS };

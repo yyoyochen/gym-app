@@ -8,6 +8,7 @@
  * and only ever use `Date.UTC` / `getUTC*`, so a date string maps to the same
  * cell in every timezone.
  */
+import { monthShort } from '../app/dates';
 
 export interface HeatCell {
   /** ISO `YYYY-MM-DD`. */
@@ -40,10 +41,6 @@ export interface HeatmapGrid {
 
 const MS_PER_DAY = 86_400_000;
 
-const MONTH_NAMES = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-] as const;
 
 /** ISO date string → whole days since 1970-01-01 (UTC math, TZ-proof). */
 export function isoToEpochDays(iso: string): number {
@@ -115,7 +112,7 @@ export function computeMonthLabels(columns: HeatCell[][]): MonthLabel[] {
   let prev = -1;
   columns.forEach((col, i) => {
     const month = Number(col[0].date.slice(5, 7));
-    if (month !== prev) labels.push({ col: i, label: MONTH_NAMES[month - 1] });
+    if (month !== prev) labels.push({ col: i, label: monthShort(month) });
     prev = month;
   });
   if (labels.length >= 2 && labels[0].col === 0 && labels[1].col === 1) labels.shift();
