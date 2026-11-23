@@ -18,7 +18,7 @@ import {
 } from '../db';
 import { guessExercise } from '../domain/catalog';
 import {
-  addDays, classifyGap, daysBetween, formatFloor, grade, lastSessionLine, lastTimeParts, minimumToKeep, nudge,
+  addDays, chosenTarget, classifyGap, daysBetween, formatFloor, grade, lastSessionLine, lastTimeParts, minimumToKeep, nudge,
   painEventsFromSets, painStatus, prescribe, reentryNote, reentryState, resumeCard, stopsLiftToday,
   type ExerciseSession, type Gap, type LiftSession, type Nudge, type PainStatus, type PlannedSet,
   type ReentryState, type ResumeCard,
@@ -167,6 +167,26 @@ export async function planToday(db: GymDb, today: ISODate, now: Millis, opts: Pl
   const minimum = !!opts.minimum && ps.minimumSlotIds.length > 0;
   const slots = minimum ? ps.slots.filter(s => ps.minimumSlotIds.includes(s.id)) : ps.slots;
 
+  const out = await planSlots(db, {
+    slots: slots.map(raw => ({ raw, slot: effectiveSlot(raw, program, today) })), today, readiness, effortScale, gapDays, reentry,
+    profile, minimumIds: ps.minimumSlotIds,
+  });
+  return {
+    ...base, status: out.length ? 'planned' : 'empty_session', sessionKey: ps.key, sessionName: ps.name, readiness, minimum, slots: out,
+  };
+}
+
+/**
+ * The engine's plan for each slot, the same way for a program session and a
+ * one-off workout (app/workout.ts). `chosen` gives a lift a weight the lifter
+ * set; its target is then built at that weight (engine chosenTarget), and a
+ * lift with no history becomes a plain fixed plan at it.
+ */
+export async function planSlots(db: GymDb, i: {
+  slots: { raw: Slot; slot: Slot; chosen?: number }[]; today: ISODate; readiness: Readiness; effortScale: EffortScale;
+  gapDays: number | null; reentry: ReentryState; profile: ProfileRecord | undefined; minimumIds: string[];
+}): Promise<SlotPlan[]> {
+  const { today } = i;
   // Pain flags in the last 60 days (the rules look back 14; holds look at the last session).
   const painSets = (await listSetsByDate(db, { from: addDays(today, -60), to: addDays(today, -1) })).filter(s => s.pain);
   const dateOf = new Map(painSets.map(s => [s.sessionId, s.date] as const));
@@ -175,23 +195,23 @@ export async function planToday(db: GymDb, today: ISODate, now: Millis, opts: Pl
   const plates = await getPlateSettings(db);
 
   const out: SlotPlan[] = [];
-  for (const [i, raw] of slots.entries()) {
-    const slot = effectiveSlot(raw, program, today);
+  for (const [n, { raw, slot, chosen }] of i.slots.entries()) {
     const exercise = await exerciseOf(db, slot.exerciseId);
     const hist = await liftHistory(db, exercise.id, today);
     const pain = painStatus({
-      exercise, events: painEvents, today, injuries: profile?.injuries ?? [],
+      exercise, events: painEvents, today, injuries: i.profile?.injuries ?? [],
       history: hist.map((h): ExerciseSession => ({ date: h.date, sessionId: h.sessionId, exerciseId: exercise.id })),
     });
-    const target = prescribe(slot, exercise, hist, {
-      today, readiness, effortScale, bodyweightKg, gapDays, reentry: reentry.reentry, afterLayoff: reentry.afterLayoff, pain,
-      startingSet: startingSetFor(profile, exercise.id, today),
-    });
-    out.push(slotPlan(i + 1, raw, exercise, target, hist, effortScale, plates, ps.minimumSlotIds.includes(raw.id), pain));
+    const ctx = {
+      today, readiness: i.readiness, effortScale: i.effortScale, bodyweightKg, gapDays: i.gapDays,
+      reentry: i.reentry.reentry, afterLayoff: i.reentry.afterLayoff, pain, startingSet: startingSetFor(i.profile, exercise.id, today),
+    };
+    const fresh = !hist.some(h => h.sets.some(s => s.kind !== 'warmup'));
+    const target = chosen === undefined ? prescribe(slot, exercise, hist, ctx)
+      : chosenTarget(fresh ? { ...slot, model: 'fixed' } : slot, exercise, chosen, ctx);
+    out.push(slotPlan(n + 1, raw, exercise, target, hist, i.effortScale, plates, i.minimumIds.includes(raw.id), pain));
   }
-  return {
-    ...base, status: out.length ? 'planned' : 'empty_session', sessionKey: ps.key, sessionName: ps.name, readiness, minimum, slots: out,
-  };
+  return out;
 }
 
 /** One lift's earlier sessions (strictly before `today`), oldest first, with the promise committed each day. */
