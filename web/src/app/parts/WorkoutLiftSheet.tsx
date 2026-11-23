@@ -1,5 +1,5 @@
 // Change one lift of a one-off workout: its sets as one numbered list, in
-// order (weight × reps each; drag a set by its ≡ handle to a new place; the
+// order (weight × reps each; drag a set by its handle to a new place; the
 // fields only edit), + Add a set, then Swap lift or Remove. A list
 // left as planned keeps the app's own plan (and its progression); an edited
 // list becomes the lifter's plan and is graded set by set.
