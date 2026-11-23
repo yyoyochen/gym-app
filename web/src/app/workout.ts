@@ -6,9 +6,9 @@ import type { GymDb } from '../db';
 import {
   getActiveProgram, getMeta, getProfile, listEvents, listExercises, listSessions, listSetsByDate, putCommit, setMeta, startSession,
 } from '../db';
-import type { ISODate, Millis, Readiness, Session } from '../domain/types';
+import type { GoalKind, ISODate, Millis, Readiness, Session, Target } from '../domain/types';
 import { addDays, daysBetween, reentryNote, reentryState } from '../engine';
-import { nextRotationKey, planSlots, type DayPlan } from './coach';
+import { kg, nextRotationKey, planSlots, type DayPlan } from './coach';
 import { newId } from '../db/util';
 import { GOAL_WEEK_SETS, pickFocus, reasonLine, suggestWorkout, type DraftSlot, type LiftUse, type PartWeek } from './suggest';
 import { BODY_PARTS, bodyPartOf, weekBodyPartSets, type BodyPart } from './weekSets';
@@ -52,6 +52,12 @@ async function weekState(db: GymDb, today: ISODate) {
   }
   const goalLiftIds = new Set((profile?.targets ?? []).map(t => t.subject).filter(id => id in byId));
   return { profile, exercises, rows, use, goalLiftIds, goal };
+}
+
+/** The focus chips' numbers: this week's sets per body part against its target, plus the goal and the Goal Board lifts. */
+export async function focusState(db: GymDb, today: ISODate): Promise<{ rows: PartWeek[]; goal: GoalKind; goalLiftIds: Set<string> }> {
+  const w = await weekState(db, today);
+  return { rows: w.rows, goal: w.goal, goalLiftIds: w.goalLiftIds };
 }
 
 /** A fresh suggestion; `focus` overrides the body parts picked from this week. */
@@ -112,4 +118,11 @@ export async function commitWorkout(db: GymDb, plan: WorkoutPlan, readiness: Rea
   await putCommit(db, { sessionId: session.id, committedAt: now, readiness, targets: plan.slots.map(s => s.target) });
   await db.meta.delete('workoutDraft');
   return session;
+}
+
+/** The line under a lift in the builder: "Top 100 × 2, then 3 × 8 at 75", "3 × 8 at 70", or a first time. */
+export function planSummary(t: Target, plannedSets: number): string {
+  if (t.isNew) return 'First time: pick a weight';
+  if (t.model === 'topset' && t.topWeight !== undefined) return `Top ${kg(t.topWeight)} × ${t.topReps ?? 1}, then ${t.targetSets ?? 0} × ${t.targetReps} at ${kg(t.weight)}`;
+  return t.weight > 0 ? `${plannedSets} × ${t.targetReps} at ${kg(t.weight)}` : `${plannedSets} × ${t.targetReps}`;
 }

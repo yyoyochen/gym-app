@@ -37,7 +37,8 @@ export function pickFocus(rows: PartWeek[], today: ISODate, n = 3): BodyPart[] {
   return ranked.filter(r => pick.includes(r)).map(r => r.part);
 }
 
-const isMain = (ex: Exercise) => ex.benchmarkKey === 'squat' || ex.benchmarkKey === 'bench' || ex.benchmarkKey === 'deadlift' || ex.id === 'overhead-press';
+/** Squat, bench, deadlift and overhead press: the lifts a strength goal gives a top set. */
+export const isMain = (ex: Exercise) => ex.benchmarkKey === 'squat' || ex.benchmarkKey === 'bench' || ex.benchmarkKey === 'deadlift' || ex.id === 'overhead-press';
 
 /** The slot a lift gets for the goal (spec call 2). Main lifts on a strength goal get a top set. */
 export function slotFor(ex: Exercise, goal: GoalKind, main: boolean, id: string): Slot {

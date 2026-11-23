@@ -7,7 +7,7 @@ import type { ISODate } from '../domain/types';
 import { nextRotationKey, planToday } from './coach';
 import { listEvents, listSessions } from '../db';
 import { FALLBACK_LIFT } from './suggest';
-import { WORKOUT_NAME, canStartWorkout, commitWorkout, loadDraft, planWorkout, saveDraft, type WorkoutDraft } from './workout';
+import { WORKOUT_NAME, canStartWorkout, commitWorkout, loadDraft, planSummary, planWorkout, saveDraft, type WorkoutDraft } from './workout';
 
 const TODAY: ISODate = '2026-11-23';
 const at = (iso: ISODate, h = 12) => { const [y, m, d] = iso.split('-').map(Number); return new Date(y, m - 1, d, h).getTime(); };
@@ -98,5 +98,21 @@ describe('a one-off workout', () => {
     const db = await fresh();
     const d = await loadDraft(db, TODAY);
     expect(d.slots.find(s => s.slot.exerciseId === EX.squat)?.slot.model).toBe('topset');
+  });
+});
+
+describe('planSummary: the line under each lift', () => {
+  const base = { slotId: 's', exerciseId: 'e', exerciseName: 'E', rirFloor: 2, addedWeight: false, prevTop: [], criterion: '', why: '', rule: 'x' };
+  it('top set then back-offs', () => {
+    expect(planSummary({ ...base, model: 'topset', weight: 75, targetReps: 8, targetSets: 3, topWeight: 100, topReps: 2, isNew: false }, 4)).toBe('Top 100 × 2, then 3 × 8 at 75');
+  });
+  it('straight sets', () => {
+    expect(planSummary({ ...base, model: 'double', weight: 70, targetReps: 8, targetSets: null, isNew: false }, 3)).toBe('3 × 8 at 70');
+  });
+  it('a first time asks for a weight', () => {
+    expect(planSummary({ ...base, model: 'double', weight: 0, targetReps: 8, targetSets: null, isNew: true }, 3)).toBe('First time: pick a weight');
+  });
+  it('bodyweight with nothing added', () => {
+    expect(planSummary({ ...base, model: 'double', weight: 0, targetReps: 8, targetSets: null, isNew: false }, 3)).toBe('3 × 8');
   });
 });

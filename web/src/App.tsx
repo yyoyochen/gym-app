@@ -6,6 +6,7 @@ import { PrMomentHost } from './ui/kit/PrMoment';
 import { APP_ROOT_ID } from './ui/kit/modal';
 import { TabBar } from './ui/TabBar';
 import { Today } from './screens/Today';
+import { Workout } from './screens/Workout';
 import { Session } from './screens/Session';
 import { PastSession } from './screens/PastSession';
 import { Review } from './screens/Review';
@@ -20,6 +21,7 @@ import { Onboarding } from './screens/Onboarding';
 
 // Route table. Each screen owns its file; App only maps paths to screens.
 //   #/today                     Today (coach + remind)
+//   #/workout                   plan a one-off workout (suggested or your own)
 //   #/session/<id>              active session logger (full screen, no tab bar)
 //   #/session/past              pick a day, then log an ungraded past session
 //   #/review/<id>               verdict ledger after finishing
@@ -33,6 +35,7 @@ import { Onboarding } from './screens/Onboarding';
 //   #/onboarding                first run
 const ROUTES: Record<string, { tab: string | null; render: (p: string[]) => JSX.Element }> = {
   today: { tab: 'today', render: p => <Today params={p} /> },
+  workout: { tab: 'today', render: p => <Workout params={p} /> },
   session: { tab: null, render: p => (p[0] === 'past' ? <PastSession params={p.slice(1)} /> : <Session params={p} />) },
   review: { tab: null, render: p => <Review params={p} /> },
   progress: { tab: 'progress', render: p => <Progress params={p} /> },
