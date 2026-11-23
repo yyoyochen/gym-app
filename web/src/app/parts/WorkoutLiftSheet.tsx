@@ -1,10 +1,11 @@
 // Change one lift of a one-off workout: its sets as one numbered list, in
-// order (weight × reps each), + Add a set, then Swap lift or Remove. A list
+// order (weight × reps each; hold a set to drag it to a new place), + Add a
+// set, then Swap lift or Remove. A list
 // left as planned keeps the app's own plan (and its progression); an edited
 // list becomes the lifter's plan and is graded set by set.
 import { useState } from 'react';
 import type { SlotPlan } from '../coach';
-import { Button, ConfirmButton, PixelIcon, Sheet } from '../../ui/kit';
+import { Button, ConfirmButton, DragList, PixelIcon, Sheet } from '../../ui/kit';
 import type { DraftSlot } from '../suggest';
 
 export interface SetRow { weight: number; reps: number }
@@ -25,6 +26,12 @@ export function addSetRow(list: SetRow[]): SetRow[] {
   return [...list, last ? { ...last } : { weight: 0, reps: 8 }];
 }
 
+let rowSeq = 0;
+/** Rows with ids, so a moved row keeps its own inputs. */
+export function withIds(list: SetRow[]): (SetRow & { id: number })[] {
+  return list.map(r => ({ ...r, id: ++rowSeq }));
+}
+
 const num = (s: string) => { const v = parseFloat(s.replace(',', '.')); return Number.isFinite(v) && v >= 0 ? v : 0; };
 
 export function WorkoutLiftSheet({ item, plan, onDone, onSwap, onRemove, onClose }: {
@@ -32,7 +39,7 @@ export function WorkoutLiftSheet({ item, plan, onDone, onSwap, onRemove, onClose
 }) {
   // The list as the plan stands now: the lifter's own sets, or the app's planned working sets in order.
   const planned: SetRow[] = item.sets ?? plan.ghost.filter(g => g.kind !== 'warmup').map(g => ({ weight: g.weight, reps: g.reps }));
-  const [rows, setRows] = useState<SetRow[]>(planned.map(r => ({ ...r })));
+  const [rows, setRows] = useState(() => withIds(planned));
   const edit = (i: number, patch: Partial<SetRow>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const bw = plan.exercise.bodyweightFactor > 0;
 
@@ -40,8 +47,8 @@ export function WorkoutLiftSheet({ item, plan, onDone, onSwap, onRemove, onClose
     <Sheet open title={plan.exercise.name} onClose={onClose}>
       <div className="set-list" role="list" aria-label="Sets in order">
         <div className="set-row set-row-hd" aria-hidden="true"><span /><span className="label">{bw ? 'Added kg' : 'kg'}</span><span /><span className="label">Reps</span><span /></div>
-        {rows.map((r, i) => (
-          <div key={i} className="set-row" role="listitem">
+        <DragList items={rows} keyOf={r => String(r.id)} labelOf={r => `set ${rows.indexOf(r) + 1}`} longPress onReorder={setRows} render={(r, i) => (
+          <div className="set-row" role="listitem">
             <span className="set-n">{i + 1}</span>
             <input className="field tnum" inputMode="decimal" aria-label={`Set ${i + 1} weight`} value={r.weight || ''} placeholder="0"
               onChange={e => edit(i, { weight: num(e.target.value) })} />
@@ -50,11 +57,11 @@ export function WorkoutLiftSheet({ item, plan, onDone, onSwap, onRemove, onClose
               onChange={e => edit(i, { reps: Math.round(num(e.target.value)) })} />
             <button type="button" className="icon-btn" aria-label={`Remove set ${i + 1}`} data-press="dim" onClick={() => setRows(rows.filter((_, j) => j !== i))}><PixelIcon name="close" scale={1} /></button>
           </div>
-        ))}
+        )} />
       </div>
-      <Button block icon="plus" onClick={() => setRows(addSetRow(rows))}>Add a set</Button>
+      <Button block icon="plus" onClick={() => setRows([...rows, ...withIds(addSetRow(rows).slice(rows.length))])}>Add a set</Button>
       <p className="note">// Last time: {plan.lastTime.length ? plan.lastTime.join(', ') : 'first time'}</p>
-      <Button variant="primary" block iconEnd="check" onClick={() => onDone(sheetResult(item, planned, rows.filter(r => r.reps > 0)))}>Done</Button>
+      <Button variant="primary" block iconEnd="check" onClick={() => onDone(sheetResult(item, planned, rows.filter(r => r.reps > 0).map(({ weight, reps }) => ({ weight, reps }))))}>Done</Button>
       <div className="grid2">
         <Button block onClick={onSwap}>Swap lift</Button>
         <ConfirmButton danger className="block" confirmLabel={`Remove ${plan.exercise.name}?`} confirmText="Remove" onConfirm={onRemove}>Remove</ConfirmButton>

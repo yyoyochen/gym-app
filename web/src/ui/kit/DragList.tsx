@@ -86,6 +86,9 @@ export function DragList<T>({ items, keyOf, labelOf, onReorder, render, longPres
     const timer = setTimeout(() => {
       stop();
       suppressClick.current = true;
+      // A held text field must not keep the keyboard up or start a text selection while the row moves.
+      (document.activeElement as HTMLElement | null)?.blur?.();
+      window.getSelection?.()?.removeAllRanges();
       begin(i, id, last.y);
     }, LONG_PRESS_MS);
     window.addEventListener('pointermove', track);
@@ -113,6 +116,7 @@ export function DragList<T>({ items, keyOf, labelOf, onReorder, render, longPres
         return (
           <div key={keyOf(item)} ref={el => { rows.current[i] = el; }} className={`drag-item${moving ? ' lifted' : ''}${longPress ? ' hold' : ''}`}
             style={y ? { transform: `translateY(${y}px)` } : undefined}
+            data-no-drag={longPress ? '' : undefined}
             onPointerDown={longPress ? e => press(i, e) : undefined}
             onContextMenu={longPress ? e => e.preventDefault() : undefined}
             onClickCapture={e => { if (suppressClick.current) { suppressClick.current = false; e.stopPropagation(); e.preventDefault(); } }}>

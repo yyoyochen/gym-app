@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addSetRow, sheetResult } from './WorkoutLiftSheet';
+import { addSetRow, sheetResult, withIds } from './WorkoutLiftSheet';
 
 const slot = { id: 'x', exerciseId: 'barbell-row', model: 'double' as const, params: { sets: 3, repMin: 8, repMax: 12, rirFloor: 2 } };
 const planned = [{ weight: 70, reps: 8 }, { weight: 70, reps: 8 }, { weight: 70, reps: 8 }];
@@ -26,5 +26,19 @@ describe('addSetRow', () => {
   });
   it('starts at 0 × 8 when empty', () => {
     expect(addSetRow([])).toEqual([{ weight: 0, reps: 8 }]);
+  });
+});
+
+describe('reordering sets', () => {
+  it('the same sets in a new order are an edit, kept in that order', () => {
+    const item = { part: 'Back' as const, slot };
+    const plan = [{ weight: 80, reps: 5 }, { weight: 60, reps: 8 }, { weight: 60, reps: 8 }];
+    const moved = [{ weight: 60, reps: 8 }, { weight: 60, reps: 8 }, { weight: 80, reps: 5 }];
+    expect(sheetResult(item, plan, moved)).toEqual({ part: 'Back', slot, sets: moved });
+  });
+  it('rows carry ids so a moved row keeps its own inputs', () => {
+    const rows = withIds([{ weight: 80, reps: 5 }, { weight: 60, reps: 8 }]);
+    expect(new Set(rows.map(r => r.id)).size).toBe(2);
+    expect(rows.map(({ weight, reps }) => ({ weight, reps }))).toEqual([{ weight: 80, reps: 5 }, { weight: 60, reps: 8 }]);
   });
 });
