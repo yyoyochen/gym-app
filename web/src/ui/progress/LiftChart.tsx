@@ -43,9 +43,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
       {allTargets.length > 0 && (
         <ul className="tk-target-key">
           {allTargets.map(t => (
-            <li key={t.name}>{t.kind === 'goal'
-              ? <span className="tk-key-chars" aria-hidden="true">*****</span>
-              : <svg className="tk-key-line" viewBox="0 0 24 4" aria-hidden="true"><line className="tk-target" x1={0} x2={24} y1={2} y2={2} /></svg>}<span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
+            <li key={t.name}><svg className="tk-key-line" viewBox={`0 0 ${KEY_W} 8`} aria-hidden="true"><CharLine t={t} y={4} x0={0} x1={KEY_W} /></svg><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
           ))}
         </ul>
       )}
@@ -93,6 +91,8 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
 }
 
 const STAR_SCALE = 0.7;
+/** Width of a line sample in the key: the same box for both kinds, so they line up end to end. */
+const KEY_W = 30;
 
 /** A target line: the next level as a fine dotted line, your own target as a row of small * centred on y. */
 function CharLine({ t, y, x0, x1 }: { t: ChartTarget; y: number; x0: number; x1: number }) {
