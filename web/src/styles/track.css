@@ -190,3 +190,8 @@
 .tk-sd-cell.top { background: var(--ink); color: var(--paper); }
 .tk-sd-cell.top .x, .tk-sd-cell.top .mid { color: inherit; }
 .tk-sd-cell.ramp { border-style: dotted; border-color: var(--mid); color: var(--mid); }
+/* Progress lift list: "Your lifts" / "Other lifts" and the needs-a-look flag under a name. */
+.tk-sub-hd { margin-top: var(--space-3); padding-bottom: var(--space-1); border-bottom: var(--rule-w) solid var(--ink); font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--mid); }
+.tk-lift-name { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.tk-flag { white-space: nowrap; padding: var(--space-half) var(--space-1); border: var(--rule-w) dashed var(--accent); color: var(--accent); font: var(--text-stamp); letter-spacing: var(--track-stamp); text-transform: uppercase; }
+.tk-lift.quiet .tk-lift-name, .tk-lift.quiet .tk-lift-v { color: var(--mid); }

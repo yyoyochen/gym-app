@@ -4,7 +4,7 @@
 import { pickTip } from '../app/tips';
 import { ScreenTip, useTipsSeen } from '../app/parts/ScreenTip';
 import type { ISODate } from '../domain/types';
-import { getProfile, listExercises, listSessions } from '../db';
+import { getActiveProgram, getProfile, listExercises, listSessions } from '../db';
 import { addDays } from '../engine';
 import { kg } from '../app/coach';
 import { DemoBanner } from '../app/DemoBanner';
@@ -21,6 +21,7 @@ import { LevelBar, ValueText } from '../ui/progress/StandardLadder';
 import { SecHead } from '../ui/progress/parts';
 import { WEEKDAY_LONG, funComparison, funLine, pluralLift, tonnage, trainingStats } from '../ui/progress/stats';
 import { Sparkline } from '../ui/progress/Sparkline';
+import { flagRank, flagText, liftFlag, type LiftFlag } from '../ui/progress/liftFlags';
 
 const BENCH_LIFTS = ['squat', 'bench', 'deadlift'] as const;
 const FEAS_KIND: Record<string, VerdictKind> = { comfortable: 'beat', ambitious: 'hit', unlikely: 'missed' };
@@ -31,8 +32,8 @@ export function Progress(_props: { params: string[] }) {
   useScrollTop('progress');
   const data = useLive(async db => {
     const today = todayISO();
-    const [profile, sessions, sets, bw, exercises] = await Promise.all([
-      getProfile(db), listSessions(db, { to: today }), db.sets.toArray(), latestBodyweight(db, today), listExercises(db, { includeArchived: true }),
+    const [profile, sessions, sets, bw, exercises, program] = await Promise.all([
+      getProfile(db), listSessions(db, { to: today }), db.sets.toArray(), latestBodyweight(db, today), listExercises(db, { includeArchived: true }), getActiveProgram(db),
     ]);
     const byId = new Map(exercises.map(e => [e.id, e]));
     const stats = trainingStats(sessions, sets);
@@ -41,24 +42,38 @@ export function Progress(_props: { params: string[] }) {
     const since90 = addDays(today, -90);
     const recent = new Map<string, number>();
     for (const s of sets) if (s.kind !== 'warmup' && s.date >= since90 && s.date <= today) recent.set(s.exerciseId, (recent.get(s.exerciseId) ?? 0) + 1);
+    const cache = new Map<string, LiftStats>();
+    const statsOf = async (id: string) => { if (!cache.has(id)) cache.set(id, await liftStats(db, byId.get(id)!, today, bw)); return cache.get(id)!; };
     const lifts: LiftStats[] = [];
-    for (const [id] of [...recent.entries()].sort((a, b) => b[1] - a[1])) {
-      const ex = byId.get(id);
-      if (ex) lifts.push(await liftStats(db, ex, today, bw));
+    for (const [id] of [...recent.entries()].sort((a, b) => b[1] - a[1])) if (byId.has(id)) lifts.push(await statsOf(id));
+    // The lift list: "your lifts" (a Goal Board target, or a program lift trained in 90 days) first,
+    // the ones that need a look on top with a flag saying why; then everything else.
+    const mine = new Set<string>();
+    if (sessions.length) {
+      for (const t of profile?.targets ?? []) if (byId.has(t.subject)) mine.add(t.subject);
+      // Program lifts count only once you train them: a template can list lifts you never do.
+      for (const ps of program?.sessions ?? []) if (program!.rotation.includes(ps.key)) for (const sl of ps.slots) if (recent.has(sl.exerciseId)) mine.add(sl.exerciseId);
     }
+    const yours: { l: LiftStats; flag: LiftFlag | null }[] = [];
+    for (const id of mine) {
+      const l = await statsOf(id);
+      yours.push({ l, flag: liftFlag(l.series.map(p => ({ date: p.date, e1rm: p.e1rm })), l.history.map(h => h.date), today) });
+    }
+    yours.sort((a, b) => flagRank(a.flag) - flagRank(b.flag) || (recent.get(b.l.exercise.id) ?? 0) - (recent.get(a.l.exercise.id) ?? 0));
+    const others = lifts.filter(l => !mine.has(l.exercise.id));
     // Fun line: squat tonnage since the first session (else the favourite lift's).
     const squats = exercises.filter(e => e.benchmarkKey === 'squat' && !(e.bodyweightFactor > 0));
     let funIds = new Set(squats.map(e => e.id)), funWord = 'squats';
     if (!tonnage(sets, funIds) && stats.favourite) { funIds = new Set([stats.favourite.exerciseId]); funWord = pluralLift(byId.get(stats.favourite.exerciseId)?.name ?? 'lift'); }
     const fun = funComparison(tonnage(sets, funIds));
     const goals = profile ? await goalRows(db, profile, today) : [];
-    return { today, profile, bw, stats, lifts, goals, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined,
+    return { today, profile, bw, stats, lifts, yours, others, goals, fun, funWord, favName: stats.favourite ? byId.get(stats.favourite.exerciseId)?.name : undefined,
       finished: sessions.filter(s => s.sealed).length };
   }, []);
   const tipsSeen = useTipsSeen();
 
   if (!data) return <section className="screen" aria-busy="true" />;
-  const { today, profile, bw, stats, lifts, goals, fun, funWord, favName } = data;
+  const { today, profile, bw, stats, lifts, yours, others, goals, fun, funWord, favName } = data;
   const benchIn = { profile, bodyweightKg: bw, year: Number(today.slice(0, 4)) };
   const stdMissing = missingForStandards(benchIn);
   const ctx = standardsContext(benchIn);
@@ -140,22 +155,15 @@ export function Progress(_props: { params: string[] }) {
 
       <section className="tk-sec" aria-label="Lifts">
         <SecHead title="Lifts (90 days)" meta="e1RM and trend" />
-        {!lifts.length && <p className="tk-quiet">Nothing logged in the last 90 days.</p>}
-        <ul className="tk-rows">
-          {lifts.map(l => {
-            const tr = trendOf(l.rate);
-            const trail = l.series.slice(-12).map(p => p.e1rm);
-            return (
-              <li key={l.exercise.id}>
-                <a className="tk-lift" data-press="row" href={`#/lift/${encodeURIComponent(l.exercise.id)}`}>
-                  <span className="tk-lift-name">{l.exercise.name}</span>
-                  <span className="tk-lift-v">{l.best90 !== null ? <>{kg(Math.round(l.best90 * 2) / 2)}<small> kg{l.exercise.bodyweightFactor > 0 ? ' incl. BW' : ''}</small></> : '—'}</span>
-                  <span className="tk-trend">{trail.length > 1 ? <Sparkline values={trail} label={`trend ${tr === 'unknown' ? 'not enough data' : tr}`} /> : <span aria-hidden="true" className="mid">·</span>}</span>
-                </a>
-              </li>
-            );
-          })}
-        </ul>
+        {!lifts.length && !yours.length && <p className="tk-quiet">Nothing logged in the last 90 days.</p>}
+        {yours.length > 0 && <>
+          <div className="tk-sub-hd">Your lifts</div>
+          <ul className="tk-rows">{yours.map(({ l, flag }) => <li key={l.exercise.id}><LiftRow l={l} flag={flag} /></li>)}</ul>
+        </>}
+        {others.length > 0 && <>
+          {yours.length > 0 && <div className="tk-sub-hd">Other lifts</div>}
+          <ul className="tk-rows">{others.map(l => <li key={l.exercise.id}><LiftRow l={l} quiet={yours.length > 0} /></li>)}</ul>
+        </>}
         <ScreenTip id="progress" shown={pickTip({ progress: data.finished >= 2 && lifts.length > 0 }, tipsSeen)} />
       </section>
 
@@ -182,6 +190,19 @@ function RatedBar({ l, r, label }: { l: LiftStats; r: LiftRating; label: string 
   return (
     <a className="tk-barlink" data-press="dim" href={`#/lift/${encodeURIComponent(l.exercise.id)}`}>
       <LevelBar rating={r} label={label} />
+    </a>
+  );
+}
+
+/** One row of the lift list: name (and a flag when it needs a look), best e1RM in 90 days, the trend. */
+function LiftRow({ l, flag = null, quiet = false }: { l: LiftStats; flag?: LiftFlag | null; quiet?: boolean }) {
+  const tr = trendOf(l.rate);
+  const trail = l.series.slice(-12).map(p => p.e1rm);
+  return (
+    <a className={`tk-lift${quiet ? ' quiet' : ''}`} data-press="row" href={`#/lift/${encodeURIComponent(l.exercise.id)}`}>
+      <span className="tk-lift-name">{l.exercise.name}{flag && <span className="tk-flag">{flagText(flag)}</span>}</span>
+      <span className="tk-lift-v">{l.best90 !== null ? <>{kg(Math.round(l.best90 * 2) / 2)}<small> kg{l.exercise.bodyweightFactor > 0 ? ' incl. BW' : ''}</small></> : '—'}</span>
+      <span className="tk-trend">{trail.length > 1 ? <Sparkline values={trail} label={`trend ${tr === 'unknown' ? 'not enough data' : tr}`} /> : <span aria-hidden="true" className="mid">·</span>}</span>
     </a>
   );
 }
