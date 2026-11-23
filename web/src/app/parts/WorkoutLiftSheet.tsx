@@ -1,6 +1,6 @@
 // Change one lift of a one-off workout: its sets as one numbered list, in
-// order (weight × reps each; hold a set to drag it to a new place), + Add a
-// set, then Swap lift or Remove. A list
+// order (weight × reps each; drag a set by its ≡ handle to a new place; the
+// fields only edit), + Add a set, then Swap lift or Remove. A list
 // left as planned keeps the app's own plan (and its progression); an edited
 // list becomes the lifter's plan and is graded set by set.
 import { useState } from 'react';
@@ -47,9 +47,9 @@ export function WorkoutLiftSheet({ item, plan, onDone, onSwap, onRemove, onClose
     <Sheet open title={plan.exercise.name} onClose={onClose}>
       <div className="set-list" role="list" aria-label="Sets in order">
         <div className="set-row set-row-hd" aria-hidden="true"><span /><span className="label">{bw ? 'Added kg' : 'kg'}</span><span /><span className="label">Reps</span><span /></div>
-        <DragList items={rows} keyOf={r => String(r.id)} labelOf={r => `set ${rows.indexOf(r) + 1}`} longPress onReorder={setRows} render={(r, i) => (
+        <DragList items={rows} keyOf={r => String(r.id)} labelOf={r => `set ${rows.indexOf(r) + 1}`} onReorder={setRows} render={(r, i, grip) => (
           <div className="set-row" role="listitem">
-            <span className="set-n">{i + 1}</span>
+            <span className="set-h">{grip}<span className="set-n">{i + 1}</span></span>
             <input className="field tnum" inputMode="decimal" aria-label={`Set ${i + 1} weight`} value={r.weight || ''} placeholder="0"
               onChange={e => edit(i, { weight: num(e.target.value) })} />
             <span className="set-x" aria-hidden="true">×</span>

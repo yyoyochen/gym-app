@@ -1,4 +1,4 @@
-// A list you reorder by dragging a row's grip (six dots), or, with `longPress`,
+// A list you reorder by dragging a row's grip (three bars, ≡), or, with `longPress`,
 // by holding a row still for a moment and then dragging it. The row follows
 // the finger, the others slide aside, and the new order is saved on release.
 // A quick tap still reaches the row; a swipe still scrolls.
