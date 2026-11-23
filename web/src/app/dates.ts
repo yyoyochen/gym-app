@@ -2,6 +2,7 @@
 // never parsed with `new Date(iso)` (that reads them as UTC midnight).
 import type { ISODate, Millis } from '../domain/types';
 import { localISODate, pad } from '../db/util';
+import { getLang } from '../i18n/lang';
 
 export function todayISO(now: Millis = Date.now()): ISODate {
   return localISODate(now);
@@ -35,15 +36,48 @@ export function weekday(iso: ISODate): number {
   return (((dayNumber(iso) + 4) % 7) + 7) % 7; // 1970-01-01 was a Thursday
 }
 
-/** "Fri 21 Nov 2026" */
+const ZH_DAYS = ['日', '一', '二', '三', '四', '五', '六'];
+const zh = () => getLang() === 'zh';
+
+/** "Fri 21 Nov 2026"; in Chinese "2026年11月21日 週五". */
 export function formatDate(iso: ISODate, opts: { weekday?: boolean; year?: boolean } = {}): string {
   const [y, m, d] = iso.split('-').map(Number);
+  if (zh()) {
+    const wd = opts.weekday === false ? '' : ` 週${ZH_DAYS[weekday(iso)]}`;
+    return `${opts.year === false ? '' : `${y}年`}${m}月${d}日${wd}`;
+  }
   const wd = opts.weekday === false ? '' : `${WEEKDAYS[weekday(iso)]} `;
   return `${wd}${d} ${MONTHS[m - 1]}${opts.year === false ? '' : ` ${y}`}`;
 }
 
+/** "November 2026"; in Chinese "2026年11月". */
 export function monthLabel(year: number, month: number): string {
-  return `${MONTHS_LONG[month - 1]} ${year}`;
+  return zh() ? `${year}年${month}月` : `${MONTHS_LONG[month - 1]} ${year}`;
+}
+
+/** Month 1–12, short: "Nov" / "11月". */
+export function monthShort(month: number): string {
+  return zh() ? `${month}月` : MONTHS[month - 1];
+}
+
+/** Month 1–12, long: "November" / "11月". */
+export function monthLong(month: number): string {
+  return zh() ? `${month}月` : MONTHS_LONG[month - 1];
+}
+
+/** Weekday 0 = Sunday, short: "Sun" / "週日". */
+export function weekdayShort(day: number): string {
+  return zh() ? `週${ZH_DAYS[day]}` : WEEKDAYS[day];
+}
+
+/** Weekday 0 = Sunday, long: "Sunday" / "星期日". */
+export function weekdayLong(day: number): string {
+  return zh() ? `星期${ZH_DAYS[day]}` : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][day];
+}
+
+/** One letter per day, Monday first: M T W T F S S / 一 二 三 四 五 六 日. */
+export function dayInitials(): string[] {
+  return zh() ? ['一', '二', '三', '四', '五', '六', '日'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 }
 
 /** Shift a (year, month 1–12) by n months. */

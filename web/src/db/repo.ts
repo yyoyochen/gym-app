@@ -38,6 +38,8 @@ export interface MetaValues {
   lastRestoreAt: Millis;
   /** Appearance: 'dark' | 'light' (default dark; an old 'system' reads as dark). See ui/kit/useTheme.ts. */
   theme: 'system' | 'dark' | 'light';
+  /** Language: 'en' | 'zh' (Traditional Chinese). Unset: the phone's language. See i18n/lang.ts. */
+  lang: 'en' | 'zh';
   /** Tip ids dismissed with Got it (app/tips.ts). Unset: not decided yet, no tip shows. */
   tipsSeen: string[];
   /** Today's one-off workout while it is being planned (app/workout.ts WorkoutDraft). Dropped on Start or the next day. */

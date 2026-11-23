@@ -22,6 +22,7 @@ import { sessionNames } from '../ui/session/text';
 import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import { TemplateList } from '../app/parts/TemplatePicker';
+import { LanguageControl } from '../i18n/LanguageControl';
 
 const COUNT = SETUP_STEPS.length;
 
@@ -108,6 +109,7 @@ function StepAbout({ onNext }: { onNext: () => void }) {
     <>
       <Question sub="How you rate effort, and what you weigh.">About you</Question>
       <div className="stack">
+        <LanguageControl />
         <Segmented<EffortScale> label="Effort scale" value={scale} onChange={setScale}
           options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
         <p className="quiet">RIR: reps left in the tank. RPE: 10 minus that.</p>

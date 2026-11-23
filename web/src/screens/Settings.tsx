@@ -14,6 +14,7 @@ import { resetTips } from '../app/tips';
 import { formatDate, todayISO } from '../app/dates';
 import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
+import { LanguageControl } from '../i18n/LanguageControl';
 
 
 export function Settings(_props: { params: string[] }) {
@@ -87,6 +88,7 @@ function Appearance() {
     <Group label="Appearance">
       <Segmented<ThemePref> label="Theme" value={theme} onChange={v => { void setTheme(v); }}
         options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
+      <LanguageControl />
       <Button block onClick={async () => { await resetTips(getDb()); showHud({ text: 'Tips will show again', icon: 'check' }); }}>Show tips again</Button>
     </Group>
   );
