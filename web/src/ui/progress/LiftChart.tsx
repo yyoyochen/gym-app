@@ -4,8 +4,9 @@
 // ceiling 120% of the best, floor 90% of the lowest. Targets too close to or
 // above the ceiling sit in a lane above the plot and never move the scale;
 // a thin dither band marks the ceiling edge. Target names sit in a key above
-// the chart, never on the plot: inside it a target is a line typed out in the
-// mono font and nothing else: · · · for the next level, * * * for your target.
+// the chart, never on the plot: inside it a target is a line and nothing else:
+// the next level is the grid's fine dotted line in the accent colour, your own
+// target is a spaced row of small * characters.
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
@@ -42,7 +43,9 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
       {allTargets.length > 0 && (
         <ul className="tk-target-key">
           {allTargets.map(t => (
-            <li key={t.name}><span className="tk-key-chars" aria-hidden="true">{charsOf(t).repeat(4)}</span><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
+            <li key={t.name}>{t.kind === 'goal'
+              ? <span className="tk-key-chars" aria-hidden="true">* * *</span>
+              : <svg className="tk-key-line" viewBox="0 0 24 4" aria-hidden="true"><line className="tk-target" x1={0} x2={24} y1={2} y2={2} /></svg>}<span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
           ))}
         </ul>
       )}
@@ -89,16 +92,10 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
   );
 }
 
-/** The character a target line is typed with. */
-const charsOf = (t: ChartTarget) => (t.kind === 'goal' ? '*' : '·');
-/** Vertical nudge so the glyph's centre, not its baseline, sits on the value (micro size). */
-const CHAR_DY: Record<string, number> = { '*': 5.5, '·': 3 };
-
-/** A target line typed out in the mono font, spread evenly from x0 to x1 and centred on y. */
+/** A target line: the next level as a fine dotted line, your own target as a spaced row of * centred on y. */
 function CharLine({ t, y, x0, x1 }: { t: ChartTarget; y: number; x0: number; x1: number }) {
-  const ch = charsOf(t);
-  const n = Math.max(2, Math.floor((x1 - x0) / 6));
-  return (
-    <text className={`tk-target-chars ${t.kind ?? 'level'}`} x={x0} y={y + CHAR_DY[ch]} textLength={x1 - x0} lengthAdjust="spacing">{ch.repeat(n)}</text>
-  );
+  if (t.kind !== 'goal') return <line className="tk-target" x1={x0} x2={x1} y1={y} y2={y} />;
+  const n = Math.max(2, Math.floor((x1 - x0) / 9));
+  // +5.5 puts the middle of the * (it sits high in the em box) on the value.
+  return <text className="tk-target-chars" x={x0} y={y + 5.5} textLength={x1 - x0} lengthAdjust="spacing">{'*'.repeat(n)}</text>;
 }
