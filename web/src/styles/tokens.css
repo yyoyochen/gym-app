@@ -131,7 +131,7 @@
 :root[data-theme='light'] {
   --paper:  #fcd0af;
   --ink:    #1e2152;
-  --accent: #313670;                 /* steel navy: navy's hue, a step lighter and greyer; data marks only */
+  --accent: #4a518f;                 /* steel navy: navy's hue, lighter and greyer; data marks only */
   --select: var(--ink);              /* chrome (active tab, focus, links, tips) stays navy */
   --mid:    rgb(30 33 82 / 0.62);
   --rule:   rgb(30 33 82 / 0.28);
