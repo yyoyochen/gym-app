@@ -76,7 +76,7 @@
 .tk-hold { stroke-dasharray: 2 3; }
 .tk-target { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 1 3; }
 .tk-target-chars { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; fill: var(--accent); }
-.tk-key-chars { flex: none; width: 5ch; white-space: pre; }
+.tk-key-chars { flex: none; width: 5ch; white-space: pre; transform: scale(0.7); transform-origin: left center; } /* same 70% stars as the chart line */
 .tk-key-line { flex: none; width: 5ch; height: 4px; overflow: visible; }
 .tk-bar { fill: var(--ink); shape-rendering: crispEdges; }
 .tk-legend { margin: 0; }

@@ -6,7 +6,7 @@
 // a thin dither band marks the ceiling edge. Target names sit in a key above
 // the chart, never on the plot: inside it a target is a line and nothing else:
 // the next level is the grid's fine dotted line in the accent colour, your own
-// target is a spaced row of small * characters.
+// target is a tight row of * at 70% of the micro type size.
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
@@ -44,7 +44,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
         <ul className="tk-target-key">
           {allTargets.map(t => (
             <li key={t.name}>{t.kind === 'goal'
-              ? <span className="tk-key-chars" aria-hidden="true">* * *</span>
+              ? <span className="tk-key-chars" aria-hidden="true">*****</span>
               : <svg className="tk-key-line" viewBox="0 0 24 4" aria-hidden="true"><line className="tk-target" x1={0} x2={24} y1={2} y2={2} /></svg>}<span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
           ))}
         </ul>
@@ -92,10 +92,17 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
   );
 }
 
-/** A target line: the next level as a fine dotted line, your own target as a spaced row of * centred on y. */
+const STAR_SCALE = 0.7;
+
+/** A target line: the next level as a fine dotted line, your own target as a row of small * centred on y. */
 function CharLine({ t, y, x0, x1 }: { t: ChartTarget; y: number; x0: number; x1: number }) {
   if (t.kind !== 'goal') return <line className="tk-target" x1={x0} x2={x1} y1={y} y2={y} />;
-  const n = Math.max(2, Math.floor((x1 - x0) / 9));
-  // +5.5 puts the middle of the * (it sits high in the em box) on the value.
-  return <text className="tk-target-chars" x={x0} y={y + 5.5} textLength={x1 - x0} lengthAdjust="spacing">{'*'.repeat(n)}</text>;
+  const n = Math.max(2, Math.floor((x1 - x0) / 6));
+  // Drawn at the micro role, then scaled to 70% so the stars sit just above the dots in weight.
+  // +3 (before scaling) puts the middle of the * (it sits high in the em box) on the value.
+  return (
+    <g transform={`translate(${x0} ${y}) scale(${STAR_SCALE})`}>
+      <text className="tk-target-chars" x={0} y={3} textLength={(x1 - x0) / STAR_SCALE} lengthAdjust="spacing">{'*'.repeat(n)}</text>
+    </g>
+  );
 }
