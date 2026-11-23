@@ -5,12 +5,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { BenchmarkKey, Exercise, ModelKind, PainArea, Program, ProgramSession, Slot, SlotParams, SlotType } from '../domain/types';
 import { getActiveProgram, getDb, listExercises, putExercise, saveProgram, seedCatalog } from '../db';
-import { exerciseIdFor, nameKey } from '../domain/catalog';
+import { exerciseIdFor, nameKey, sameExerciseName } from '../domain/catalog';
 import { useLive } from '../ui/useLive';
 import { ConfirmButton, Errors, Group, Segmented, Sheet, Stepper } from '../ui/common';
 import { Button, LabelValueGrid, NavBar, Parts, PixelIcon, Toggle, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
-import { PAIN_AREAS, PAIN_AREA_LABELS } from '../app/labels';
+import { PAIN_AREAS, PAIN_AREA_LABELS, displayName } from '../app/labels';
 import {
   MODEL_LABELS, addSession, addSlot, blankProgram, changeModel, deleteSession, describeSlot, moveSession, moveSlot, removeSlot,
   renameSession, setInRotation, swapExercise, toggleMinimum, uniqueExerciseId, updateSlot,
@@ -102,7 +102,7 @@ export function ProgramEditor(_props: { params: string[] }) {
           <div className="prog-head">
             <label className="field-wrap">
               <span className="label">{t('Program name')}</span>
-              <input className="field prog-name" value={tn(prog.name)} onChange={e => apply(p => ({ ...p, name: e.target.value }))} />
+              <NameInput key={prog.id} className="field prog-name" name={prog.name} onChange={v => apply(p => ({ ...p, name: v }))} />
             </label>
             <LabelValueGrid items={[
               { label: t('Rotation'), value: prog.rotation.length ? prog.rotation.join(' → ') : t('None'), accent: true },
@@ -202,7 +202,7 @@ function SessionForm({ s, index, count, inRotation, apply, onDeleted }: {
     <>
       <label className="field-wrap">
         <span className="label">{t('Session name')}</span>
-        <input className="field" value={tn(s.name)} onChange={e => apply(p => renameSession(p, s.key, e.target.value))} />
+        <NameInput key={s.key} className="field" name={s.name} onChange={v => apply(p => renameSession(p, s.key, v))} />
       </label>
       <Toggle label={t('In rotation')} hint={t('Off keeps the session in the program but out of the A → B → C order.')} checked={inRotation}
         onChange={v => apply(p => setInRotation(p, s.key, v))} />
@@ -343,7 +343,7 @@ function NewExerciseForm({ initialName, exercises, onCancel, onCreated }: {
           const n = name.trim().replace(/\s+/g, ' ');
           const errs: string[] = [];
           if (!n) errs.push(t('Name the exercise'));
-          const dupe = exercises.find(e => nameKey(e.name) === nameKey(n) || e.aliases.some(a => nameKey(a) === nameKey(n)));
+          const dupe = exercises.find(e => sameExerciseName(e.name, n) || e.aliases.some(a => sameExerciseName(a, n)));
           if (dupe) errs.push(t('“{name}” already exists', { name: tn(dupe.name) }));
           setErrors(errs);
           if (errs.length) return;
@@ -360,4 +360,11 @@ function NewExerciseForm({ initialName, exercises, onCancel, onCreated }: {
   );
 }
 
-
+/** A stored name as an editable field: it opens showing the name in the app's
+ *  language, and only what the lifter actually types is saved (never the
+ *  translation of a name they didn't touch, and the field never re-translates
+ *  mid-word). */
+function NameInput({ name, className, onChange }: { name: string; className: string; onChange: (v: string) => void }) {
+  const [draft, setDraft] = useState(() => { const shown = tn(displayName(name)); return shown === displayName(name) ? name : shown; });
+  return <input className={className} value={draft} onChange={e => { setDraft(e.target.value); onChange(e.target.value); }} />;
+}

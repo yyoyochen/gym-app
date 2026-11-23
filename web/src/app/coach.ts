@@ -18,14 +18,14 @@ import {
 } from '../db';
 import { guessExercise } from '../domain/catalog';
 import {
-  addDays, chosenTarget, listTarget, classifyGap, daysBetween, formatFloor, grade, lastSessionLine, lastTimeParts, minimumToKeep, nudge,
+  addDays, chosenTarget, listTarget, classifyGap, daysBetween, formatFloor, grade, lastTimeParts, minimumToKeep, nudge,
   painEventsFromSets, painStatus, prescribe, reentryNote, reentryState, resumeCard, stopsLiftToday,
   type ExerciseSession, type Gap, type LiftSession, type Nudge, type PainStatus, type PlannedSet,
   type ReentryState, type ResumeCard,
 } from '../engine';
 import { getPlateSettings, type PlateSettings } from './prefs';
 import { displayName } from './labels';
-import { t, te, tn } from '../i18n';
+import { t, tn } from '../i18n';
 import { startingSetFor } from './setup';
 
 const EPS = 1e-9;
@@ -467,6 +467,15 @@ export interface TodayState {
 }
 
 /** Last activity → gap → what the top of Today shows (§3.5). */
+/** "Last session: A: Squat + Bench, 3 days ago, 2/3 kept", built from its parts so a
+ *  name with commas stays whole in Chinese (same English as the engine's lastSessionLine). */
+export function lastLineText(name: string, ago: string, kept?: number, total?: number): string {
+  const shown = tn(displayName(name));
+  return total
+    ? t('Last session: {name}, {ago}, {kept}/{total} kept', { name: shown, ago, kept: kept ?? 0, total })
+    : t('Last session: {name}, {ago}', { name: shown, ago });
+}
+
 export async function todayState(db: GymDb, today: ISODate, now: Millis): Promise<TodayState> {
   const open = await getOpenSession(db);
   const last = open ?? (await getLastSession(db));
@@ -478,9 +487,7 @@ export async function todayState(db: GymDb, today: ISODate, now: Millis): Promis
   const g = await gradeSession(db, last.id);
   const d = daysBetween(last.date, today);
   const ago = d === 0 ? t('today') : d === 1 ? t('yesterday') : t('{n} days ago', { n: d });
-  const lastLine = g && g.total
-    ? te(lastSessionLine(displayName(last.nameSnapshot), last.date, today, g.kept, g.total))
-    : t('Last session: {name}, {ago}', { name: tn(displayName(last.nameSnapshot)), ago });
+  const lastLine = lastLineText(last.nameSnapshot, ago, g?.kept, g?.total);
   const doneToday = last.sealed && last.date === today ? { session: last, kept: g?.kept ?? 0, total: g?.total ?? 0 } : undefined;
   return { gap, lastLine, last, ...(doneToday ? { doneToday } : {}) };
 }

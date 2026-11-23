@@ -85,11 +85,19 @@ function Foot({ children, onBack }: { children: ReactNode; onBack?: () => void }
 
 // ---------------------------------------------------------------- 01 about you
 
+const aboutDraft: { sex: Sex | 'none'; birthYear: string; bw: string; scale: EffortScale } = { sex: 'none', birthYear: '', bw: '', scale: 'rir' };
+
 function StepAbout({ onNext }: { onNext: () => void }) {
-  const [sex, setSex] = useState<Sex | 'none'>('none');
-  const [birthYear, setBirthYear] = useState('');
-  const [bw, setBw] = useState('');
-  const [scale, setScale] = useState<EffortScale>('rir');
+  // Kept outside the component: switching language re-mounts the app, and
+  // what was typed so far must survive it.
+  const [sex, setSexState] = useState<Sex | 'none'>(aboutDraft.sex);
+  const [birthYear, setBirthYearState] = useState(aboutDraft.birthYear);
+  const [bw, setBwState] = useState(aboutDraft.bw);
+  const [scale, setScaleState] = useState<EffortScale>(aboutDraft.scale);
+  const setSex = (v: Sex | 'none') => { aboutDraft.sex = v; setSexState(v); };
+  const setBirthYear = (v: string) => { aboutDraft.birthYear = v; setBirthYearState(v); };
+  const setBw = (v: string) => { aboutDraft.bw = v; setBwState(v); };
+  const setScale = (v: EffortScale) => { aboutDraft.scale = v; setScaleState(v); };
   const [errors, setErrors] = useState<string[]>([]);
   const [history, setHistory] = useState(false);
   const save = async () => {

@@ -31,7 +31,16 @@ export function initLang(): void {
   try { cached = localStorage.getItem(LANG_CACHE_KEY); } catch { /* none */ }
   applyLang(isLang(cached) ? cached : langFromLocale(typeof navigator === 'undefined' ? undefined : navigator.language));
   // db is loaded lazily: app/dates.ts imports this file, and db must not come along with it.
-  import('../db').then(({ getDb, getMeta }) => getMeta(getDb(), 'lang')).then(v => { if (isLang(v) && v !== lang) applyLang(v); }, () => {});
+  void syncLangFromDb();
+}
+
+/** Apply the stored language (after start-up, a restore or an undo), keeping the mirror in step. */
+export async function syncLangFromDb(): Promise<void> {
+  try {
+    const { getDb, getMeta } = await import('../db');
+    const v = await getMeta(getDb(), 'lang');
+    if (isLang(v) && v !== lang) applyLang(v);
+  } catch { /* no database yet */ }
 }
 
 export async function setLang(l: Lang): Promise<void> {

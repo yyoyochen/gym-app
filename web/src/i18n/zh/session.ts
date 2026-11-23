@@ -40,6 +40,7 @@ const zh: Dict = {
   'swapped to {name}': '已換成「{name}」',
   'swapped to {name} — logged, not graded': '已換成「{name}」——已記錄，不評分',
   'Last session: {name}, {ago}': '上次訓練：{name}，{ago}',
+  'Last session: {name}, {ago}, {kept}/{total} kept': '上次訓練：{name}，{ago}，達成 {kept}/{total}',
 
   // ---- session names and set words (ui/session/text.tsx, logger.ts)
   'Session {key}, {name}': '課表 {key}：{name}',

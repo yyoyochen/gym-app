@@ -88,8 +88,6 @@ const zh: Dict = {
   'first session after a layoff: no jump': '停練後第一次訓練：不加重',
   'after a layoff jumps are capped at {w}kg (5% or one increment)': '停練後加重上限為 {w}kg（5% 或一次增量）',
   'jumps are capped at one increment ({w}kg)': '加重上限為一次增量（{w}kg）',
-  // readable() turns "capped at 0kg" into "capped at bodyweight" too; here it means no jump at all.
-  'after a layoff jumps are capped at bodyweight (5% or one increment)': '停練後加重上限為 0kg（5% 或一次增量）',
 
   // ---- why: pain.ts
   'pain flagged on this lift last session (severity {n}) — hold the load': '上次訓練這個動作標記了疼痛（程度 {n}）——維持重量',

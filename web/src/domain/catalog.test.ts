@@ -157,3 +157,13 @@ describe('equipment never crosses over', () => {
   });
 });
 
+
+describe('sameExerciseName', () => {
+  it('compares Chinese names by their text, since they have no Latin key', async () => {
+    const { sameExerciseName } = await import('./catalog');
+    expect(sameExerciseName('深蹲變化', '臀推機')).toBe(false);
+    expect(sameExerciseName(' 臀推機 ', '臀推機')).toBe(true);
+    expect(sameExerciseName('Pull-ups', 'pullups')).toBe(true);
+    expect(sameExerciseName('深蹲', 'Squat')).toBe(false);
+  });
+});

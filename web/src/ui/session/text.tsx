@@ -23,7 +23,7 @@ export function MonoNums({ text }: { text: string }) {
   );
 }
 
-const KEYED = new RegExp(`^(\\S{1,3})(?: ${LEGACY_DOT} |: )(.+)$`);
+const KEYED = new RegExp(`^(\\S{1,3}?)(?: ${LEGACY_DOT} |: |：)(.+)$`);
 const MINIMUM = ' (minimum)';
 
 /** One stored name part: known names translated (tn), "(minimum)" too; a name the lifter typed stays as typed. */

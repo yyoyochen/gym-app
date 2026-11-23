@@ -13,9 +13,19 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  // Fonts kept on first use (LAZY) move into the new cache before the old ones
+  // go, so 中文 still has its fonts offline after an update.
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
+    caches.keys().then(async (keys) => {
+      const next = await caches.open(CACHE);
+      for (const k of keys.filter((k) => k !== CACHE)) {
+        const old = await caches.open(k);
+        for (const req of await old.keys()) {
+          if (LAZY.test(new URL(req.url).pathname)) { const res = await old.match(req); if (res) await next.put(req, res); }
+        }
+        await caches.delete(k);
+      }
+    }).then(() => self.clients.claim()),
   );
 });
 

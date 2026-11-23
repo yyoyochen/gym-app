@@ -6,6 +6,7 @@ import { ConfirmButton, Errors, FilePicker } from '../../ui/common';
 import { LabelValueGrid, showHud } from '../../ui/kit';
 import { useLive } from '../../ui/useLive';
 import { t, te } from '../../i18n';
+import { syncLangFromDb } from '../../i18n/lang';
 
 export function RestorePanel({ onRestored }: { onRestored?: () => void }) {
   const [doc, setDoc] = useState<ExportDoc | null>(null);
@@ -34,6 +35,7 @@ export function RestorePanel({ onRestored }: { onRestored?: () => void }) {
             message={t('Your current data is kept as an undo copy until the next restore.')} confirmText={t('Replace all my data')} onConfirm={async () => {
               try {
                 await restoreBackup(getDb(), doc);
+                await syncLangFromDb();
                 await suppressTipsIfReturning(getDb());
                 setDoc(null);
                 showHud({ text: t('Restored'), icon: 'import' });
@@ -44,7 +46,7 @@ export function RestorePanel({ onRestored }: { onRestored?: () => void }) {
       )}
       {undo && (
         <ConfirmButton className="block" confirmLabel={t('Undo the last restore and bring back the data from before it?')} confirmText={t('Undo last restore')} onConfirm={async () => {
-          try { await undoLastRestore(getDb()); showHud({ text: t('Restore undone'), icon: 'back' }); }
+          try { await undoLastRestore(getDb()); await syncLangFromDb(); showHud({ text: t('Restore undone'), icon: 'back' }); }
           catch (e) { setErrors([e instanceof Error ? te(e.message) : t('Undo failed')]); }
         }}>{t('Undo last restore')}</ConfirmButton>
       )}

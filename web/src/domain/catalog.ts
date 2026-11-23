@@ -17,6 +17,13 @@ export function nameKey(name: string): string {
   return name.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '');
 }
 
+/** Same exercise name? By nameKey, or, for names with no Latin letters or digits
+ *  (a name typed in Chinese), by the trimmed text itself. */
+export function sameExerciseName(a: string, b: string): boolean {
+  const ka = nameKey(a), kb = nameKey(b);
+  return ka || kb ? ka === kb : a.trim() === b.trim();
+}
+
 /** Stable exercise id for a canonical name. */
 export function exerciseIdFor(name: string): string {
   return slugify(name);
