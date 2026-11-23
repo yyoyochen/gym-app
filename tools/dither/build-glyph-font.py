@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Generates web/src/styles/fonts/gymbro-glyph.woff2: GymBro's own 4-glyph font
-for the dither glyphs ░ ▒ ▓ █ (Space Mono has none of them).
+for the dither glyphs ░ ▒ ▓ █, so they match the app's mono font exactly.
 
 ░ ▒ ▓ are the same Bayer 4×4 ordered dither at 25 / 50 / 75% that
 tools/dither/build-css.mjs uses for the dither tiles; █ is solid. Advance
-width and vertical metrics are copied from Space Mono 400, so glyph strings
+width and vertical metrics are copied from JetBrains Mono 400, so glyph strings
 line up with the mono text around them. A cell is a quarter of the advance,
 so each character holds exactly one Bayer period and adjacent glyphs tile
 seamlessly.
 
   python3 -I tools/dither/build-glyph-font.py \
-    node_modules/@fontsource/space-mono/files/space-mono-latin-400-normal.woff2 \
+    node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2 \
     web/src/styles/fonts/gymbro-glyph.woff2
 """
 import sys
@@ -71,5 +71,5 @@ def main(src, out):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        sys.exit('usage: build-glyph-font.py <space-mono.woff2> <out.woff2>')
+        sys.exit('usage: build-glyph-font.py <mono-400.woff2> <out.woff2>')
     main(*sys.argv[1:])

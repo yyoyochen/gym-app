@@ -1,4 +1,4 @@
-// Templates as spec-sheet blocks (sessions and slots in Space Mono), for
+// Templates as spec-sheet blocks (sessions and slots in the mono font), for
 // Onboarding (pick one, the pinned button applies it) and the Program editor.
 import type { ReactNode } from 'react';
 import type { Exercise, ProgramSession } from '../../domain/types';

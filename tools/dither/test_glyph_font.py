@@ -5,7 +5,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FONT = os.path.join(ROOT, 'web/src/styles/fonts/gymbro-glyph.woff2')
-SPACE_MONO = os.path.join(ROOT, 'node_modules/@fontsource/space-mono/files/space-mono-latin-400-normal.woff2')
+MONO_400 = os.path.join(ROOT, 'node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2')
 GLYPHS = {0x2591: 0.25, 0x2592: 0.50, 0x2593: 0.75, 0x2588: 1.00}
 
 def rects(font, name):
@@ -22,12 +22,12 @@ def rects(font, name):
 
 def main():
     assert os.path.exists(FONT), f'missing {FONT}'
-    f, sm = TTFont(FONT), TTFont(SPACE_MONO)
+    f, sm = TTFont(FONT), TTFont(MONO_400)
     cmap, sm_cmap = f.getBestCmap(), sm.getBestCmap()
     assert set(cmap) == set(GLYPHS), f'cmap {sorted(hex(c) for c in cmap)}'
     adv = sm['hmtx'][sm_cmap[ord('0')]][0]
     asc, desc = sm['hhea'].ascent, sm['hhea'].descent
-    assert f['hhea'].ascent == asc and f['hhea'].descent == desc, 'vertical metrics differ from Space Mono'
+    assert f['hhea'].ascent == asc and f['hhea'].descent == desc, 'vertical metrics differ from the mono font'
     box = adv * (asc - desc)
     for cp, want in GLYPHS.items():
         name = cmap[cp]
