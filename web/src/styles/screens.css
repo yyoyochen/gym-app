@@ -77,3 +77,4 @@ a.heading::after { content: ' ›'; color: var(--mid); }
 .wk-rx { font: var(--text-mono); letter-spacing: var(--track-mono); font-weight: var(--font-strong); }
 .wk-why { font: var(--text-mono); letter-spacing: var(--track-mono); color: var(--mid); }
 .wk-clear { align-self: center; min-height: var(--touch-min); }
+.today-other { display: block; align-self: center; text-align: center; min-height: var(--touch-min); line-height: var(--touch-min); }

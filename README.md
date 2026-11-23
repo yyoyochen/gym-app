@@ -23,6 +23,7 @@ Once installed it opens full screen and runs with no connection.
 
 - **Plan, then grade.** Each lift gets a target from your history: top set plus back-offs, double progression, 5 × 5, or a fixed dose. Logging a set is two taps: Log as planned, or Adjust.
 - **Day-one plans.** Setup takes about 90 seconds. Enter your best recent set for squat, bench, deadlift and overhead press, and the first session already has real targets.
+- **No program needed.** On days you decide on the spot, Plan today's workout fills in a session from your goals and what you've trained this week; change anything, or build your own, and it's graded like any other.
 - **Readiness.** Three quick taps (sleep, soreness, stress) ease the day's targets on a bad day.
 - **Progress.** e1RM trends, strength levels against lifters like you, best weight at each rep count, PRs, weekly sets by body part and a training calendar.
 - **Bring your log.** Import a CSV: the app’s own template (download it in the app), or an export from **Hevy** or **Strong** (iPhone or Android). Warm-ups, effort (RPE) and units carry over; re-importing the same file adds nothing.

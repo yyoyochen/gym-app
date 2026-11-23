@@ -177,16 +177,14 @@ export function Today(_props: { params: string[] }) {
       {!open && !done && state.lastLine && !showPlan && <p className="quiet">{state.lastLine}</p>}
       {!open && plan.reentryNote && showPlan && <p className="note">// Re-entry: {plan.reentryNote}</p>}
 
-      {plan.status === 'no_program' && (
-        <div className="banner stack">
-          <span>No program yet. Plan your own, or start from an example program and change it to suit you.</span>
-          <LinkButton variant="primary" href="#/profile/program" block iconEnd="chevron">Plan a program</LinkButton>
-        </div>
+      {plan.status === 'no_program' && !open && (
+        <LinkButton variant="primary" href="#/workout" block iconEnd="chevron">Plan today's workout</LinkButton>
       )}
       {plan.status === 'empty_session' && (
         <div className="banner stack">
           <span>{plan.sessionName} has no lifts.</span>
           <LinkButton href="#/profile/program" block>Edit the program</LinkButton>
+          <a className="link today-other" href="#/workout">Something else today</a>
         </div>
       )}
 
@@ -258,7 +256,10 @@ export function Today(_props: { params: string[] }) {
           {open ? (
             <LinkButton variant="primary" block iconEnd="chevron" href={`#/session/${open.session.id}`}>Resume {names.short}</LinkButton>
           ) : (
-            <Button variant="primary" block iconEnd="chevron" disabled={busy} onClick={start}>Start {names.short}</Button>
+            <>
+              <Button variant="primary" block iconEnd="chevron" disabled={busy} onClick={start}>Start {names.short}</Button>
+              <a className="link today-other" href="#/workout">Something else today</a>
+            </>
           )}
         </div>
       )}

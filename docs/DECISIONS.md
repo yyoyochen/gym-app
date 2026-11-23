@@ -103,3 +103,15 @@ Build decisions not already settled in [PWA-SPEC.md](PWA-SPEC.md). Newest last.
 **No truncated text.** Ellipsis and line clamps were replaced with wrapping. While a text field has focus the tab bar hides and pinned footers un-pin (`ui/kit/keyboard.ts`).
 
 **Light theme opts out of forced dark** (`color-scheme: only light`), so Brave's night mode or Android's auto-dark can't invert it.
+
+## 2026-11-23 — one-off workouts ("Plan today's workout")
+
+Spec: [superpowers/specs/2026-11-23-plan-todays-workout-design.md](superpowers/specs/2026-11-23-plan-todays-workout-design.md).
+
+**Today has one entry for a day without a plan.** No program: a single "Plan today's workout" button. With a program: Today is unchanged plus a quiet "Something else today" link. Both open `#/workout`.
+
+**The builder starts filled in.** The 3 body parts furthest behind this week (share of the weekly target done; parts trained in the last 2 days skipped unless too few are left), the lifter's own most-trained lift for each (Goal Board lifts first; catalogue fallback when none), sets and reps by goal, weights from the engine. With no program the weekly targets are goal defaults (strength/maintain: Legs 12, Back 10, Chest 8, Shoulders 6, Arms 4, Core 3; hypertrophy/bodycomp: 15, 14, 12, 10, 8, 4); with a program, its planned sets, or the default for a part it plans 0 sets for.
+
+**Straight sets are double progression**, so accessories in one-off workouts still progress and can be beaten. **A weight the lifter sets** is planned with the engine's `chosenTarget` at that weight and graded like a seeded plan; on a lift never done before it is a plain fixed plan. Program days and one-off workouts share `planSlots`, so they are planned by one code path.
+
+**A one-off workout is a session named "Today's workout" with key `workout`**, which no program has, so it never moves a program's rotation. The draft is kept in meta (`workoutDraft`) for the day only and dropped on Start.
