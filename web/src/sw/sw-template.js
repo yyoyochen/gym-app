@@ -2,6 +2,7 @@
    features. Updates install in the background and wait; the app decides when
    to activate (never during an active session). */
 const VERSION = '__VERSION__';
+const APP_VERSION = '__APP_VERSION__';
 const CACHE = `gymbro-${VERSION}`;
 const PRECACHE = __PRECACHE__;
 
@@ -18,6 +19,8 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data === 'skip-waiting') self.skipWaiting();
+  // The page asks a waiting worker which version it carries, for the update banner.
+  if (event.data && event.data.type === 'version' && event.ports[0]) event.ports[0].postMessage(APP_VERSION);
 });
 
 self.addEventListener('fetch', (event) => {

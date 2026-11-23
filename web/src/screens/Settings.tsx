@@ -14,7 +14,6 @@ import { resetTips } from '../app/tips';
 import { formatDate, todayISO } from '../app/dates';
 import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
-import pkg from '../../../package.json';
 
 
 export function Settings(_props: { params: string[] }) {
@@ -118,7 +117,7 @@ function About() {
   return (
     <Group label="About">
       <LabelValueGrid variant="stats" items={[
-        { label: 'Version:', value: pkg.version },
+        { label: 'Version:', value: __APP_VERSION__ },
         { label: 'Account:', value: 'None, local-first' },
         { label: 'Network:', value: 'Never sees your data' },
         { label: 'Code:', value: 'MIT licence' },

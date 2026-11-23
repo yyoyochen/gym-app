@@ -265,3 +265,11 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .tip-n { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--mid); }
 .tip-ok { min-height: 48px; padding: 0 0 0 var(--space-4); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; font-weight: var(--font-strong); color: var(--accent); text-decoration: underline; }
 .tip-link { display: inline-flex; align-items: center; min-height: 48px; }
+
+/* ---------- update banner (app/parts/UpdateBanner): a new version is ready ---------- */
+.update-banner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; min-height: var(--touch-min);
+  padding: var(--space-3) var(--space-4); background: var(--accent); color: var(--paper); text-align: left; }
+.update-banner-txt { display: flex; flex-direction: column; gap: var(--space-half); }
+.update-banner-txt b { font: var(--text-value); letter-spacing: var(--track-value); }
+.update-banner-txt span { font: var(--text-quiet); letter-spacing: var(--track-quiet); }
+.update-banner:disabled { opacity: 0.7; }

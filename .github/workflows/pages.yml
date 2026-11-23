@@ -28,6 +28,8 @@ jobs:
       - run: npm test
       - name: Build (typecheck, bundle check, style check)
         run: npm run build
+        env:
+          APP_BUILD: ${{ github.run_number }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

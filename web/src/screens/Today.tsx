@@ -11,6 +11,7 @@ import { useFirstRunRedirect } from '../app/firstRun';
 import { firstPromisedSession, goalNudgeDue } from '../app/tips';
 import { ScreenTip, useScreenTip } from '../app/parts/ScreenTip';
 import { DemoBanner } from '../app/DemoBanner';
+import { UpdateBanner } from '../app/parts/UpdateBanner';
 import { formatDate, todayISO } from '../app/dates';
 import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
@@ -127,6 +128,7 @@ export function Today(_props: { params: string[] }) {
   return (
     <section className="screen today">
       <DemoBanner />
+      {!open && <UpdateBanner />}
       <Lockup mid={`Training log //${open ? 'Live' : done && !showNext ? 'Done today' : names.short}`} />
 
       <div className="place">
