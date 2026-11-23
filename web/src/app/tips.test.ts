@@ -29,7 +29,7 @@ describe('which tip shows', () => {
     expect(tipNumber('promise')).toBe(1);
     expect(tipNumber('progress')).toBe(6);
     expect(TIP_IDS).toHaveLength(6);
-    expect(TIP_TEXT.promise).toBe("This is today's promise: the numbers to hit, with the reason under them. It locks when you start, and the session is graded against it.");
+    expect(TIP_TEXT.promise).toBe("This is today's plan: the numbers to hit, with the reason under them. It locks when you start, and the session is graded against it.");
     for (const id of TIP_IDS) expect(TIP_TEXT[id]).not.toMatch(/commit/i);
   });
   it('goal nudge: 7 days after the first finished session, never with a target', () => {

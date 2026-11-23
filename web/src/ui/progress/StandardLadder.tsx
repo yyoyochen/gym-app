@@ -15,7 +15,7 @@ export function levelValueText(r: Pick<LiftRating, 'level' | 'percentile'>): str
 export function LevelBar({ rating, label, cells }: { rating: Pick<LiftRating, 'level' | 'percentile'>; label: string; cells?: number }) {
   return (
     <DitherBar value={rating.percentile / 100} cells={cells} label={label} valueText={levelValueText(rating)}
-      ariaLabel={`${label}: ${levelWord(rating)}, ${ordinal(rating.percentile)} percentile of gym-goers`} />
+      ariaLabel={`${label}: ${levelWord(rating)}, ${ordinal(rating.percentile)} percentile of lifters like you`} />
   );
 }
 

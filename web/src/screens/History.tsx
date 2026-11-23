@@ -1,7 +1,8 @@
-// History: the year at a glance (the 52-week heatmap of working sets, tap a
-// day for its session) and every session as spec-sheet rows, newest first,
-// under month headings (docs/superpowers/specs/2026-11-22-tab-jobs-design.md).
-import { useMemo } from 'react';
+// Calendar: the last 3 months as a large heatmap of working sets (tap a day for
+// its session), then one month of sessions at a time as spec-sheet rows,
+// newest first. Change month with the ‹ › arrows, a sideways swipe, or by
+// tapping the month name for a month and year picker.
+import { useMemo, useRef, useState } from 'react';
 import { getProfile, listSessions, sortSets } from '../db';
 import { useLive } from '../ui/useLive';
 import { DemoBanner } from '../app/DemoBanner';
@@ -9,8 +10,12 @@ import { displayName, formatLoad } from '../app/labels';
 import { formatDate, monthLabel, todayISO } from '../app/dates';
 import { groupBySession, summarizeSession, type SessionSummary } from '../app/history';
 import { LinkButton, Lockup, Parts, PixelIcon, SquareHeatmap, go } from '../ui/kit';
-import { SecHead } from '../ui/progress/parts';
+import { MonthYearHeader, clampMonth, ymOf, type YM } from '../ui/common';
 import { loadConsistency } from '../ui/progress/data';
+import { swipeMonths } from './historySwipe';
+
+/** Heatmap window: 13 weeks, about 3 months. */
+const HEAT_WEEKS = 13;
 
 export function History(_props: { params: string[] }) {
   const data = useLive(async db => {
@@ -30,44 +35,60 @@ export function History(_props: { params: string[] }) {
     };
   }, []);
 
-  const months = useMemo(() => {
-    const out: { key: string; label: string; rows: SessionSummary[] }[] = [];
-    for (const d of [...(data?.rows ?? [])].reverse()) {
-      const key = d.session.date.slice(0, 7);
-      if (out[out.length - 1]?.key !== key) out.push({ key, label: monthLabel(Number(key.slice(0, 4)), Number(key.slice(5, 7))), rows: [] });
-      out[out.length - 1].rows.push(d);
-    }
-    return out;
-  }, [data]);
+  const [picked, setPicked] = useState<YM | null>(null);
+  const max = ymOf(data?.today ?? todayISO());
+  const earliest = data?.rows.reduce<string | null>((a, d) => (!a || d.session.date < a ? d.session.date : a), null);
+  const min = earliest ? ymOf(earliest) : max;
+  const ym = clampMonth(picked ?? max, min, max);
+  const key = `${ym.year}-${String(ym.month).padStart(2, '0')}`;
+  const month = useMemo(() => (data?.rows ?? []).filter(d => d.session.date.startsWith(key)).reverse(), [data, key]);
+
+  const move = (n: number) => setPicked(clampMonth(ymAdd(ym, n), min, max));
+  const touch = useRef<{ x: number; y: number } | null>(null);
 
   const total = data?.rows.length ?? 0;
+  const sets = month.reduce((n, d) => n + d.setCount, 0);
   return (
     <section className="screen tk-screen">
       <DemoBanner />
       <Lockup mid={`Calendar //${total} session${total === 1 ? '' : 's'}`} />
 
       {data && (
-        <section className="tk-block" aria-label="Last 52 weeks">
-          <SquareHeatmap counts={data.counts} weeks={52} end={data.today} weekTarget={data.target} legend
-            label={`Training days, last 52 weeks. ${data.heat.thisWeek} of ${data.target} sessions this week`}
+        <section className="tk-block cal-hero" aria-label="Last 3 months">
+          <SquareHeatmap shape="square" counts={data.counts} weeks={HEAT_WEEKS} end={data.today} weekTarget={data.target} legend
+            label={`Training days, last 3 months. ${data.heat.thisWeek} of ${data.target} sessions this week`}
             onSelect={d => data.heat.sessionByDate[d] && go(`history/${encodeURIComponent(data.heat.sessionByDate[d])}`)} />
         </section>
       )}
 
       {data === undefined && <p className="tk-quiet">Loading…</p>}
       {data && total === 0 && <p className="tk-quiet">No sessions yet. Logged and imported sessions show up here.</p>}
-      {months.map(m => (
-        <section key={m.key} className="tk-sec" aria-label={m.label}>
-          <SecHead title={m.label} meta={`${m.rows.length} session${m.rows.length === 1 ? '' : 's'}, ${m.rows.reduce((n, d) => n + d.setCount, 0)} sets`} />
-          <ul className="tk-rows">
-            {m.rows.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data?.bwFactor} names={data?.names} /></li>)}
-          </ul>
+      {data && total > 0 && (
+        <section className="tk-sec cal-month" aria-label={monthLabel(ym.year, ym.month)}
+          onTouchStart={e => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY }; }}
+          onTouchEnd={e => {
+            const s = touch.current; touch.current = null;
+            const t = e.changedTouches[0];
+            if (s) { const n = swipeMonths(t.clientX - s.x, t.clientY - s.y); if (n) move(n); }
+          }}>
+          <MonthYearHeader as="h2" ym={ym} min={min} max={max} onChange={v => setPicked(v)} />
+          <p className="tk-mono mid cal-month-meta">{month.length ? `${month.length} session${month.length === 1 ? '' : 's'}, ${sets} sets` : 'No sessions this month.'}</p>
+          {month.length > 0 && (
+            <ul className="tk-rows">
+              {month.map(d => <li key={d.session.id}><SessionRow d={d} bwFactor={data.bwFactor} names={data.names} /></li>)}
+            </ul>
+          )}
         </section>
-      ))}
+      )}
       {data && <LinkButton href="#/session/past" icon="plus" className="tk-past">Log past session</LinkButton>}
     </section>
   );
 }
+
+const ymAdd = (ym: YM, n: number): YM => {
+  const i = ym.year * 12 + ym.month - 1 + n;
+  return { year: Math.floor(i / 12), month: (i % 12) + 1 };
+};
 
 function SessionRow({ d, bwFactor, names }: { d: SessionSummary; bwFactor?: Map<string, number>; names?: Map<string, string> }) {
   const s = d.session;

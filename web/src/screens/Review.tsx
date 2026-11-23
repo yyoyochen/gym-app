@@ -32,8 +32,8 @@ function sentence(g: SessionGrade): string {
   if (!g.total) return g.added.length ? 'Nothing graded: every lift was added or swapped.' : 'No committed targets.';
   const missed = g.slots.filter(s => !s.ungraded && s.result.verdict === 'missed').map(s => s.target.exerciseName);
   const beat = g.slots.filter(s => s.result.verdict === 'beat').length;
-  if (!missed.length) return beat ? `Every promise kept, ${beat} beaten.` : 'Every promise kept.';
-  return `${missed.join(', ')} ${missed.length === 1 ? 'was' : 'were'} short of the promise.`;
+  if (!missed.length) return beat ? `Every plan met, ${beat} beaten.` : 'Every plan met.';
+  return `${missed.join(', ')} ${missed.length === 1 ? 'was' : 'were'} short of the plan.`;
 }
 
 function safetyEvents(g: SessionGrade, scale: EffortScale): string[] {
@@ -103,8 +103,8 @@ export function Review({ params }: { params: string[] }) {
       {grade ? (
         <>
           <header className="kept">
-            <BigNumber value={grade.kept} unit={`of ${grade.total}`} caption={`promise${grade.total === 1 ? '' : 's'} kept`}
-              label={`${grade.kept} of ${grade.total} promises kept`} />
+            <BigNumber value={grade.kept} unit={`of ${grade.total}`} caption={`plan${grade.total === 1 ? '' : 's'} met`}
+              label={`${grade.kept} of ${grade.total} plans met`} />
             <p className="quiet kept-line">{sentence(grade)}</p>
           </header>
           <div className={`rv-ledger${reveal ? ' reveal' : ''}`} role="list">
@@ -132,7 +132,7 @@ export function Review({ params }: { params: string[] }) {
           </div>
           <ScreenTip id="grade" shown={pickTip({ grade: session.sealed && grade.slots.some(s => !s.ungraded && s.result.verdict !== 'new') }, tipsSeen)} />
         </>
-      ) : <p className="quiet">No committed promise for this session, so there is nothing to grade.</p>}
+      ) : <p className="quiet">This session had no locked-in plan, so there is nothing to grade.</p>}
 
       {top && (
         <section className="pr-inline" aria-label="New bests">
@@ -167,7 +167,7 @@ export function Review({ params }: { params: string[] }) {
 
       {next && next.status === 'planned' && nextNames && (
         <section className="stack" aria-label="Next session">
-          <p className="note">//Next: {nextNames.title}. Preview only, the promise is set when you start it.</p>
+          <p className="note">//Next: {nextNames.title}. Preview only, the plan locks when you start it.</p>
           <div className="next-list">
             {next.slots.map(sp => (
               <div key={sp.target.slotId} className="next-item">

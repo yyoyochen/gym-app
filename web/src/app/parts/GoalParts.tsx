@@ -55,7 +55,7 @@ export function TargetLevelBar({ gym, ctx, ex, value }: { gym: GymStandardsData 
   if (!r) return null;
   const text = `${levelWord(r)}, ${ordinal(r.percentile)}`;
   return <DitherBar label={r.basis === 'weighted' ? 'Level at target (added load)' : 'Level at target'} valueText={text} value={r.percentile / 100}
-    ariaLabel={`Level at target: ${levelWord(r)}, ${ordinal(r.percentile)} percentile of gym-goers`} />;
+    ariaLabel={`Level at target: ${levelWord(r)}, ${ordinal(r.percentile)} percentile of lifters like you`} />;
 }
 
 /** "Hold 120 kg by 31 Dec" */

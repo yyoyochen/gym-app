@@ -80,7 +80,7 @@ export const confidenceWord = (r: Pick<LiftRating, 'confidence'> & Partial<Pick<
 
 /** Subtitle for a set of ratings: Strength Level when any of them came from its table. */
 export const sourceMeta = (ratings: Pick<LiftRating, 'source'>[]) =>
-  ratings.some(r => r.source === 'table') ? 'vs Strength Level' : 'vs gym-goers';
+  ratings.some(r => r.source === 'table') ? 'vs Strength Level' : 'vs lifters like you';
 
 const half = (x: number) => kg(Math.round(x * 2) / 2);
 
@@ -101,9 +101,9 @@ export function nextText(n: NextStep, perDumbbell = false): string {
   return `${lvl} at ${kg(n.value)} ${n.unit === 'reps' ? 'reps' : 's'}`;
 }
 
-/** "Intermediate · 54th percentile of gym-goers". */
+/** "Intermediate, 54th percentile of lifters like you". */
 export function standingText(r: LiftRating): string {
-  return `${levelWord(r)}, ${ordinal(r.percentile)} percentile of gym-goers`;
+  return `${levelWord(r)}, ${ordinal(r.percentile)} percentile of lifters like you`;
 }
 
 export function contextText(ctx: RateContext): string {
@@ -111,7 +111,7 @@ export function contextText(ctx: RateContext): string {
 }
 
 export const STANDARDS_CAVEAT =
-  'Compared with modeled self-reported gym-goers, not competitors. Beginner ≈ 5th, Novice ≈ 20th, Intermediate ≈ 50th, Advanced ≈ 80th, Elite ≈ 95th percentile. ' +
+  'Compared with everyday gym lifters of your sex, age and bodyweight (modeled from self-reported numbers), not competitors. Beginner ≈ 5th, Novice ≈ 20th, Intermediate ≈ 50th, Advanced ≈ 80th, Elite ≈ 95th percentile. ' +
   'Self-reported numbers run generous, and B/C lifts are ratio estimates from the squat, bench and deadlift anchors.';
 
 const rnd = (x: number) => (x >= 10 ? Math.round(x * 2) / 2 : Math.round(x * 4) / 4); // the model's rounding

@@ -22,6 +22,10 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 .page { position: absolute; inset: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; background: var(--paper);
         padding-top: env(safe-area-inset-top); -webkit-overflow-scrolling: touch; }
 .page.with-tabs { padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
+/* Keyboard open (ui/kit/keyboard.ts): nothing pinned may sit over the field being typed in. */
+.kb-open .tabbar { display: none; }
+.kb-open .page.with-tabs { padding-bottom: var(--space-8); }
+.kb-open .pin, .kb-open .onb-foot { position: static; }
 .page-dim { position: absolute; inset: 0; background: var(--dim); opacity: 0; pointer-events: none; z-index: 30; }
 .page.moving { will-change: transform; box-shadow: -1px 0 0 var(--rule); /* ds-allow: page edge while a page slides during push and pop */ }
 

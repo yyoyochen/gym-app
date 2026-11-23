@@ -72,7 +72,7 @@ describe('nudge: push rules', () => {
   });
   it('promise met with sets to spare', () => {
     const n = run({ target: dblT, plannedSets: 4, sets: [set(80, 8), set(80, 8), set(80, 7)] });
-    expect(n).toEqual({ kind: 'info', rule: 'promise_kept', text: 'Promise kept. Extra sets are a bonus, not required.' });
+    expect(n).toEqual({ kind: 'info', rule: 'promise_kept', text: 'Plan met. Extra sets are a bonus, not required.' });
   });
   it('back-offs at prescribed reps with 4+ RIR: coach note for next time', () => {
     const n = run({ sets: [top(100, 1, 2), back(80, 6, 4), back(80, 6, 4), back(80, 6, 4)] });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calendarLevels, canConfirm, clampDate, dayLabel, markerRects, monthGrid, moveDay, tabbableDay } from './calendarModel';
+import { calendarLevels, canConfirm, clampDate, dayLabel, markerRects, monthGrid, moveDay, sameDayIn, tabbableDay } from './calendarModel';
 
 const flat = (g: ReturnType<typeof monthGrid>) => g.flat();
 const find = (g: ReturnType<typeof monthGrid>, iso: string) => flat(g).find(d => d.iso === iso)!;
@@ -114,5 +114,13 @@ describe('markerRects', () => {
     expect(markerRects(1)).toHaveLength(6);
     expect(markerRects(1)[3]).toEqual({ x: 4, y: 4, w: 4, h: 4 });
     expect(markerRects(2)).toEqual([{ x: 0, y: 0, w: 24, h: 8 }]);
+  });
+});
+
+describe('sameDayIn: the focused day after a jump of several months', () => {
+  it('keeps the day number, clamped to the shorter month', () => {
+    expect(sameDayIn('2026-01-31', 1)).toBe('2026-02-28');
+    expect(sameDayIn('2026-03-15', -14)).toBe('2025-01-15');
+    expect(sameDayIn('2026-11-30', 13)).toBe('2027-12-30');
   });
 });

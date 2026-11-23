@@ -1,10 +1,9 @@
 // The PR moment: the new best resolves from coarse ordered (Bayer) dither into
-// solid type on a canvas, in the accent colour, with a haptic tick. Reduced
+// solid type on a canvas, in the accent colour. Reduced
 // motion shows the solid number at once. <DitherNumber> is the canvas alone;
 // showPrMoment() opens the full-screen moment (host: <PrMomentHost />).
 import { useEffect, useLayoutEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { haptic } from './haptic';
 import { prefersReducedMotion } from './motion/reduced';
 import { isTopModal, popModal, pushModal } from './modal';
 import { deferNav, pushSheetEntry } from './sheetHistory';
@@ -101,7 +100,7 @@ let releaseEntry: (() => void) | null = null;
 let entryPending = false;
 const onSystemBack = () => { releaseEntry = null; setShown(null); }; // the entry is already popped
 
-/** Open the full-screen PR moment (haptic included). Tap, Esc or back closes. */
+/** Open the full-screen PR moment. Tap, Esc or back closes. */
 export function showPrMoment(d: PrMomentData): void {
   setShown({ ...d, id: ++n });
   if (releaseEntry || entryPending) return;
@@ -140,7 +139,7 @@ export function PrMoment({ data, onClose }: { data: PrMomentData; onClose: () =>
     <div className="pr-moment" ref={root} role="dialog" aria-modal="true" aria-label={`New best: ${data.value} ${data.unit ?? ''}`} tabIndex={-1} onClick={onClose}>
       <div className="pr-inner">
         <div className="label"><Parts items={[`[PR] //${data.lift ?? 'New best'}`, stampDate()]} /></div>
-        <DitherNumber text={data.value} className="accent" onStart={() => haptic('pr')} />
+        <DitherNumber text={data.value} className="accent" />
         {(data.unit || data.caption) && <div className="pr-sub">{data.unit}{data.caption && <span>{data.caption}</span>}</div>}
         {data.pairs && data.pairs.length > 0 && (
           <div className="lv-grid pr-pairs">

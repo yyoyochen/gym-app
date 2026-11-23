@@ -2,9 +2,9 @@
 
 A strength-training log for lifters who already know what they're doing.
 
-Before each session the app shows a **promise**: the numbers to hit for every
+Before each session the app shows a **plan**: the numbers to hit for every
 lift, and why. It locks when you start. Afterwards the session is **graded**
-against that exact promise (beat, hit or missed), and the next promise follows
+against that exact plan (beat, hit or missed), and the next plan follows
 from the result.
 
 It's a web app you install on your phone. It works offline, needs no account,
@@ -21,10 +21,10 @@ Once installed it opens full screen and runs with no connection.
 
 ## What it does
 
-- **Promise, then grade.** Each lift gets a target from your history: top set plus back-offs, double progression, 5 × 5, or a fixed dose. Logging a set is two taps: Log as planned, or Adjust.
-- **Day-one promises.** Setup takes about 90 seconds. Enter your best recent set for squat, bench, deadlift and overhead press, and the first session already has real targets.
+- **Plan, then grade.** Each lift gets a target from your history: top set plus back-offs, double progression, 5 × 5, or a fixed dose. Logging a set is two taps: Log as planned, or Adjust.
+- **Day-one plans.** Setup takes about 90 seconds. Enter your best recent set for squat, bench, deadlift and overhead press, and the first session already has real targets.
 - **Readiness.** Three quick taps (sleep, soreness, stress) ease the day's targets on a bad day.
-- **Progress.** e1RM trends, strength levels against gym-goers, best weight at each rep count, PRs, weekly sets by body part and a training calendar.
+- **Progress.** e1RM trends, strength levels against lifters like you, best weight at each rep count, PRs, weekly sets by body part and a training calendar.
 - **Bring your log.** Import a CSV: the app’s own template (download it in the app), or an export from **Hevy** or **Strong** (iPhone or Android). Warm-ups, effort (RPE) and units carry over; re-importing the same file adds nothing.
 - **Your data stays yours.** Everything is stored on your phone. Export a backup file any time and restore it on another device.
 

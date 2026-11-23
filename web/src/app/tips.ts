@@ -13,10 +13,10 @@ export type CardId = TipId | 'goalNudge';
 const ALL_CARDS: CardId[] = [...TIP_IDS, 'goalNudge'];
 
 export const TIP_TEXT: Record<TipId, string> = {
-  promise: "This is today's promise: the numbers to hit, with the reason under them. It locks when you start, and the session is graded against it.",
+  promise: "This is today's plan: the numbers to hit, with the reason under them. It locks when you start, and the session is graded against it.",
   log: 'Did exactly what it says? Log as planned. Different weight or reps? Adjust. Warm-ups are listed first and count separately.',
   undo: 'Logged. Undo is there for 10 seconds; after that, tap any set in the list to edit it. Back keeps the session running.',
-  grade: "Beat means more than promised, hit means exactly it, missed means short. Next time's promise is built from today, so a beat moves you up.",
+  grade: "Beat means more than planned, hit means exactly it, missed means short. Next time's plan is built from today, so a beat moves you up.",
   readiness: "Three quick taps before you start. A bad night or sore legs eases today's targets; skip them and they count as good.",
   progress: "Each lift's trend and level. Tap a lift for its chart, its next level and your best weight at each rep count.",
 };

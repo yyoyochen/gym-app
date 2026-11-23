@@ -1,5 +1,5 @@
 // Settings (spec §4 Profile → Settings): appearance, effort scale,
-// benchmarks, plates, backup / restore / import, storage, wipe, about.
+// backup / restore / import, storage, wipe, about.
 import { useEffect, useState } from 'react';
 import { detectPlatform, storageNote } from '../app/storageNote';
 import type { EffortScale, Profile } from '../domain/types';
@@ -7,12 +7,11 @@ import {
   defaultProfile, exportBackupJson, exportSetsCsv, getDb, getMeta, getProfile, requestPersist, saveProfile, wipeAll,
 } from '../db';
 import { useLive } from '../ui/useLive';
-import { ConfirmButton, Group, GroupAction, Segmented, Stepper, downloadText } from '../ui/common';
-import { Button, LabelValueGrid, NavBar, Toggle, go, showHud, useHaptics, useTheme, type ThemePref } from '../ui/kit';
+import { ConfirmButton, Group, Segmented, downloadText } from '../ui/common';
+import { Button, LabelValueGrid, NavBar, go, showHud, useTheme, type ThemePref } from '../ui/kit';
 import { DemoBanner, useDemoMode } from '../app/DemoBanner';
 import { resetTips } from '../app/tips';
 import { formatDate, todayISO } from '../app/dates';
-import { DEFAULT_PLATES, STANDARD_PLATES, getPlateSettings, savePlateSettings, type PlateSettings } from '../app/prefs';
 import { ImportCsvPanel } from '../app/parts/ImportCsvPanel';
 import { RestorePanel } from '../app/parts/RestorePanel';
 import pkg from '../../../package.json';
@@ -20,7 +19,6 @@ import pkg from '../../../package.json';
 
 export function Settings(_props: { params: string[] }) {
   const stored = useLive(db => getProfile(db).then(r => r ?? null), []);
-  const plates = useLive(db => getPlateSettings(db), []);
   const lastExport = useLive(db => getMeta(db, 'lastExportAt'), []);
   const demo = useDemoMode();
 
@@ -43,11 +41,9 @@ export function Settings(_props: { params: string[] }) {
         <Group label="Training">
           <Segmented<EffortScale> label="Effort scale" value={profile.effortScale} onChange={v => setProfile({ effortScale: v })}
             options={[{ value: 'rir', label: 'RIR' }, { value: 'rpe', label: 'RPE' }]} />
-          <p className="quiet">Reps in reserve, or RPE (10 − RIR). Stored as RIR either way.</p>
+          <p className="quiet">How you rate a set’s effort. RIR is reps left in the tank: 2 means two more were possible. RPE is the 1–10 scale, where RPE 8 is 2 RIR. Switch any time; past sets show in the scale you pick.</p>
         </Group>
       )}
-
-      {plates && <Plates value={plates} />}
 
       <Group label="Backup">
         <LabelValueGrid items={[
@@ -88,34 +84,11 @@ export function Settings(_props: { params: string[] }) {
 
 function Appearance() {
   const { theme, setTheme } = useTheme();
-  const { enabled, setEnabled } = useHaptics();
   return (
     <Group label="Appearance">
       <Segmented<ThemePref> label="Theme" value={theme} onChange={v => { void setTheme(v); }}
         options={[{ value: 'dark', label: 'Dark' }, { value: 'light', label: 'Light' }]} />
-      <Toggle label="Haptics" hint="A short buzz on set commit and on a new best. Android only." checked={enabled} onChange={v => { void setEnabled(v); }} />
       <Button block onClick={async () => { await resetTips(getDb()); showHud({ text: 'Tips will show again', icon: 'check' }); }}>Show tips again</Button>
-    </Group>
-  );
-}
-
-function Plates({ value }: { value: PlateSettings }) {
-  const save = (s: PlateSettings) => savePlateSettings(getDb(), s);
-  const isDefault = value.barKg === DEFAULT_PLATES.barKg && [...value.platesKg].sort().join() === [...DEFAULT_PLATES.platesKg].sort().join();
-  return (
-    <Group label="Bar and plates" right={!isDefault && <GroupAction onClick={() => save({ ...DEFAULT_PLATES })}>Reset</GroupAction>}>
-      <Stepper label="Bar weight" unit="kg" value={value.barKg} step={2.5} min={0} max={40} onChange={v => save({ ...value, barKg: v })} />
-      <div className="field-wrap">
-        <span className="label">Plates available (kg)</span>
-        <div className="plate-grid" role="group" aria-label="Plates available">
-          {STANDARD_PLATES.map(p => {
-            const on = value.platesKg.includes(p);
-            return <button key={p} type="button" aria-pressed={on} className={`plate-opt tnum${on ? ' on' : ''}`} data-press="dim"
-              onClick={() => save({ ...value, platesKg: on ? value.platesKg.filter(x => x !== p) : [...value.platesKg, p] })}>{p}</button>;
-          })}
-        </div>
-      </div>
-      <p className="quiet">Used by the plate calculator. Exercise increments are set per exercise in the Program editor.</p>
     </Group>
   );
 }
@@ -151,7 +124,7 @@ function About() {
         { label: 'Code:', value: 'MIT licence' },
       ]} />
       <span className="label">Data credits</span>
-      <p className="quiet">Strength benchmarks: modeled gym-goer standards. Squat, bench and deadlift anchors are self-reported gym percentiles from the Symmetric Strength dataset, as published by <a className="link" href="https://fitnessvolt.com/strength-standards/" target="_blank" rel="noopener">Strength Standards data by FitnessVolt</a> (CC BY 4.0). Everything else is modeled by this app; neither site endorses these figures.</p>
+      <p className="quiet">Strength benchmarks: modeled standards for everyday gym lifters. Squat, bench and deadlift anchors are self-reported gym percentiles from the Symmetric Strength dataset, as published by <a className="link" href="https://fitnessvolt.com/strength-standards/" target="_blank" rel="noopener">Strength Standards data by FitnessVolt</a> (CC BY 4.0). Everything else is modeled by this app; neither site endorses these figures.</p>
     </Group>
   );
 }

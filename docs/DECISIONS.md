@@ -80,3 +80,26 @@ Build decisions not already settled in [PWA-SPEC.md](PWA-SPEC.md). Newest last.
 **PR detection is a pure helper, not wired yet.** `app/bests.ts` `isNewBest()` (heavier than any earlier working set, else a better e1RM by more than 0.05 kg; never on a lift's first log). The logger and Review are marked `TODO(PrMoment)` for the screen rewrites.
 
 **2026-11-22: the powerlifter comparison was removed.** The OpenPowerlifting data, loader, Progress and lift-page sections and the Benchmark population setting are gone; `profile.benchmarkPopulation` stays in the data model so old backups restore. Levels use the gym-goer standards only. Entries above that describe the comparison are history.
+
+
+## 2026-11-23 — feedback round after phone testing
+
+**"Promise" is "plan" on screen.** The grade-against-the-plan idea is unchanged; only the word changed ("2 of 3 plans met", "The plan: Back Squat"). Code, specs and engine comments keep "promise" as the internal term.
+
+**Haptics removed.** Web vibration works only in Android Chrome and never on iPhone, so the setting mostly did nothing.
+
+**Plates are no longer a setting.** The plate calculator uses the default bar (20 kg) and plates (25, 20, 15, 10, 5, 2.5, 1.25 kg); a set someone saved before keeps working.
+
+**Phases are gone from the Program editor.** The engine still applies phases already in a program (from a restore), but there is no way to add or see one.
+
+**Built-in programs are examples.** With no program, Today says "Plan a program"; the Program page offers "Plan my own" (one empty Session A) above the examples.
+
+**Today lets you pick the session.** The rotation still preselects the next one.
+
+**Calendar shows one month at a time** under a 13-week heatmap drawn large. Arrows, a sideways swipe (finger right = previous month, like turning back a wall calendar) or the month/year panel change the month. The same panel is in the date picker.
+
+**Levels are "vs lifters like you"**, not "vs gym-goers": the model is adjusted for sex, age and bodyweight.
+
+**No truncated text.** Ellipsis and line clamps were replaced with wrapping. While a text field has focus the tab bar hides and pinned footers un-pin (`ui/kit/keyboard.ts`).
+
+**Light theme opts out of forced dark** (`color-scheme: only light`), so Brave's night mode or Android's auto-dark can't invert it.

@@ -28,3 +28,12 @@ describe('SquareHeatmap shading is even', () => {
     }
   });
 });
+
+describe('SquareHeatmap square cells (the Calendar hero)', () => {
+  it('an 8 × 8 cell lights 25/50/75/100% of its 64 sub-pixels', () => {
+    expect([0, 1, 2, 3].map(l => cellPixels(l, 'square').length)).toEqual([16, 32, 48, 64]);
+  });
+  it('the pattern stays inside the cell', () => {
+    for (const [x, y] of cellPixels(3, 'square')) { expect(x).toBeLessThan(16); expect(y).toBeLessThan(16); }
+  });
+});

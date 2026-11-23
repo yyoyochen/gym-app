@@ -44,14 +44,17 @@ export function moveDay(iso: ISODate, key: CalKey): ISODate {
     case 'ArrowDown': return addDays(iso, 7);
     case 'Home': return monday(iso);
     case 'End': return addDays(monday(iso), 6);
-    case 'PageUp':
-    case 'PageDown': {
-      const [y, m, d] = iso.split('-').map(Number);
-      const t = shiftMonth(y, m, key === 'PageDown' ? 1 : -1);
-      const dim = Number(lastDay(t.year, t.month).slice(8));
-      return `${t.year}-${pad(t.month)}-${pad(Math.min(d, dim))}`;
-    }
+    case 'PageUp': return sameDayIn(iso, -1);
+    case 'PageDown': return sameDayIn(iso, 1);
   }
+}
+
+/** The same day number `n` months away, clamped to that month's last day. */
+export function sameDayIn(iso: ISODate, n: number): ISODate {
+  const [y, m, d] = iso.split('-').map(Number);
+  const t = shiftMonth(y, m, n);
+  const dim = Number(lastDay(t.year, t.month).slice(8));
+  return `${t.year}-${pad(t.month)}-${pad(Math.min(d, dim))}`;
 }
 
 const WEEKDAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

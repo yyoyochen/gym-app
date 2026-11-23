@@ -32,7 +32,7 @@
 .today .bignum-c { max-width: 16ch; }
 .lift-strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: var(--space-1); margin-top: var(--space-1); }
 .lift-cell { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-2) 0 var(--space-2); min-height: 48px; text-align: left; border-top: var(--hair); min-width: 0; }
-.lift-cell .label { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; min-height: 2.5em; }
+.lift-cell .label { display: block; overflow-wrap: anywhere; min-height: 2.5em; }
 .lift-cell b { font: var(--text-value); letter-spacing: var(--track-value); }
 .lift-cell small { font: var(--text-quiet); color: var(--mid); margin-top: calc(-1 * var(--space-1)); }
 .lift-cell.on { border-top: var(--rule-w) solid var(--ink); }
@@ -61,7 +61,7 @@
   margin: calc(-1 * var(--space-6)) calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter); min-height: 52px; background: var(--paper);
   font: var(--text-label); text-transform: uppercase; letter-spacing: var(--track-label); }
 .lhead-close { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 48px; margin-left: calc(-1 * var(--space-1)); padding: 0 var(--space-1); color: var(--ink); font: inherit; letter-spacing: inherit; text-transform: inherit; }
-.lhead-mid { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lhead-mid { text-align: center; overflow-wrap: anywhere; }
 .lhead-t { font-variant-numeric: tabular-nums; }
 .next { display: flex; flex-direction: column; }
 .next > .label { margin-top: var(--space-2); }
@@ -90,7 +90,7 @@
 .lg-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) 64px 22px; align-items: center; min-height: 48px; width: 100%; text-align: left;
   border-bottom: var(--hair); font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink); }
 .lg-row .k, .lg-row .e { color: var(--mid); }
-.lg-row .v { font: var(--text-value); letter-spacing: var(--track-value); text-transform: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lg-row .v { font: var(--text-value); letter-spacing: var(--track-value); text-transform: none; overflow-wrap: anywhere; }
 .lg-row .x { color: var(--mid); }
 .lg-row .i { display: flex; justify-content: flex-end; }
 .lg-row.warm { min-height: 44px; }

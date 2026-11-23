@@ -89,7 +89,6 @@ export function LiftDetail({ params }: { params: string[] }) {
 
       <section className="tk-sec" aria-label="Chart">
         <Segmented<Metric> label="Chart" options={METRICS} value={metric} onChange={setMetric} />
-        <LiftChart points={points} label={chartLabel} kind={metric === 'volume' ? 'bars' : 'step'} targets={chartTargets} current={st.best90 === null ? null : Math.round(st.best90 * 2) / 2} />
         {points.length > 1 && <Legend className="tk-legend">
           <i className="tk-sw line" />{metric === 'volume' ? 'kg × reps per week' : metric === 'top' ? 'heaviest set' : 'Epley e1RM'}
           {metric !== 'volume' && <><i className="tk-sw pr" />PR</>}
@@ -97,6 +96,7 @@ export function LiftDetail({ params }: { params: string[] }) {
           {metric !== 'volume' && <><i className="tk-sw last" />latest</>}
           {hasHold && <><i className="tk-sw hold" />no sessions</>}
         </Legend>}
+        <LiftChart points={points} label={chartLabel} kind={metric === 'volume' ? 'bars' : 'step'} targets={chartTargets} current={st.best90 === null ? null : Math.round(st.best90 * 2) / 2} />
       </section>
 
       <section className="tk-sec" aria-label="Verdicts">
@@ -133,7 +133,7 @@ export function LiftDetail({ params }: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Level">
-        <SecHead title="Level" meta={standing?.kind === 'rated' ? sourceMeta([standing]) : 'vs gym-goers'} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <><p>{gym.meta.licenceNote}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
+        <SecHead title="Level" meta={standing?.kind === 'rated' ? sourceMeta([standing]) : 'vs lifters like you'} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <><p>{gym.meta.licenceNote}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
         {gym === undefined ? <p className="tk-quiet">Loading…</p>
           : gym === null ? <p className="tk-quiet">Strength standards could not be loaded.</p>
           : !ctx ? <p className="tk-quiet">Add {missingForStandards(benchIn).join(' and ')} on <a className="tk-link" href="#/profile">Profile</a> to see your level.</p>
@@ -156,6 +156,7 @@ export function LiftDetail({ params }: { params: string[] }) {
 
       <section className="tk-sec" aria-label="History">
         <SecHead title="History" meta={st.days.length > 30 ? `latest 30 of ${st.days.length}` : `${st.days.length} session${st.days.length === 1 ? '' : 's'}`} />
+        {shown.length > 0 && <Legend className="tk-legend tk-legend-top"><SetCellsKey /></Legend>}
         <ul className="tk-rows">
           {shown.map(d => (
             <li key={d.sessionId}>
@@ -167,7 +168,6 @@ export function LiftDetail({ params }: { params: string[] }) {
             </li>
           ))}
         </ul>
-        {shown.length > 0 && <Legend className="tk-legend"><SetCellsKey /></Legend>}
       </section>
     </section>
   );

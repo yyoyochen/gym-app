@@ -28,6 +28,11 @@ export function nextSessionKey(p: Program): string {
   return `S${n}`;
 }
 
+/** A program to plan from scratch: one empty Session A, nothing else. */
+export function blankProgram(): Program {
+  return addSession({ id: newId('prog'), name: 'My program', sessions: [], rotation: [], phases: [] });
+}
+
 export function addSession(p: Program, name?: string): Program {
   const key = nextSessionKey(p);
   const s: ProgramSession = { key, name: name?.trim() || `Session ${key}`, slots: [], minimumSlotIds: [] };

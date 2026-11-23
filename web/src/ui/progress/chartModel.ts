@@ -75,7 +75,5 @@ export function gapText(target: number, current: number): string {
   return d <= 0 ? 'reached' : `+${d}`;
 }
 
-/** SVG points for an up-pointing triangle centred on (cx, cy): the PR marker. */
-export const trianglePoints = (cx: number, cy: number, r = 5): string => `${cx - r},${cy + r} ${cx + r},${cy + r} ${cx},${cy - r}`;
 /** SVG points for a diamond centred on (cx, cy): the target marker. */
 export const diamondPoints = (cx: number, cy: number, r = 5): string => `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`;

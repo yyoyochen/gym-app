@@ -3,7 +3,7 @@
 // promise word for word, label/value pairs, this week + goal pace bars,
 // readiness, the glyph heatmap, and START pinned above the tab bar.
 import { useState } from 'react';
-import { getDb, getMeta, getProfile, listSessions } from '../db';
+import { getActiveProgram, getDb, getMeta, getProfile, listSessions } from '../db';
 import type { ReadinessAnswers } from '../engine';
 import { formatElapsed, readinessFromAnswers, formatEffort } from '../engine';
 import { backupDue, commitSession, kg, planToday, skipSession, todayState, type SlotPlan } from '../app/coach';
@@ -16,7 +16,7 @@ import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { readable } from '../ui/readable';
 import {
-  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, RecentWeeks, Toggle, go, type LabelValueItem,
+  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, RecentWeeks, Segmented, Toggle, go, type LabelValueItem,
 } from '../ui/kit';
 import { goalRows, loadConsistency, loadWeekBodyParts } from '../ui/progress/data';
 import { ReadinessCheck } from '../ui/session/Readiness';
@@ -26,7 +26,7 @@ import { useNow, useScrollTop } from '../ui/session/useNow';
 /** The number a lift is about: its top set, else its working weight (reps for bodyweight). */
 function heroOf(sp: SlotPlan): { value: string; unit: string; caption: string } {
   const t = sp.target;
-  if (t.model === 'topset' && t.topWeight !== undefined) {
+  if (t.model === 'topset' && t.topWeight !== undefined && t.topWeight > 0) {
     const reps = t.topReps ?? sp.ghost[0]?.reps ?? t.targetReps;
     return { value: kg(t.topWeight), unit: `kg × ${reps}`, caption: topWord(reps) };
   }
@@ -58,6 +58,7 @@ export function Today(_props: { params: string[] }) {
   const [showNext, setShowNext] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sel, setSel] = useState<number | null>(null);
+  const [pick, setPick] = useState<string | null>(null);
   const readiness = readinessFromAnswers({ sleep: answers.sleep ?? 'good', soreness: answers.soreness ?? 'good', stress: answers.stress ?? 'good' });
   const clock = useNow(1000);
   useScrollTop('today');
@@ -66,22 +67,24 @@ export function Today(_props: { params: string[] }) {
     const now = Date.now();
     const today = todayISO(now);
     const profile = await getProfile(db);
-    const [state, plan, heat, backup, demo, goals, parts, sessions] = await Promise.all([
+    const [state, plan, heat, backup, demo, goals, parts, sessions, program] = await Promise.all([
       todayState(db, today, now),
-      planToday(db, today, now, { readiness, minimum }),
+      planToday(db, today, now, { readiness, minimum, ...(pick ? { sessionKey: pick } : {}) }),
       loadConsistency(db, today, 52, profile),
       backupDue(db, now),
       getMeta(db, 'demoMode'),
       profile ? goalRows(db, profile, today) : Promise.resolve([]),
       loadWeekBodyParts(db, today, profile?.sessionsPerWeekTarget ?? 3),
       listSessions(db),
+      getActiveProgram(db),
     ]);
     const committed = new Set((await db.commits.toCollection().primaryKeys()) as string[]);
     const finished = sessions.filter(s => s.sealed);
     const counts: Record<string, number> = {};
     for (const col of heat.grid.columns) for (const c of col) if (c.inWindow && c.count > 0) counts[c.date] = c.count;
-    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals, parts, finished: finished.length, firstPromised: firstPromisedSession(sessions, committed) };
-  }, [readiness, minimum]);
+    const choices = (program?.sessions ?? []).filter(x => x.slots.length > 0).map(x => ({ value: x.key, label: x.key, name: x.name }));
+    return { now, today, profile, state, plan, heat, counts, backup, demo: demo === true, goals, parts, choices, finished: finished.length, firstPromised: firstPromisedSession(sessions, committed) };
+  }, [readiness, minimum, pick]);
 
   const tip = useScreenTip(data ? {
     promise: data.plan.status === 'committed' || (data.plan.status === 'planned' && (!data.state.doneToday || showNext)),
@@ -90,7 +93,7 @@ export function Today(_props: { params: string[] }) {
   } : {});
 
   if (gate !== 'ready' || !data) return <section className="screen today" aria-busy="true" />;
-  const { today, profile, state, plan, heat, counts, backup, demo, goals, parts } = data;
+  const { today, profile, state, plan, heat, counts, backup, demo, goals, parts, choices } = data;
   const scale = profile?.effortScale ?? 'rir';
   const open = state.open;
   const target = profile?.sessionsPerWeekTarget ?? 3;
@@ -132,10 +135,15 @@ export function Today(_props: { params: string[] }) {
         </div>
       </div>
 
+      {canStart && choices.length > 1 && plan.sessionKey && (
+        <Segmented<string> label="Session" value={plan.sessionKey} onChange={k => { setPick(k); setSel(null); setMinimum(false); }}
+          options={choices.map(c => ({ value: c.value, label: c.label }))} />
+      )}
+
       {done && !showNext ? (
         <div className="stack">
           {done.total > 0
-            ? <BigNumber value={done.kept} unit={`of ${done.total}`} caption={`promise${done.total === 1 ? '' : 's'} kept`} label={`${done.kept} of ${done.total} promises kept`} />
+            ? <BigNumber value={done.kept} unit={`of ${done.total}`} caption={`plan${done.total === 1 ? '' : 's'} met`} label={`${done.kept} of ${done.total} plans met`} />
             : <BigNumber value="0" unit="graded" caption="logged, nothing to grade" />}
           <LinkButton block className="split" iconEnd="chevron" href={`#/review/${done.session.id}`}>See the review</LinkButton>
         </div>
@@ -153,7 +161,7 @@ export function Today(_props: { params: string[] }) {
             </div>
           )}
           <div className="promise">
-            <span className="label">{plan.status === 'committed' ? 'Locked in' : 'The promise'}: {sp.exercise.name}{sp.inMinimum && minimum ? ', minimum' : ''}</span>
+            <span className="label">{plan.status === 'committed' ? 'Locked in' : 'The plan'}: {sp.exercise.name}{sp.inMinimum && minimum ? ', minimum' : ''}</span>
             <p className="promise-text"><MonoNums text={sp.target.criterion} /></p>
             <p className="quiet">Why: {readable(sp.target.why)}</p>
             {sp.lastNote && <p className="quiet">Last note: {sp.lastNote}</p>}
@@ -169,8 +177,8 @@ export function Today(_props: { params: string[] }) {
 
       {plan.status === 'no_program' && (
         <div className="banner stack">
-          <span>No program yet.</span>
-          <LinkButton href="#/profile/program" block>Pick a program</LinkButton>
+          <span>No program yet. Plan your own, or start from an example program and change it to suit you.</span>
+          <LinkButton variant="primary" href="#/profile/program" block iconEnd="chevron">Plan a program</LinkButton>
         </div>
       )}
       {plan.status === 'empty_session' && (
@@ -198,8 +206,9 @@ export function Today(_props: { params: string[] }) {
         <>
           <ReadinessCheck answers={answers} onChange={setAnswers} readiness={readiness} />
           <ScreenTip id="readiness" shown={tip} />
-          {plan.slots.some(s => s.inMinimum) && (
-            <Toggle label="Minimum version" hint="Only the lifts that keep the week on track" checked={minimum} onChange={setMinimum} />
+          {(minimum || plan.slots.some(s => s.inMinimum)) && (
+            <Toggle label="Short on time" checked={minimum} onChange={setMinimum}
+              hint={minimum ? 'Only the main lifts today. The session still counts toward your week.' : `Do only the main lifts (${plan.slots.filter(s => s.inMinimum).length} of ${plan.slots.length}). The session still counts toward your week.`} />
           )}
         </>
       )}

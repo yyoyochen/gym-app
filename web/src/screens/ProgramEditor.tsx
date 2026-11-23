@@ -3,20 +3,19 @@
 // Sessions are spec-sheet blocks (inverted key cell), slots are rows; slot
 // and session edits happen in kit Sheets.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { BenchmarkKey, Exercise, ModelKind, PainArea, Phase, Program, ProgramSession, Slot, SlotParams, SlotType } from '../domain/types';
+import type { BenchmarkKey, Exercise, ModelKind, PainArea, Program, ProgramSession, Slot, SlotParams, SlotType } from '../domain/types';
 import { getActiveProgram, getDb, listExercises, putExercise, saveProgram, seedCatalog } from '../db';
 import { exerciseIdFor, nameKey } from '../domain/catalog';
 import { useLive } from '../ui/useLive';
-import { ConfirmButton, DateField, Errors, Group, GroupAction, Segmented, Sheet, Stepper } from '../ui/common';
-import { Button, LabelValueGrid, NavBar, Parts, PixelIcon, Select, Toggle, ValueRow, showHud } from '../ui/kit';
+import { ConfirmButton, Errors, Group, Segmented, Sheet, Stepper } from '../ui/common';
+import { Button, LabelValueGrid, NavBar, Parts, PixelIcon, Toggle, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
-import { formatDate } from '../app/dates';
 import { PAIN_AREAS, PAIN_AREA_LABELS } from '../app/labels';
 import {
-  MODEL_LABELS, addSession, addSlot, changeModel, deleteSession, describeSlot, moveSession, moveSlot, removeSlot,
+  MODEL_LABELS, addSession, addSlot, blankProgram, changeModel, deleteSession, describeSlot, moveSession, moveSlot, removeSlot,
   renameSession, setInRotation, swapExercise, toggleMinimum, uniqueExerciseId, updateSlot,
 } from '../app/program';
-import { parseNum, validatePhase, validateSlotParams } from '../app/validate';
+import { parseNum, validateSlotParams } from '../app/validate';
 import { programFromTemplate } from '../domain/templates';
 import { TemplateList, sessionTitle } from '../app/parts/TemplatePicker';
 
@@ -34,7 +33,6 @@ export function ProgramEditor(_props: { params: string[] }) {
   const [editing, setEditing] = useState<Editing | null>(null);
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [addingPhase, setAddingPhase] = useState(false);
 
   useEffect(() => { seedCatalog(getDb()).catch(() => undefined); }, []);
   // Local copy is the source of truth while our own saves are in flight, so a
@@ -59,13 +57,13 @@ export function ProgramEditor(_props: { params: string[] }) {
 
   const templates = (
     <TemplateList exercises={exercises} renderAction={id => (
-      <ConfirmButton className="primary block" confirmLabel={prog ? 'Replace your program with this template?' : 'Start from this template?'}
-        message={prog ? 'Sessions already committed don’t change.' : undefined} confirmText={prog ? 'Replace program' : 'Use template'} onConfirm={async () => {
+      <ConfirmButton className="primary block" confirmLabel={prog ? 'Replace your program with this example?' : 'Start from this example?'}
+        message={prog ? 'Sessions already started don’t change.' : undefined} confirmText={prog ? 'Replace program' : 'Use this example'} onConfirm={async () => {
           const p = programFromTemplate(id);
           await saveProgram(getDb(), p);
           cur.current = p; setProg(p); setShowTemplates(false);
           showHud('Program set');
-        }}>{prog ? 'Replace with this' : 'Use this template'}</ConfirmButton>
+        }}>{prog ? 'Replace with this' : 'Start from this'}</ConfirmButton>
     )} />
   );
 
@@ -79,7 +77,19 @@ export function ProgramEditor(_props: { params: string[] }) {
       <NavBar title="Program" backLabel="Profile" fallback="profile" />
       <p className="note">//Note: edits apply to sessions you start from now on. Sessions already started keep their plan.</p>
 
-      {!prog && <><p className="quiet">No program yet. Start from a template.</p>{templates}</>}
+      {!prog && (
+        <>
+          <p className="quiet">No program yet. Plan your own, or start from one of the examples below and change it to suit you.</p>
+          <Button variant="primary" block iconEnd="plus" onClick={async () => {
+            const p = blankProgram();
+            await saveProgram(getDb(), p);
+            cur.current = p; setProg(p);
+            showHud('Program started');
+          }}>Plan my own</Button>
+          <span className="label">Examples</span>
+          {templates}
+        </>
+      )}
 
       {prog && (
         <>
@@ -100,24 +110,14 @@ export function ProgramEditor(_props: { params: string[] }) {
           ))}
           <Button block iconEnd="plus" onClick={() => apply(p => addSession(p))}>Add session</Button>
 
-          <Phases phases={prog.phases} onAdd={() => setAddingPhase(true)} onChange={phases => apply(p => ({ ...p, phases }))} />
-
-          <Group label="Templates">
-            <p className="quiet">Start over from one of the built-in programs. Your sessions and slots are replaced.</p>
-            <Button block iconEnd="chevron" onClick={() => setShowTemplates(true)}>Start from a template</Button>
+          <Group label="Examples">
+            <p className="quiet">Ready-made programs to start from. Using one replaces your sessions and lifts.</p>
+            <Button block iconEnd="chevron" onClick={() => setShowTemplates(true)}>Start from an example</Button>
           </Group>
         </>
       )}
 
-      <Sheet className="setup-sheet" open={showTemplates} title="Templates" detents={['large']} onClose={() => setShowTemplates(false)}>{templates}</Sheet>
-
-      <Sheet className="setup-sheet" open={addingPhase} title="Add a phase" onClose={() => setAddingPhase(false)}>
-        {prog && <PhaseForm phases={prog.phases} onAdd={ph => {
-          apply(p => ({ ...p, phases: [...p.phases, ph].sort((a, b) => (a.start < b.start ? -1 : 1)) }));
-          setAddingPhase(false);
-          showHud('Phase added');
-        }} />}
-      </Sheet>
+      <Sheet className="setup-sheet" open={showTemplates} title="Example programs" detents={['large']} onClose={() => setShowTemplates(false)}>{templates}</Sheet>
 
       <ExercisePicker open={!!picker} exercises={exercises} title={picker?.swapSlotId ? 'Swap exercise' : 'Add exercise'}
         onClose={() => setPicker(null)}
@@ -348,71 +348,4 @@ function NewExerciseForm({ initialName, exercises, onCancel, onCreated }: {
   );
 }
 
-function overrideLine(ph: Phase): string {
-  if (!ph.overrides) return 'Marker only';
-  return Object.entries(ph.overrides).map(([m, o]) =>
-    `${MODEL_SHORT[m as ModelKind]}: ${o?.sets ? `${o.sets} sets ` : ''}${o?.repMin ? `reps ${o.repMin}–${o.repMax ?? o.repMin}` : ''}`.trim()).join('; ');
-}
 
-function Phases({ phases, onAdd, onChange }: { phases: Phase[]; onAdd: () => void; onChange: (p: Phase[]) => void }) {
-  return (
-    <Group label="Phases (optional)" right={<GroupAction onClick={onAdd}>Add</GroupAction>}>
-      <p className="quiet">Dated blocks that change sets or rep ranges for one model, e.g. a 2-week re-entry at 3 × 8.</p>
-      {phases.length > 0 && (
-        <div className="sheetblk">
-          {phases.map((ph, i) => (
-            <ValueRow key={i} k={pad2(i + 1)} value={ph.name}
-              sub={`${formatDate(ph.start, { weekday: false })} – ${formatDate(ph.end, { weekday: false })}, ${overrideLine(ph)}`}>
-              <ConfirmButton className="icon-btn" confirmLabel={`Delete the phase “${ph.name}”?`} confirmText="Delete phase" danger
-                onConfirm={() => onChange(phases.filter((_, j) => j !== i))}><PixelIcon name="trash" title={`Delete ${ph.name}`} /></ConfirmButton>
-            </ValueRow>
-          ))}
-        </div>
-      )}
-    </Group>
-  );
-}
-
-const MODEL_OPTS: (ModelKind | '')[] = ['', ...MODELS];
-
-function PhaseForm({ phases, onAdd }: { phases: Phase[]; onAdd: (ph: Phase) => void }) {
-  const [name, setName] = useState('');
-  const [start, setStart] = useState('');
-  const [end, setEnd] = useState('');
-  const [model, setModel] = useState<ModelKind | ''>('');
-  const [sets, setSets] = useState('');
-  const [repMin, setRepMin] = useState('');
-  const [repMax, setRepMax] = useState('');
-  const [errors, setErrors] = useState<string[]>([]);
-  return (
-    <>
-      <label className="field-wrap"><span className="label">Name</span><input className="field" value={name} onChange={e => setName(e.target.value)} /></label>
-      <div className="grid2">
-        <DateField label="Start" value={start} onChange={setStart} />
-        <DateField label="End" value={end} min={start || undefined} onChange={setEnd} />
-      </div>
-      <Select<ModelKind | ''> label="Applies to model" value={model} onChange={setModel}
-        options={MODEL_OPTS.map(m => ({ value: m, label: m ? MODEL_LABELS[m] : 'No override (marker only)' }))} />
-      {model && (
-        <div className="grid3">
-          <label className="field-wrap"><span className="label">Sets</span><input className="field tnum" inputMode="numeric" value={sets} onChange={e => setSets(e.target.value)} /></label>
-          <label className="field-wrap"><span className="label">Reps min</span><input className="field tnum" inputMode="numeric" value={repMin} onChange={e => setRepMin(e.target.value)} /></label>
-          <label className="field-wrap"><span className="label">Reps max</span><input className="field tnum" inputMode="numeric" value={repMax} onChange={e => setRepMax(e.target.value)} /></label>
-        </div>
-      )}
-      <Errors errors={errors} />
-      <Button variant="primary" block iconEnd="plus" onClick={() => {
-        const nums = { sets: parseNum(sets, { integer: true, min: 1, max: 10, name: 'Sets' }), repMin: parseNum(repMin, { integer: true, min: 1, max: 50, name: 'Reps min' }), repMax: parseNum(repMax, { integer: true, min: 1, max: 50, name: 'Reps max' }) };
-        const errs = Object.values(nums).flatMap(r => (r.ok ? [] : [r.error]));
-        const o: Partial<SlotParams> = {};
-        for (const [k, r] of Object.entries(nums)) if (r.ok && r.value !== undefined) (o as Record<string, number>)[k] = r.value;
-        if (o.repMin !== undefined && o.repMax !== undefined && o.repMin > o.repMax) errs.push('Reps min can’t be above reps max');
-        const ph: Phase = { name: name.trim(), start, end, ...(model && Object.keys(o).length ? { overrides: { [model]: o } } : {}) };
-        errs.push(...validatePhase(ph, phases));
-        setErrors(errs);
-        if (errs.length) return;
-        onAdd(ph);
-      }}>Add phase</Button>
-    </>
-  );
-}

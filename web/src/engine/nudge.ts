@@ -85,7 +85,7 @@ export function nudge(inp: NudgeInput): Nudge | null {
   if (!t.isNew && work.length && remaining > 0) {
     const g = grade(t, work, scale);
     if (g.verdict === 'hit' || g.verdict === 'beat') {
-      return { kind: 'info', rule: 'promise_kept', text: 'Promise kept. Extra sets are a bonus, not required.' };
+      return { kind: 'info', rule: 'promise_kept', text: 'Plan met. Extra sets are a bonus, not required.' };
     }
   }
   if (remaining === 1 && prev && prev.rir !== undefined && prev.rir >= LIGHT_RIR && !lastWasTop) {

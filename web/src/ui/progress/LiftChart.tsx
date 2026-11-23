@@ -7,7 +7,7 @@
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
-import { PLOT_PX, chartScale, diamondPoints, fillWeeks, gapText, stepRuns, trianglePoints, type ChartTarget } from './chartModel';
+import { PLOT_PX, chartScale, diamondPoints, fillWeeks, gapText, stepRuns, type ChartTarget } from './chartModel';
 
 export interface LinePoint { date: ISODate; value: number; pr?: boolean }
 
@@ -82,7 +82,7 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
               </g>
             ))}
             {data.filter(p => p.pr).map(p => (
-              <polygon key={p.date} className="tk-pr" points={trianglePoints(x(p.date), y(p.value) - 1, 4)} />
+              <rect key={p.date} className="tk-pr" x={x(p.date) - 3.5} y={y(p.value) - 3.5} width={7} height={7} />
             ))}
             <rect className="tk-last" x={x(last.date) - 3.5} y={y(last.value) - 3.5} width={7} height={7} />
           </>

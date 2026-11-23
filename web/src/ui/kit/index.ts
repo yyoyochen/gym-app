@@ -17,8 +17,6 @@ export { go, back, canGoBack, getNav, useNav, type NavSnapshot, type GoOptions }
 export { classifyNavigation, transitionFor, isTabRoot, normalizePath, TAB_ROOTS, type NavDirection, type Transition } from './nav';
 export { useTheme, initTheme, applyTheme, setThemePref } from './useTheme';
 export { resolveTheme, THEME_PAPER, DEFAULT_THEME, type ThemePref, type ResolvedTheme } from './theme';
-export { haptic, setHapticsEnabled, hapticsEnabled, type HapticKind } from './haptic';
-export { useHaptics, initHaptics, setHapticsPref } from './useHaptics';
 export { animateSpring, springAt, springCurve, rubberband, projectFling, nearestStop, VelocityTracker, SPRINGS, type SpringParams } from './motion/spring';
 export { installPressFeedback, cancelPress } from './motion/press';
 export { prefersReducedMotion } from './motion/reduced';

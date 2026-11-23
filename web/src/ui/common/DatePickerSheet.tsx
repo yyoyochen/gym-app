@@ -5,8 +5,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ISODate } from '../../domain/types';
 import { monthLabel, shiftMonth, todayISO } from '../../app/dates';
-import { Button, InfoButton, PixelIcon, Sheet } from '../kit';
-import { MARKER_H, MARKER_W, canConfirm, clampDate, dayLabel, markerRects, monthGrid, moveDay, tabbableDay, type CalKey, type DayLevel } from './calendarModel';
+import { MonthYearHeader } from './MonthYearHeader';
+import { ymOf } from './monthYear';
+import { Button, InfoButton, Sheet } from '../kit';
+import { MARKER_H, MARKER_W, canConfirm, clampDate, dayLabel, markerRects, monthGrid, moveDay, sameDayIn, tabbableDay, type CalKey, type DayLevel } from './calendarModel';
 
 const KEYS = new Set<string>(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -34,7 +36,7 @@ export function DatePickerSheet({ open, value, min, max, levels, title, confirmL
   const weeks = monthGrid(ym.year, ym.month, { today, selected: sel, ...(min ? { min } : {}), ...(max ? { max } : {}), ...(levels ? { levels } : {}) });
   const ok = (d: ISODate) => !(min && d < min) && !(max && d > max);
   // Changing month moves the focused day with it (same day number, clamped), so Tab always has a cell.
-  const go = (n: number) => { setYm(shiftMonth(ym.year, ym.month, n)); setFocus(moveDay(focus, n > 0 ? 'PageDown' : 'PageUp')); };
+  const go = (n: number) => { setYm(shiftMonth(ym.year, ym.month, n)); setFocus(clampDate(sameDayIn(focus, n), min, max)); };
   const tab = tabbableDay(weeks, focus);
 
   const range = { ...(min ? { min } : {}), ...(max ? { max } : {}) };
@@ -56,11 +58,10 @@ export function DatePickerSheet({ open, value, min, max, levels, title, confirmL
 
   return (
     <Sheet open={open} title={title} onClose={onClose} detents={['large']}>
-      <div className="cal-hd">
-        <button type="button" className="cal-nav" aria-label="Previous month" onClick={() => go(-1)}><PixelIcon name="back" scale={2} /></button>
-        <h3 className="cal-title" aria-live="polite">{monthLabel(ym.year, ym.month)}</h3>
-        <button type="button" className="cal-nav" aria-label="Next month" onClick={() => go(1)}><PixelIcon name="chevron" scale={2} /></button>
-      </div>
+      <MonthYearHeader ym={ym} {...(min ? { min: ymOf(min) } : {})} {...(max ? { max: ymOf(max) } : {})} onChange={n => {
+        const d = (n.year - ym.year) * 12 + (n.month - ym.month);
+        if (d) go(d);
+      }} />
       <div className="cal-dow" aria-hidden="true">{DOW.map((d, i) => <span key={i}>{d}</span>)}</div>
       <div className="cal-grid" role="grid" aria-label={monthLabel(ym.year, ym.month)} ref={grid} onKeyDown={onKey}>
         {weeks.map((w, i) => (

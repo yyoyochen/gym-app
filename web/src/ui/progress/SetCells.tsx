@@ -29,9 +29,9 @@ export function SetCells({ sets, bodyweightFactor, decimals }: { sets: SetEntry[
 export function SetCellsKey() {
   return (
     <>
-      <span className="tk-key top">Top</span>top set
-      <span className="tk-key work">Work</span>work sets
-      <span className="tk-key ramp">Ramp</span>ramp
+      <span className="tk-key top">Top set</span>
+      <span className="tk-key work">Work set</span>
+      <span className="tk-key ramp">Ramp</span>
     </>
   );
 }

@@ -4,20 +4,21 @@ import { HEATMAP_INFO } from './heatmapInfo';
 import { useMemo } from 'react';
 import { heatmapGrid } from './dither';
 
-// Geometry in SVG units. The SVG scales to the container width; cells are
-// shade glyphs (░ ▒ ▓ █): half as wide as tall, drawn as a 4 × 8 dither of
-// square sub-pixels. 52 weeks on a 390 px phone ≈ 5.3 × 10.6 px per cell.
+// Geometry in SVG units. The SVG scales to the container width. Two cell
+// shapes: 'glyph' cells are shade glyphs (░ ▒ ▓ █), half as wide as tall, a
+// 4 × 8 dither of square sub-pixels (52 weeks on a 390 px phone ≈ 5.3 × 10.6 px
+// per cell); 'square' cells are 8 × 8 and fill the row, for a short window
+// shown large (the Calendar's 13 weeks ≈ 22 px cells).
+export type CellShape = 'glyph' | 'square';
 const SUB = 2;
-const DIV_X = 4;
 const DIV_Y = 8;
-const CELL_W = DIV_X * SUB;
+const divX = (shape: CellShape) => (shape === 'square' ? 8 : 4);
 const CELL_H = DIV_Y * SUB;
 const GAP = 2;
-const STEP_X = CELL_W + GAP;
 const STEP_Y = CELL_H + GAP;
 const MARK_H = 2;              // week-target mark under each column
 const MARK_GAP = 3;
-// Largest on-screen px per SVG unit: a short history (12 weeks) or a wide
+// Largest on-screen px per SVG unit for glyph cells: a short history or a wide
 // screen keeps phone-sized cells instead of stretching them to fill the row.
 const MAX_SCALE = 0.8;
 
@@ -39,14 +40,14 @@ export function shadeOn(level: number, x: number, y: number): boolean {
 }
 /** Sub-pixels lit per level: 25 / 50 / 75 / 100% of 32. */
 export const SUBPIXELS = [8, 16, 24, 32] as const;
-export const CELL_DIV = { x: DIV_X, y: DIV_Y, sub: SUB } as const;
+export const CELL_DIV = { x: divX('glyph'), y: DIV_Y, sub: SUB } as const;
 
 /** Sub-pixel rects (x, y in units) for a cell at a level; exported for tests. */
-export function cellPixels(level: number): [number, number][] {
+export function cellPixels(level: number, shape: CellShape = 'glyph'): [number, number][] {
   if (level < 0) return [];
   const on = STEPS[Math.min(level, 3)];
   const out: [number, number][] = [];
-  for (let y = 0; y < DIV_Y; y++) for (let x = 0; x < DIV_X; x++) if (on(x, y)) out.push([x * SUB, y * SUB]);
+  for (let y = 0; y < DIV_Y; y++) for (let x = 0; x < divX(shape); x++) if (on(x, y)) out.push([x * SUB, y * SUB]);
   return out;
 }
 
@@ -55,7 +56,7 @@ export function cellPixels(level: number): [number, number][] {
  * weekday (Mon → Sun, all seven named down the left), filling the container width. Cell shade is a
  * tiny ordered dither in the accent colour; empty days are a faint dot.
  */
-export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget, onSelect, label = 'Training days', legend = false, className = '' }: {
+export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget, onSelect, label = 'Training days', legend = false, className = '', shape = 'glyph' }: {
   counts: Record<string, number>;
   weeks?: number;
   /** Last day shown (today), ISO. */
@@ -67,7 +68,10 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
   label?: string;
   legend?: boolean;
   className?: string;
+  shape?: CellShape;
 }) {
+  const CELL_W = divX(shape) * SUB;
+  const STEP_X = CELL_W + GAP;
   const g = useMemo(() => heatmapGrid({ counts, weeks, end, thresholds, weekTarget }), [counts, weeks, end, thresholds, weekTarget]);
   const W = weeks * STEP_X - GAP;
   const gridH = 7 * STEP_Y - GAP;
@@ -75,7 +79,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
   const trained = g.rows.reduce((n, r) => n + r.cells.filter(c => c.level >= 0).length, 0);
 
   return (
-    <div className={`sqheat ${className}`} style={{ maxWidth: `calc(var(--sqheat-days) + ${W * MAX_SCALE}px)` }}>
+    <div className={`sqheat ${shape} ${className}`.trim()} style={shape === 'glyph' ? { maxWidth: `calc(var(--sqheat-days) + ${W * MAX_SCALE}px)` } : undefined}>
       <div className="sqheat-months" aria-hidden="true">
         {g.months.map(m => (
           <span key={m.week} style={{ left: `${(m.week * STEP_X / W) * 100}%` }}>{m.text}</span>
@@ -95,7 +99,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
             <g key={c.date} transform={`translate(${x} ${y})`}>
               {c.level < 0
                 ? <rect className="sqheat-empty" x={CELL_W / 2 - 1} y={CELL_H / 2 - 1} width={2} height={2} />
-                : cellPixels(c.level).map(([px, py]) => <rect key={`${px},${py}`} className="sqheat-on" x={px} y={py} width={SUB} height={SUB} />)}
+                : cellPixels(c.level, shape).map(([px, py]) => <rect key={`${px},${py}`} className="sqheat-on" x={px} y={py} width={SUB} height={SUB} />)}
               {c.isEnd && <rect className="sqheat-today" x={-0.75} y={-0.75} width={CELL_W + 1.5} height={CELL_H + 1.5} />}
               {onSelect && c.level >= 0 && (
                 <rect className="sqheat-hit" x={-GAP / 2} y={-GAP / 2} width={STEP_X} height={STEP_Y} onClick={() => onSelect(c.date)}>
@@ -116,7 +120,7 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
           <span>Less</span>
           {[0, 1, 2, 3].map(l => (
             <svg key={l} viewBox={`0 0 ${CELL_W} ${CELL_H}`} className="sqheat-key" shapeRendering="crispEdges">
-              {cellPixels(l).map(([px, py]) => <rect key={`${px},${py}`} className="sqheat-on" x={px} y={py} width={SUB} height={SUB} />)}
+              {cellPixels(l, shape).map(([px, py]) => <rect key={`${px},${py}`} className="sqheat-on" x={px} y={py} width={SUB} height={SUB} />)}
             </svg>
           ))}
           <span>More</span>

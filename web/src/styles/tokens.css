@@ -118,7 +118,8 @@
   --grain:  0.55;
   --dim:    rgb(30 33 82 / 0.28);
   --behind: #1e2152;
-  color-scheme: light;
+  /* 'only' stops a browser's forced dark mode (Brave night mode, Android auto-dark) from inverting the light theme. */
+  color-scheme: only light;
 }
 
 @media (prefers-reduced-motion: reduce) {

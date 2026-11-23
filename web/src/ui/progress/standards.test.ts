@@ -31,7 +31,7 @@ describe('plain-language strings', () => {
   it('describe what was rated, and the next step', () => {
     const sq = rateValue(data, 'back_squat', 121.3, ctx, 'e1rm')!;
     expect(ratedValueText(sq)).toBe('e1RM 121.5 kg');
-    expect(standingText(sq)).toMatch(/^(Novice|Intermediate|Advanced), \d+(st|nd|rd|th) percentile of gym-goers$/);
+    expect(standingText(sq)).toMatch(/^(Novice|Intermediate|Advanced), \d+(st|nd|rd|th) percentile of lifters like you$/);
     expect(nextText({ level: 'advanced', value: 140.5, unit: 'kg', added: false })).toBe('Advanced at 140.5 kg e1RM');
     expect(nextText({ level: 'elite', value: 42.5, unit: 'kg', added: true })).toBe('Elite at +42.5 kg added');
     expect(nextText({ level: 'novice', value: 5, unit: 'reps', added: false })).toBe('Novice at 5 reps');
@@ -48,7 +48,7 @@ describe('plain-language strings', () => {
   });
 
   it('the caveat names the population and the level percentiles', () => {
-    expect(STANDARDS_CAVEAT).toMatch(/gym-goers, not competitors/);
+    expect(STANDARDS_CAVEAT).toMatch(/everyday gym lifters .*not competitors/);
     expect(STANDARDS_CAVEAT).toMatch(/Intermediate ≈ 50th/);
   });
 });
@@ -60,7 +60,7 @@ describe('benchmark source wording', () => {
   });
   it('the section subtitle follows the ratings shown', () => {
     expect(sourceMeta([{ source: 'model' }, { source: 'table' }])).toBe('vs Strength Level');
-    expect(sourceMeta([{ source: 'model' }])).toBe('vs gym-goers');
-    expect(sourceMeta([])).toBe('vs gym-goers');
+    expect(sourceMeta([{ source: 'model' }])).toBe('vs lifters like you');
+    expect(sourceMeta([])).toBe('vs lifters like you');
   });
 });

@@ -7,18 +7,20 @@ import { shadeOn } from './SquareHeatmap';
  * Monday → Sunday, with each week's target mark. Cut from the same 52-week
  * grid History draws, so a day's shade matches there.
  */
-export function recentWeeks(g: HeatGrid, n = 4): { days: HeatCell[][]; marks: ('met' | 'part' | 'none')[] } {
+export function recentWeeks(g: HeatGrid, n = 4): { days: HeatCell[][]; marks: ('met' | 'part' | 'none')[]; trained: number[] } {
   const cols = Array.from({ length: Math.min(n, g.weeks) }, (_, i) => g.weeks - Math.min(n, g.weeks) + i);
+  const days = cols.map(w => g.rows.map(r => r.cells[w]));
   return {
-    days: cols.map(w => g.rows.map(r => r.cells[w])),
+    days,
     marks: cols.map(w => g.weekMarks?.[w] ?? 'none'),
+    trained: days.map(week => week.filter(c => c.level >= 0 && !c.future).length),
   };
 }
 
 const PX = 2; // one shade sub-pixel, in CSS px
 const HEAD = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-/** Today's near-term calendar: 4 rolling weeks of shaded day tiles, a week mark per row. */
+/** Today's near-term calendar: 4 rolling weeks of shaded day tiles; each row ends with "trained/target" for that week. */
 export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
   counts: Record<string, number>;
   end: string;
@@ -27,7 +29,7 @@ export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
   weeks?: number;
 }) {
   const g = useMemo(() => heatmapGrid({ counts, weeks: 52, end, weekTarget }), [counts, end, weekTarget]);
-  const { days, marks } = recentWeeks(g, weeks);
+  const { days, marks, trained } = recentWeeks(g, weeks);
   const uid = useId().replace(/:/g, '');
   return (
     <div className="rweeks" role="grid" aria-label={`Last ${weeks} weeks`}>
@@ -42,7 +44,7 @@ export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
         </defs>
       </svg>
       {HEAD.map((d, i) => <span key={i} className="rweeks-h" aria-hidden="true">{d}</span>)}
-      <span aria-hidden="true" />
+      <span className="rweeks-h rweeks-h-wk" aria-hidden="true">Week</span>
       {days.map((week, w) => [
         ...week.map(c => {
           const on = c.level >= 0 && !c.future;
@@ -60,7 +62,7 @@ export function RecentWeeks({ counts, end, weekTarget, onSelect, weeks = 4 }: {
             </button>
           );
         }),
-        <span key={`m${w}`} className={`rweeks-wk ${marks[w]}`} aria-label={`Week ${marks[w] === 'met' ? 'at target' : marks[w] === 'part' ? 'below target' : 'not trained'}`} />,
+        <span key={`m${w}`} className={`rweeks-wk ${marks[w]}`} role="gridcell" aria-label={`${trained[w]} of ${weekTarget} sessions that week`}>{trained[w]}/{weekTarget}</span>,
       ])}
     </div>
   );

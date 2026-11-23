@@ -255,7 +255,7 @@ these at 6. Today there are 4:
 | `showPrMoment({value, unit, caption, lift, pairs})`, `DitherNumber` | the PR moment |
 | `NavBar title backLabel right` | large title that collapses into the bar |
 | `PageStack`, `go`, `back`, `useNav` | navigation (§5) |
-| `useTheme`, `haptic` | theme preference; `navigator.vibrate(10)` where supported |
+| `useTheme` | theme preference |
 
 `ui/common` re-exports `Sheet`, `Stepper`, `Segmented`, `ConfirmButton` from
 the kit, so older screens get the new behaviour without import changes.
@@ -288,10 +288,9 @@ the kit, so older screens get the new behaviour without import changes.
 - **Action sheet**: slide a finger across the buttons and release to pick.
 - **HUD**: pops in, draws its pixel icon row by row, fades after 1.5 s.
 - **PR moment**: the number resolves from coarse Bayer dither to solid type on a
-  canvas, with `haptic('pr')`.
-- **Haptics**: `haptic('commit')` on set commit, `haptic('pr')` on the PR
-  moment; the Settings "Haptics" toggle persists the choice in meta (`haptics`,
-  default on) via `useHaptics()` / `initHaptics()`, and `haptic()` respects it.
+  canvas.
+- **No haptics**: removed 2026-11-23. Web vibration only works in Android
+  Chrome, never on iPhone, so it was a setting that mostly did nothing.
 
 ## 6. Accessibility
 

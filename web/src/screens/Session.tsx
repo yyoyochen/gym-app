@@ -1,8 +1,8 @@
 // Session logger (#/session/<id>, full screen; spec §3.1, §3.3). Reads the
 // committed promise only. The next set is the hero; one tap logs it as
 // planned, "Adjust" opens the set sheet. No rest countdown, alerts, sounds,
-// notifications or wake lock: rest is a silent elapsed label. One haptic tick
-// on commit, and the PR moment when a set is a new best.
+// notifications or wake lock: rest is a silent elapsed label. The PR moment
+// plays when a set is a new best.
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import type { SetEntry } from '../domain/types';
@@ -11,7 +11,7 @@ import { formatElapsed } from '../engine';
 import { addSet, deleteSet, getDb, getExerciseHistory, listExercises, updateSet } from '../db';
 import { finishSession, isBarbell, kg, nextSlotOrder, platesPerSide, sessionView, type LiveSlot, type SlotOverrides } from '../app/coach';
 import { useLive } from '../ui/useLive';
-import { Button, ConfirmButton, DitherBar, LinkButton, PixelIcon, back, go, haptic, showPrMoment } from '../ui/kit';
+import { Button, ConfirmButton, DitherBar, LinkButton, PixelIcon, back, go, showPrMoment } from '../ui/kit';
 import { LiftBlock, type BlockHandlers } from '../ui/session/LiftBlock';
 import { SetSheet, type SetDraft } from '../ui/session/SetSheet';
 import { PlateSheet } from '../ui/session/PlateSheet';
@@ -48,9 +48,8 @@ function lastPlanned(slot: LiveSlot): PlannedSet {
   return ghost[ghost.length - 1] ?? { kind: 'working', weight: slot.sets[slot.sets.length - 1]?.weight ?? 0, reps: 8 };
 }
 
-/** Haptic tick on commit; the PR moment when the set beats every earlier set of the lift. */
+/** The PR moment when the set beats every earlier set of the lift. */
 async function celebrate(saved: SetEntry, lift: string): Promise<void> {
-  haptic('commit');
   if (saved.kind === 'warmup' || saved.failed) return;
   const days = await getExerciseHistory(getDb(), saved.exerciseId);
   const moment = prMomentFor(saved, priorFromHistory(days, saved.id), lift);
@@ -162,7 +161,7 @@ export function Session({ params }: { params: string[] }) {
       {session.sealed && (
         <div className="banner spread"><span>Finished. Changes are marked “edited”.</span><LinkButton href={`#/review/${id}`}>Review</LinkButton></div>
       )}
-      {!view.commit && <p className="note">//Note: this session has no committed promise; sets are logged ungraded.</p>}
+      {!view.commit && <p className="note">//Note: this session has no locked-in plan; sets are logged ungraded.</p>}
 
       {count.planned > 0 && (
         <DitherBar label={names.short} valueText={`${count.done} of ${count.planned} sets`} value={count.done / count.planned} />

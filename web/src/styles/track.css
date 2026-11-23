@@ -71,7 +71,7 @@
 .tk-base { stroke: var(--ink); stroke-width: 1; }
 .tk-tick { font: var(--text-micro); letter-spacing: var(--track-micro); fill: var(--mid); text-transform: uppercase; }
 .tk-line { fill: none; stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: miter; stroke-linecap: square; }
-.tk-pr { fill: var(--ink); }
+.tk-pr { fill: var(--ink); shape-rendering: crispEdges; }
 .tk-last { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; shape-rendering: crispEdges; }
 .tk-hold { stroke-dasharray: 2 3; }
 .tk-target { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 1 3; }
@@ -82,7 +82,7 @@
 .tk-legend { margin: 0; }
 .tk-sw { display: inline-block; flex: none; }
 .tk-sw.line { width: 14px; border-top: var(--rule-w) solid var(--ink); }
-.tk-sw.pr { width: 9px; height: 9px; background: var(--ink); clip-path: polygon(50% 0, 100% 100%, 0 100%); margin-left: var(--space-2); }
+.tk-sw.pr { width: 7px; height: 7px; background: var(--ink); margin-left: var(--space-2); }
 .tk-sw.target { width: 9px; height: 9px; background: var(--accent); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); margin-left: var(--space-2); }
 .tk-sw.last { width: 7px; height: 7px; border: var(--rule-w) solid var(--accent); margin-left: var(--space-2); }
 .tk-sw.hold { width: 14px; border-top: var(--rule-w) dotted var(--ink); margin-left: var(--space-2); }
@@ -126,7 +126,7 @@
 /* ---------- lift history set cells: equal size, digits aligned ---------- */
 .tk-hrow.cells { grid-template-columns: 8ch 1fr 9px; gap: var(--space-3); }
 .tk-hrow.cells .tk-hrow-k { min-width: 0; }
-.tk-hrow.cells .tk-hrow-k span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tk-hrow.cells .tk-hrow-k span { overflow-wrap: anywhere; }
 .tk-cells { --cell-w: calc(6.5ch + var(--space-2)); display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--cell-w), 1fr)); gap: var(--space-1); font: var(--text-mono); letter-spacing: var(--track-mono); }
 .tk-cells.dec { --cell-w: calc(8.5ch + var(--space-2)); }
 .tk-cell { display: grid; grid-template-columns: 3ch 1.5ch 2ch; justify-content: center; padding: var(--space-2) 0; border: var(--rule-w) solid var(--ink); white-space: nowrap; }
@@ -180,3 +180,8 @@
 .tk-num { font-weight: var(--font-strong); font-variant-numeric: tabular-nums; color: inherit; }
 .tk-herolabel { margin-bottom: var(--space-3); }
 .tk-led-r.none { font: var(--text-body); color: var(--mid); }
+
+/* ---------- session detail: the date is the title, the name sits under it, each with its edit button ---------- */
+.sd-name { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.sd-name-v { font: var(--text-title); letter-spacing: var(--track-title); overflow-wrap: anywhere; }
+.sd-name .icon-btn { margin-right: calc(-1 * var(--space-3)); }

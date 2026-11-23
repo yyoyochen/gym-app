@@ -38,8 +38,6 @@ export interface MetaValues {
   lastRestoreAt: Millis;
   /** Appearance: 'dark' | 'light' (default dark; an old 'system' reads as dark). See ui/kit/useTheme.ts. */
   theme: 'system' | 'dark' | 'light';
-  /** Haptics on/off (default on). See ui/kit/useHaptics.ts. */
-  haptics: boolean;
   /** Tip ids dismissed with Got it (app/tips.ts). Unset: not decided yet, no tip shows. */
   tipsSeen: string[];
 }

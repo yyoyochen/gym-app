@@ -27,4 +27,8 @@ describe('recentWeeks', () => {
     const byDate = new Map(g.rows.flatMap(r => r.cells).map(c => [c.date, c.level]));
     for (const c of recentWeeks(g).days.flat()) expect(c.level).toBe(byDate.get(c.date));
   });
+  it('counts trained days per week, for the "2/3" next to each row', () => {
+    const r = recentWeeks(grid('2026-11-22'));
+    expect(r.trained).toEqual([1, 1, 0, 1]);
+  });
 });

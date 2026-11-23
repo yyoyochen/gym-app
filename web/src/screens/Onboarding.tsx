@@ -142,17 +142,17 @@ function HistorySheet({ open, onClose }: { open: boolean; onClose: () => void })
   return (
     <Sheet open={open} title="Bring your log" onClose={onClose}>
       <div className="choice-list">
-        <Choice k="01" title="Import a CSV" sub="App template, Hevy or Strong" open={mode === 'csv'} onClick={() => pick('csv')} />
+        <Choice title="Import a CSV" sub="App template, Hevy or Strong" open={mode === 'csv'} onClick={() => pick('csv')} />
         {mode === 'csv' && <div className="choice-body">
           <ImportCsvPanel onDone={r => setImported(r.sessionsAdded > 0 || r.sessionsUnchanged > 0)} />
           {imported && <Button variant="primary" block iconEnd="chevron" onClick={onClose}>Continue setup</Button>}
         </div>}
-        <Choice k="02" title="Restore a backup" sub="A .json backup from this app" open={mode === 'restore'} onClick={() => pick('restore')} />
+        <Choice title="Restore a backup" sub="A .json backup from this app" open={mode === 'restore'} onClick={() => pick('restore')} />
         {mode === 'restore' && <div className="choice-body">
           <RestorePanel onRestored={finish} />
           <p className="quiet">A restore brings back your profile and program too, so it goes straight to Today.</p>
         </div>}
-        <Choice k="03" title={demoBusy ? 'Loading demo…' : 'Explore with demo data'} sub="A sample log you can wipe later" disabled={demoBusy} onClick={async () => {
+        <Choice title={demoBusy ? 'Loading demo…' : 'Explore with demo data'} sub="A sample log you can wipe later" disabled={demoBusy} onClick={async () => {
           setDemoBusy(true); setError('');
           try { await loadDemo(getDb()); finish(); }
           catch (e) { setError(e instanceof Error ? e.message : 'Could not load the demo'); setDemoBusy(false); }
@@ -163,10 +163,9 @@ function HistorySheet({ open, onClose }: { open: boolean; onClose: () => void })
   );
 }
 
-function Choice({ k, title, sub, open, disabled, onClick }: { k: string; title: string; sub: string; open?: boolean; disabled?: boolean; onClick: () => void }) {
+function Choice({ title, sub, open, disabled, onClick }: { title: string; sub: string; open?: boolean; disabled?: boolean; onClick: () => void }) {
   return (
     <button type="button" className={`srow choice${open ? ' open' : ''}`} aria-expanded={open} disabled={disabled} data-press="row" onClick={onClick}>
-      <span className="srow-k">{k}</span>
       <span className="srow-main"><span className="srow-v">{title}</span><span className="srow-sub">{sub}</span></span>
       <PixelIcon name={open === undefined ? 'chevron' : open ? 'minus' : 'plus'} />
     </button>
@@ -184,7 +183,7 @@ function StepProgram({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
   useEffect(() => { if (active?.templateId && TEMPLATES.some(t => t.id === active.templateId)) setSel(active.templateId); }, [active?.templateId]);
   return (
     <>
-      <Question sub="Pick a template. Everything in it can be edited later under You, Program.">Program</Question>
+      <Question sub="Start from an example program. Change anything in it later under Profile, Program.">Program</Question>
       <TemplateList exercises={exercises} selected={sel} onSelect={setSel} />
       {error && <span className="field-error" role="alert">{error}</span>}
       <Foot onBack={onBack}>
@@ -284,10 +283,10 @@ function StepNumbers({ onNext, onBack }: { onNext: () => void; onBack?: () => vo
 
 // ---------------------------------------------------------------- 04 how GymBro works
 
-const HOW = [
-  'A promise before you lift: each session shows the numbers to hit, and why.',
-  'Two taps a set: did what it says? Log as planned. If not, adjust.',
-  'A grade after: beat, hit or missed, and the next promise follows from it.',
+const HOW: readonly [string, string][] = [
+  ['Before you lift', 'A plan for each session: the numbers to hit, and why.'],
+  ['Each set', 'Two taps. Did what it says? Log as planned. If not, adjust.'],
+  ['After', 'A grade: beat, hit or missed. The next plan follows from it.'],
 ];
 
 function StepHow({ onBack }: { onBack?: () => void }) {
@@ -311,15 +310,17 @@ function StepHow({ onBack }: { onBack?: () => void }) {
     <>
       <Question>How it works</Question>
       <ol className="onb-how">
-        {HOW.map((line, i) => (
-          <li key={i}><span className="srow-k">{pad2(i + 1)}</span><span>{line}</span></li>
+        {HOW.map(([when, line]) => (
+          <li key={when}><b className="onb-how-k">{when}</b><span>{line}</span></li>
         ))}
       </ol>
       <p className="quiet">Small tips will point things out the first time you meet them.</p>
       {error && <span className="field-error" role="alert">{error}</span>}
+      {short && <Button variant="quiet" className="onb-link" onClick={finish}>Look around first</Button>}
       <Foot onBack={onBack}>
-        <Button variant="quiet" onClick={finish}>Look around first</Button>
-        {short && <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={start}>Start {short}</Button>}
+        {short
+          ? <Button variant="primary" className="grow" iconEnd="chevron" disabled={busy} onClick={start}>Start {short}</Button>
+          : <Button variant="primary" className="grow" iconEnd="chevron" onClick={finish}>Look around</Button>}
       </Foot>
     </>
   );

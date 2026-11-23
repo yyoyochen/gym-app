@@ -49,9 +49,14 @@ export function SessionDetail({ params }: { params: string[] }) {
 
   return (
     <section className="screen tk-screen tk-nav">
-      <NavBar title={displayName(session.nameSnapshot)} backLabel="Calendar" fallback="history">
+      <NavBar title={formatDate(session.date, { weekday: false })} backLabel="Calendar" fallback="history"
+        titleAction={<button type="button" className="icon-btn" aria-label="Change date" data-press="dim" onClick={() => setMoving(true)}><PixelIcon name="edit" /></button>}>
+        <div className="sd-name">
+          <span className="sd-name-v">{displayName(session.nameSnapshot)}</span>
+          <button type="button" className="icon-btn" aria-label="Rename session" data-press="dim" onClick={() => setRenaming(true)}><PixelIcon name="edit" /></button>
+        </div>
         <div className="tk-sub">
-          <span className="tk-mono">{formatDate(session.date)}</span>
+          <span className="tk-mono">{WEEKDAY_LONG[new Date(`${session.date}T12:00:00`).getDay()]}</span>
           {!session.sealed && <span className="chip tk-chip">in progress</span>}
           {session.edited && <span className="chip tk-chip">edited</span>}
           {session.readiness && <span className="chip tk-chip">readiness {session.readiness}</span>}
@@ -61,10 +66,10 @@ export function SessionDetail({ params }: { params: string[] }) {
       {session.note && <p className="tk-quiet">{session.note}</p>}
 
       {commit && grade && (
-        <section className="tk-sec" aria-label="Promise">
-          <SecHead title="Promise" meta={`committed ${formatDate(todayISO(commit.committedAt), { weekday: false })}`} />
-          {grade.total > 0 && <BigNumber size="lg" value={grade.kept} unit={`of ${grade.total}`} caption={`promise${grade.total === 1 ? '' : 's'} kept`}
-            label={`${grade.kept} of ${grade.total} promises kept`} />}
+        <section className="tk-sec" aria-label="Plan">
+          <SecHead title="Plan" meta={`locked in ${formatDate(todayISO(commit.committedAt), { weekday: false })}`} />
+          {grade.total > 0 && <BigNumber size="lg" value={grade.kept} unit={`of ${grade.total}`} caption={`plan${grade.total === 1 ? '' : 's'} met`}
+            label={`${grade.kept} of ${grade.total} plans met`} />}
           <div className="tk-ledger">
             {grade.slots.map(g => (
               <div key={g.target.slotId} className="tk-led">
@@ -124,9 +129,6 @@ export function SessionDetail({ params }: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Session">
-        <SecHead title="Session" />
-        <Button block onClick={() => setRenaming(true)}>Rename</Button>
-        <Button block onClick={() => setMoving(true)}>Change date</Button>
         {renaming && <RenameSheet current={displayName(session.nameSnapshot)} onClose={() => setRenaming(false)} onSave={async name => { await updateSession(getDb(), session.id, { nameSnapshot: name }); setRenaming(false); showHud({ text: 'Renamed' }); }} />}
         {moving && (
           <DatePickerSheet open value={session.date} max={todayISO()} levels={trained} title="Change date" confirmLabel="Move session" requireChange onClose={() => setMoving(false)}
@@ -145,6 +147,8 @@ export function SessionDetail({ params }: { params: string[] }) {
   );
 }
 
+
+const WEEKDAY_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /** Spec-sheet row keys: 1, 2 for working sets; B1 back-off; D1 drop. */
 const KIND_PREFIX: Partial<Record<SetKind, string>> = { backoff: 'B', drop: 'D' };

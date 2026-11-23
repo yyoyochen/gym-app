@@ -112,7 +112,7 @@ export function Progress(_props: { params: string[] }) {
       </section>
 
       <section className="tk-sec" aria-label="Benchmarks">
-        <SecHead title="Benchmarks" meta={`${sourceMeta(rated.map(x => x.r))}, 90 days`} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <><p>{gym.meta.licenceNote}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
+        <SecHead title="Benchmarks" meta={sourceMeta(rated.map(x => x.r))} right={<InfoButton label="About levels"><p>{STANDARDS_CAVEAT}</p>{gym && <><p>{gym.meta.licenceNote}</p><DataCredit meta={gym.meta} /></>}</InfoButton>} />
         {gym === undefined && <p className="tk-quiet">Loading…</p>}
         {gym === null && <p className="tk-quiet">Strength standards could not be loaded.</p>}
         {gym && !ctx && (
