@@ -17,7 +17,7 @@ import { TARGET_TYPE_LABELS } from '../app/labels';
 import { useLive } from '../ui/useLive';
 import { readable } from '../ui/readable';
 import {
-  BigNumber, Button, ConfirmButton, DitherBar, LabelValueGrid, LinkButton, Lockup, RecentWeeks, Segmented, Toggle, go, type LabelValueItem,
+  BigNumber, Button, ConfirmButton, DitherBar, InfoButton, LabelValueGrid, LinkButton, Lockup, RecentWeeks, Segmented, Toggle, go, type LabelValueItem,
 } from '../ui/kit';
 import { goalRows, loadConsistency, loadWeekBodyParts } from '../ui/progress/data';
 import { ReadinessCheck } from '../ui/session/Readiness';
@@ -216,7 +216,14 @@ export function Today(_props: { params: string[] }) {
       )}
 
       <div className="stack">
-        <span className="label">Last 4 weeks</span>
+        <div className="spread">
+          <span className="label">Last 4 weeks</span>
+          <InfoButton label="About the last 4 weeks">
+            <p>Shading shows how many working sets you did that day, compared with your busiest day in the last year: sparse dots for a light day, denser dots for more, solid for your biggest days. An empty day is a rest day.</p>
+            <p>The outlined box is today. Tap a shaded day to open that session.</p>
+            <p>Week is sessions done that week out of your target of {target} a week. It turns bold when you hit it.</p>
+          </InfoButton>
+        </div>
         <RecentWeeks counts={counts} end={today} weekTarget={target}
           onSelect={d => heat.sessionByDate[d] && go(`history/${heat.sessionByDate[d]}`)} />
       </div>
