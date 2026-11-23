@@ -17,8 +17,8 @@ export function liftChartTargets(i: {
   if (i.metric !== 'e1rm') return [];
   const out: ChartTarget[] = [];
   const goal = i.goals.filter(g => g.subject === i.subject).sort((a, b) => (a.deadline < b.deadline ? -1 : a.deadline > b.deadline ? 1 : 0))[0];
-  if (goal) out.push({ name: 'Your target', value: goal.value });
+  if (goal) out.push({ name: 'Your target', value: goal.value, kind: 'goal' });
   const n = i.next;
-  if (n && n.unit === 'kg' && !n.added && i.loadType !== 'dumbbell_each') out.push({ name: LEVEL_LABEL[n.level], value: n.value });
+  if (n && n.unit === 'kg' && !n.added && i.loadType !== 'dumbbell_each') out.push({ name: LEVEL_LABEL[n.level], value: n.value, kind: 'level' });
   return out.sort((a, b) => a.value - b.value);
 }

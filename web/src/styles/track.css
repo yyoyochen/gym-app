@@ -66,7 +66,7 @@
 
 /* ---------- ink chart: step line or bars, ceiling band, target lane ---------- */
 .tk-chart { margin: var(--space-1) 0 0; }
-.tk-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tk-chart > svg { display: block; width: 100%; height: auto; overflow: visible; }
 .tk-grid { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 1 3; }
 .tk-base { stroke: var(--ink); stroke-width: 1; }
 .tk-tick { font: var(--text-micro); letter-spacing: var(--track-micro); fill: var(--mid); text-transform: uppercase; }
@@ -75,15 +75,13 @@
 .tk-last { fill: var(--paper); stroke: var(--accent); stroke-width: 1.5; shape-rendering: crispEdges; }
 .tk-hold { stroke-dasharray: 2 3; }
 .tk-target { stroke: var(--accent); stroke-width: 1; stroke-dasharray: 1 3; }
-.tk-target-tx { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; fill: var(--accent); white-space: pre;
-  paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
-.tk-target-mark { fill: var(--accent); }
+.tk-target.goal { stroke-width: 2; stroke-dasharray: 2 2; shape-rendering: crispEdges; } /* your own target: dense square dots */
+.tk-key-line { width: 18px; height: 4px; flex: none; overflow: visible; }
 .tk-bar { fill: var(--ink); shape-rendering: crispEdges; }
 .tk-legend { margin: 0; }
 .tk-sw { display: inline-block; flex: none; }
 .tk-sw.line { width: 14px; border-top: var(--rule-w) solid var(--ink); }
 .tk-sw.pr { width: 7px; height: 7px; background: var(--ink); margin-left: var(--space-2); }
-.tk-sw.target { width: 9px; height: 9px; background: var(--accent); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); margin-left: var(--space-2); }
 .tk-sw.last { width: 7px; height: 7px; border: var(--rule-w) solid var(--accent); margin-left: var(--space-2); }
 .tk-sw.hold { width: 14px; border-top: var(--rule-w) dotted var(--ink); margin-left: var(--space-2); }
 
@@ -199,5 +197,4 @@
 .tk-target-key { list-style: none; margin: var(--space-2) 0 var(--space-1); padding: 0; display: flex; flex-direction: column; gap: var(--space-1);
   font: var(--text-label); letter-spacing: var(--track-label); text-transform: uppercase; color: var(--accent); }
 .tk-target-key li { display: flex; align-items: center; gap: var(--space-2); }
-.tk-target-key .tk-sw.target { margin-left: 0; }
 .tk-target-key .gap { margin-left: auto; font-variant-numeric: tabular-nums; }

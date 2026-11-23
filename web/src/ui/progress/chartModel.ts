@@ -12,7 +12,8 @@ export const LANE_ROOM_PX = 22;
 /** A hold longer than this has no sessions in it, so its run is dotted. */
 export const HOLD_DAYS = 42;
 
-export interface ChartTarget { name: string; value: number }
+/** A horizontal target line: the lifter's own goal, or the next strength level. */
+export interface ChartTarget { name: string; value: number; kind?: 'goal' | 'level' }
 export interface Scale { lo: number; hi: number; ticks: number[]; inRange: ChartTarget[]; pinned: ChartTarget[] }
 
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
@@ -75,5 +76,3 @@ export function gapText(target: number, current: number): string {
   return d <= 0 ? 'reached' : `+${d}`;
 }
 
-/** SVG points for a diamond centred on (cx, cy): the target marker. */
-export const diamondPoints = (cx: number, cy: number, r = 5): string => `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`;

@@ -4,13 +4,12 @@
 // ceiling 120% of the best, floor 90% of the lowest. Targets too close to or
 // above the ceiling sit in a lane above the plot and never move the scale;
 // a thin dither band marks the ceiling edge. Target names sit in a key above
-// the chart, never on the plot: inside it a target is only its dotted line, a
-// diamond at the right and its value on the y-axis (grey ticks too close to it
-// are dropped so the two never collide).
+// the chart, never on the plot: inside it a target is a line and nothing else,
+// fine dots for the next level and dense square dots for your own target.
 import type { ISODate } from '../../domain/types';
 import { daysBetween, formatDate } from '../../app/dates';
 import { kg } from '../../app/coach';
-import { PLOT_PX, chartScale, diamondPoints, fillWeeks, gapText, stepRuns, type ChartTarget } from './chartModel';
+import { PLOT_PX, chartScale, fillWeeks, gapText, stepRuns, type ChartTarget } from './chartModel';
 
 export interface LinePoint { date: ISODate; value: number; pr?: boolean }
 
@@ -35,8 +34,6 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
   const now = current ?? data[data.length - 1].value;
   const last = data[data.length - 1];
   const step = (W - L - R - 6) / data.length, bw = ev(Math.min(20, step * 0.7));
-  const targetYs = [...s.inRange.map(t => y(t.value)), ...s.pinned.map((_, k) => PT - 7 - k * PIN_ROW - 3)];
-  const ticks = s.ticks.filter(v => targetYs.every(ty => Math.abs(y(v) - ty) >= 10));
   const allTargets = [...s.pinned, ...s.inRange].sort((a, b) => b.value - a.value);
   const aria = s.pinned.length ? `${label}. Above the chart: ${s.pinned.map(t => `${t.name} ${kg(t.value)} kg, ${gapText(t.value, now)}`).join('; ')}.` : label;
 
@@ -45,12 +42,12 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
       {allTargets.length > 0 && (
         <ul className="tk-target-key">
           {allTargets.map(t => (
-            <li key={t.name}><i className="tk-sw target" aria-hidden="true" /><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
+            <li key={t.name}><svg className="tk-key-line" viewBox="0 0 18 4" aria-hidden="true"><line className={`tk-target ${t.kind ?? 'level'}`} x1={0} x2={18} y1={2} y2={2} /></svg><span>{t.name} {kg(t.value)} kg</span><span className="gap">{gapText(t.value, now)}</span></li>
           ))}
         </ul>
       )}
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={aria}>
-        {ticks.map(v => (
+        {s.ticks.map(v => (
           <g key={v}>
             {v !== 0 && <line className="tk-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} />}
             <text className="tk-tick" x={L - 6} y={y(v) + 3.5} textAnchor="end">{fmtTick(v)}</text>
@@ -61,25 +58,13 @@ export function LiftChart({ points, label, kind = 'step', targets = [], current,
         <text className="tk-tick" x={W - R} y={H - 6} textAnchor="end">{formatDate(d1, { weekday: false, year: false })}</text>
 
         {s.pinned.map((t, k) => {
-          const by = PT - 7 - k * PIN_ROW, ax = W - R - 5;
-          return (
-            <g key={t.name}>
-              <text className="tk-target-tx" x={L - 6} y={by} textAnchor="end">{kg(t.value)}</text>
-              <polygon className="tk-target-mark" points={diamondPoints(ax, by - 3, 4)} />
-            </g>
-          );
+          const by = PT - 10 - k * PIN_ROW;
+          return <line key={t.name} className={`tk-target ${t.kind ?? 'level'}`} x1={L} x2={W - R} y1={by} y2={by} />;
         })}
 
-        {s.inRange.map(t => {
-          const ty = y(t.value);
-          return (
-            <g key={t.name}>
-              <line className="tk-target" x1={L} x2={W - R - 8} y1={ty} y2={ty} />
-              <polygon className="tk-target-mark" points={diamondPoints(W - R - 4, ty, 4)} />
-              <text className="tk-target-tx" x={L - 6} y={ty + 3.5} textAnchor="end">{kg(t.value)}</text>
-            </g>
-          );
-        })}
+        {s.inRange.map(t => (
+          <line key={t.name} className={`tk-target ${t.kind ?? 'level'}`} x1={L} x2={W - R} y1={y(t.value)} y2={y(t.value)} />
+        ))}
         {bars ? data.map((p, i) => {
           const bx = ev(L + 6 + i * step);
           return p.value > 0
