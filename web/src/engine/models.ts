@@ -324,7 +324,34 @@ function seededTarget(
   // Too light to round to a load: a promise of 0kg means nothing, so log a baseline instead.
   if (w <= 0) return newTarget(base, slot, ctx.startingWeight ?? 0);
   const why = `from your starting set ${pyG(start.weight)} × ${start.reps}: a ${repWord(n)} with ${floor.floor} in reserve ≈ ${pyG(w)} kg`;
-  const rule = 'start_seed';
+  return targetAtWeight(slot, exercise, w, floor, inc, scale, base, why, 'start_seed');
+}
+
+/**
+ * The plan at a weight the lifter set themselves (a one-off workout): the
+ * same shapes as a seeded plan, graded the same way, so beating it is still
+ * possible. For a top set the weight is the top set; back-offs follow their %.
+ */
+export function chosenTarget(slot: Slot, exercise: Exercise, weight: number, ctx: PrescribeContext): Target {
+  const p = slot.params;
+  const inc = p.increment ?? exercise.increment;
+  const floor = effortFloor({
+    role: effortRole(slot.model, exercise.slotType, true),
+    baseFloor: p.rirFloor,
+    readiness: ctx.readiness,
+    gapDays: ctx.gapDays,
+    painReasons: painFloorReasons(ctx.pain),
+    reentry: (ctx.reentry ?? 'none') !== 'none',
+  });
+  const base = { slotId: slot.id, exerciseId: exercise.id, exerciseName: exercise.name, rirFloor: floor.floor };
+  return targetAtWeight(slot, exercise, round2(weight), floor, inc, ctx.effortScale ?? 'rir', base, 'Your weight', 'chosen');
+}
+
+function targetAtWeight(
+  slot: Slot, exercise: Exercise, w: number, floor: FloorResult, inc: number, scale: EffortScale, base: Base, why: string, rule: string,
+): Target {
+  const p = slot.params;
+  const n = slot.model === 'topset' ? p.topReps ?? 1 : slot.model === 'linear5x5' ? TARGET_REPS : p.repMin;
 
   if (slot.model === 'topset') {
     const nB = p.backoffSets ?? p.sets;
@@ -421,7 +448,7 @@ export function grade(target: Target, sets: SetEntry[], scale: EffortScale = 'ri
   const work = workingSets(sets);
   const out = (verdict: Verdict, detail: string): LiftResult => ({ slotId: target.slotId, exerciseId: target.exerciseId, verdict, detail });
   if (target.isNew) return work.length ? out('new', 'logged') : out('missed', 'not done');
-  if (target.rule === 'start_seed' && target.model === 'double') return gradeSeedDouble(target, work, out);
+  if ((target.rule === 'start_seed' || target.rule === 'chosen') && target.model === 'double') return gradeSeedDouble(target, work, out);
   if (target.model === 'double' || target.model === 'linear5x5') {
     const r = scoreLift(toWR(work), toLegacy(target));
     return out(r.status, r.detail);
@@ -488,7 +515,7 @@ export function minimumToKeep(t: Target): PlannedSet[] {
   if (t.model === 'fixed' || t.model === 'linear5x5') {
     return Array.from({ length: t.targetSets ?? 1 }, () => ({ kind: 'working' as const, weight: w, reps: t.targetReps }));
   }
-  if (t.rule === 'start_seed') return t.prevTop.map((r) => ({ kind: 'working' as const, weight: w, reps: r }));
+  if (t.rule === 'start_seed' || t.rule === 'chosen') return t.prevTop.map((r) => ({ kind: 'working' as const, weight: w, reps: r }));
   const lt = toLegacy(t);
   if (lt.added_weight) return [{ kind: 'working', weight: w, reps: t.targetReps }];
   if (t.prevTop.length && t.prevTop.every((r) => r >= t.targetReps)) {

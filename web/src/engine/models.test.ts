@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ModelKind, SetEntry, Target } from '../domain/types';
 import { exercise, rng, session, set, slot } from './__fixtures__/build';
-import { grade, minimumToKeep, prescribe, toLegacy, type LiftSession, type PrescribeContext } from './models';
+import { chosenTarget, grade, minimumToKeep, prescribe, toLegacy, type LiftSession, type PrescribeContext } from './models';
 import type { PainStatus } from './pain';
 
 const bench = exercise();
@@ -292,5 +292,39 @@ describe('double progression reads the worked load, not a ramp set', () => {
     const rampSets = [...sets(40, [10]), ...sets(60, [8, 8]), ...sets(80, [5])];
     const t = prescribe(slot('double', { sets: 3, repMin: 8, repMax: 12 }), bench, [session('2026-11-18', rampSets)], ctx());
     expect(t.weight).toBe(60);
+  });
+});
+
+describe('chosenTarget: a plan at a weight the lifter set', () => {
+  const topSl = slot('topset', { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 });
+  const dblSl = slot('double', { sets: 3, repMin: 8, repMax: 10, rirFloor: 2 });
+  const fixSl = slot('fixed', { sets: 3, repMin: 8, repMax: 8, rirFloor: 2 });
+  const planned = (t: Target) => minimumToKeep(t).map((p) => set(p.weight, p.reps, { kind: p.kind, ...(p.rir !== undefined ? { rir: p.rir } : {}) }));
+
+  it('top set: the weight is the top set, back-offs at their share', () => {
+    const t = chosenTarget(topSl, bench, 100, ctx());
+    expect(t).toMatchObject({ model: 'topset', topWeight: 100, topReps: 2, weight: 75, targetReps: 8, targetSets: 3, rule: 'chosen', why: 'Your weight' });
+  });
+  it('straight sets: every set at the weight, bottom of the range', () => {
+    const t = chosenTarget(dblSl, bench, 70, ctx());
+    expect(t).toMatchObject({ model: 'double', weight: 70, targetReps: 8, prevTop: [8, 8, 8], rule: 'chosen' });
+    expect(t.criterion).toContain('3 × 8+ at 70kg');
+  });
+  it('fixed: done is the goal', () => {
+    const t = chosenTarget(fixSl, bench, 40, ctx());
+    expect(t).toMatchObject({ model: 'fixed', weight: 40, targetReps: 8, targetSets: 3, rule: 'chosen' });
+    expect(t.criterion).toContain('Do 3 × 8 at 40kg');
+  });
+  it('grades like a seeded plan: more reps beats, exactly hits, fewer misses', () => {
+    const t = chosenTarget(dblSl, bench, 70, ctx());
+    expect(grade(t, sets(70, [9, 9, 9], { rir: 2 })).verdict).toBe('beat');
+    expect(grade(t, sets(70, [8, 8, 8], { rir: 2 })).verdict).toBe('hit');
+    expect(grade(t, sets(70, [8, 8, 7], { rir: 2 })).verdict).toBe('missed');
+  });
+  it('logged exactly as planned grades hit, for every model', () => {
+    for (const [sl, w] of [[topSl, 100], [dblSl, 70], [fixSl, 40]] as const) {
+      const t = chosenTarget(sl, bench, w, ctx());
+      expect(grade(t, planned(t)).verdict, t.criterion).toBe('hit');
+    }
   });
 });
