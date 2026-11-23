@@ -18,7 +18,7 @@ import {
 } from '../db';
 import { guessExercise } from '../domain/catalog';
 import {
-  addDays, chosenTarget, classifyGap, daysBetween, formatFloor, grade, lastSessionLine, lastTimeParts, minimumToKeep, nudge,
+  addDays, chosenTarget, listTarget, classifyGap, daysBetween, formatFloor, grade, lastSessionLine, lastTimeParts, minimumToKeep, nudge,
   painEventsFromSets, painStatus, prescribe, reentryNote, reentryState, resumeCard, stopsLiftToday,
   type ExerciseSession, type Gap, type LiftSession, type Nudge, type PainStatus, type PlannedSet,
   type ReentryState, type ResumeCard,
@@ -183,7 +183,7 @@ export async function planToday(db: GymDb, today: ISODate, now: Millis, opts: Pl
  * lift with no history becomes a plain fixed plan at it.
  */
 export async function planSlots(db: GymDb, i: {
-  slots: { raw: Slot; slot: Slot; chosen?: number }[]; today: ISODate; readiness: Readiness; effortScale: EffortScale;
+  slots: { raw: Slot; slot: Slot; chosen?: number; list?: { weight: number; reps: number }[] }[]; today: ISODate; readiness: Readiness; effortScale: EffortScale;
   gapDays: number | null; reentry: ReentryState; profile: ProfileRecord | undefined; minimumIds: string[];
   /** A one-off workout: count planned sets from the target alone, as the logger will once no program slot exists. */
   slotless?: boolean;
@@ -197,7 +197,7 @@ export async function planSlots(db: GymDb, i: {
   const plates = await getPlateSettings(db);
 
   const out: SlotPlan[] = [];
-  for (const [n, { raw, slot, chosen }] of i.slots.entries()) {
+  for (const [n, { raw, slot, chosen, list }] of i.slots.entries()) {
     const exercise = await exerciseOf(db, slot.exerciseId);
     const hist = await liftHistory(db, exercise.id, today);
     const pain = painStatus({
@@ -210,7 +210,7 @@ export async function planSlots(db: GymDb, i: {
     };
     const fresh = !hist.some(h => h.sets.some(s => s.kind !== 'warmup'));
     // A weight on a lift never done before is a plain fixed plan; a top set stays a top set with its back-offs.
-    const target = chosen === undefined ? prescribe(slot, exercise, hist, ctx)
+    const target = list?.length ? listTarget(slot, exercise, list, ctx) : chosen === undefined ? prescribe(slot, exercise, hist, ctx)
       : chosenTarget(fresh && slot.model !== 'topset' ? { ...slot, model: 'fixed' } : slot, exercise, chosen, ctx);
     out.push(slotPlan(n + 1, i.slotless ? null : raw, exercise, target, hist, i.effortScale, plates, i.minimumIds.includes(raw.id), pain));
   }
@@ -253,7 +253,8 @@ function slotPlan(
   plates: PlateSettings, inMinimum: boolean, pain?: PainStatus,
 ): SlotPlan {
   const plannedSets = plannedSetsFor(target, slot);
-  const lastDay = hist[hist.length - 1];
+  // The last day with working sets: a day with only warm-ups logged (an abandoned session) is not "last time".
+  const lastDay = [...hist].reverse().find(h => h.sets.some(x => x.kind !== 'warmup'));
   const lastNote = [...hist].reverse().flatMap(h => h.sets.filter(s => s.note).map(s => s.note as string))[0];
   return {
     slotOrder, slot, exercise, target, plannedSets,
@@ -269,6 +270,7 @@ function slotPlan(
 
 /** Working sets planned for a target: the top set plus back-offs, or the slot's set count. */
 export function plannedSetsFor(t: Target, slot: Slot | null): number {
+  if (t.setList) return t.setList.length;
   if (t.model === 'topset') return 1 + (t.targetSets ?? slot?.params.backoffSets ?? 0);
   return t.targetSets ?? slot?.params.sets ?? Math.max(t.prevTop.length, 3);
 }

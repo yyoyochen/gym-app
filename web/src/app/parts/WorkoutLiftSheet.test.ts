@@ -1,35 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { editedSlot, sheetResult } from './WorkoutLiftSheet';
+import { addSetRow, sheetResult } from './WorkoutLiftSheet';
 
-const dbl = { id: 'x', exerciseId: 'barbell-row', model: 'double' as const, params: { sets: 3, repMin: 8, repMax: 12, rirFloor: 2 } };
-const top = { id: 'y', exerciseId: 'back-squat', model: 'topset' as const, params: { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 } };
+const slot = { id: 'x', exerciseId: 'barbell-row', model: 'double' as const, params: { sets: 3, repMin: 8, repMax: 12, rirFloor: 2 } };
+const planned = [{ weight: 70, reps: 8 }, { weight: 70, reps: 8 }, { weight: 70, reps: 8 }];
 
-describe('editedSlot: the lift sheet choices as a slot', () => {
-  it('straight sets: reps is the bottom of the range, top is +2 (+3 for isolation)', () => {
-    expect(editedSlot(dbl, 'double', 4, 6, false).params).toMatchObject({ sets: 4, repMin: 6, repMax: 8, rirFloor: 2 });
-    expect(editedSlot(dbl, 'double', 3, 12, true).params).toMatchObject({ sets: 3, repMin: 12, repMax: 15, rirFloor: 1 });
+describe('sheetResult: pressing Done', () => {
+  it('with the list as planned leaves the lift exactly as it was', () => {
+    const item = { part: 'Back' as const, slot };
+    expect(sheetResult(item, planned, planned.map(x => ({ ...x })))).toEqual(item);
   });
-  it('top set: Sets and Reps are the back-offs; the top reps and back-off % are kept', () => {
-    expect(editedSlot(top, 'topset', 2, 6, false)).toMatchObject({ model: 'topset', params: { sets: 1, topReps: 2, backoffSets: 2, backoffPct: 75, repMin: 6, repMax: 8 } });
+  it('an edited list becomes the plan; a chosen weight from before is dropped', () => {
+    const item = { part: 'Back' as const, slot, weight: 60 };
+    const now = [{ weight: 72.5, reps: 8 }, { weight: 70, reps: 8 }];
+    expect(sheetResult(item, planned, now)).toEqual({ part: 'Back', slot, sets: now });
   });
-  it('switching straight sets to a top set gets a top double at 75%', () => {
-    expect(editedSlot(dbl, 'topset', 3, 8, false)).toMatchObject({ model: 'topset', params: { topReps: 2, backoffPct: 75, backoffSets: 3, repMin: 8 } });
-  });
-  it('keeps the slot id and lift', () => {
-    expect(editedSlot(top, 'double', 3, 8, false)).toMatchObject({ id: 'y', exerciseId: 'back-squat', model: 'double' });
+  it('an empty list is not a plan: the lift stays as it was', () => {
+    const item = { part: 'Back' as const, slot };
+    expect(sheetResult(item, planned, [])).toEqual(item);
   });
 });
 
-describe('sheetResult: pressing Done', () => {
-  const item = { part: 'Back' as const, slot: { ...dbl, params: { sets: 3, repMin: 10, repMax: 15, rirFloor: 2 } } };
-  const start = { kind: 'double' as const, sets: 3, reps: 10, weight: 70 };
-  it('with nothing changed leaves the lift exactly as it was', () => {
-    expect(sheetResult(item, start, start, false)).toEqual(item);
+describe('addSetRow', () => {
+  it('copies the last set', () => {
+    expect(addSetRow([{ weight: 135, reps: 2 }, { weight: 100, reps: 8 }])).toEqual([{ weight: 135, reps: 2 }, { weight: 100, reps: 8 }, { weight: 100, reps: 8 }]);
   });
-  it('a changed weight is kept as the lifter’s', () => {
-    expect(sheetResult(item, start, { ...start, weight: 72.5 }, false)).toEqual({ ...item, weight: 72.5 });
-  });
-  it('changed reps rewrite the range', () => {
-    expect(sheetResult(item, start, { ...start, reps: 8 }, false).slot.params).toMatchObject({ repMin: 8, repMax: 10 });
+  it('starts at 0 × 8 when empty', () => {
+    expect(addSetRow([])).toEqual([{ weight: 0, reps: 8 }]);
   });
 });

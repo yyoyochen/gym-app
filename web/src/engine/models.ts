@@ -352,6 +352,47 @@ export function chosenTarget(slot: Slot, exercise: Exercise, weight: number, ctx
   return targetAtWeight(slot, exercise, round2(weight), floor, inc, ctx.effortScale ?? 'rir', base, 'Your weight', 'chosen');
 }
 
+/** "135 × 2, then 2 × 8 at 100kg": runs of equal sets folded together, in order. */
+export function describeSets(list: { weight: number; reps: number }[], unit = 'kg'): string {
+  const runs: { weight: number; reps: number; n: number }[] = [];
+  for (const x of list) {
+    const r = runs[runs.length - 1];
+    if (r && Math.abs(r.weight - x.weight) < EPS && r.reps === x.reps) r.n++; else runs.push({ ...x, n: 1 });
+  }
+  return runs.map(r => (r.n === 1 ? `${pyG(r.weight)} × ${r.reps}` : `${r.n} × ${r.reps} at ${pyG(r.weight)}${unit}`)).join(', then ');
+}
+
+/** A one-off workout lift planned as the lifter's own list of sets, in order (rule 'custom'). */
+export function listTarget(slot: Slot, exercise: Exercise, list: { weight: number; reps: number }[], ctx: PrescribeContext): Target {
+  const floor = effortFloor({
+    role: effortRole(slot.model, exercise.slotType, true), baseFloor: slot.params.rirFloor, readiness: ctx.readiness,
+    gapDays: ctx.gapDays, painReasons: painFloorReasons(ctx.pain), reentry: (ctx.reentry ?? 'none') !== 'none',
+  });
+  const sets = list.map(x => ({ weight: round2(x.weight), reps: x.reps }));
+  const heaviest = sets.reduce((a, x) => (x.weight > a.weight ? x : a), sets[0]);
+  return {
+    slotId: slot.id, exerciseId: exercise.id, exerciseName: exercise.name, rirFloor: floor.floor,
+    model: 'fixed', weight: heaviest.weight, targetReps: heaviest.reps, targetSets: sets.length, setList: sets,
+    addedWeight: false, prevTop: [], isNew: false,
+    criterion: `Do these sets in order: ${describeSets(sets)}. Each at its weight for at least its reps; more weight or reps beats it.`,
+    why: 'Your sets', rule: 'custom', principle: 'Your own plan: every set as written; doing more than written beats it.',
+  };
+}
+
+/** Each planned set, in order, met by a later logged set at its weight for its reps; beaten if any met set did more. */
+function gradeList(t: Target, work: SetEntry[], out: Out): LiftResult {
+  const list = t.setList ?? [];
+  let from = 0, more = false, met = 0;
+  for (const p of list) {
+    const i = work.findIndex((s, j) => j >= from && !s.failed && s.weight >= p.weight - EPS && s.reps >= p.reps);
+    if (i < 0) break;
+    met++; from = i + 1;
+    if (work[i].weight > p.weight + EPS || work[i].reps > p.reps) more = true;
+  }
+  if (met < list.length) return out('missed', `${met}/${list.length} sets as planned`);
+  return more ? out('beat', `all ${list.length} sets, some with more`) : out('hit', `all ${list.length} sets as planned`);
+}
+
 function targetAtWeight(
   slot: Slot, exercise: Exercise, w: number, floor: FloorResult, inc: number, scale: EffortScale, base: Base, why: string, rule: string,
 ): Target {
@@ -453,6 +494,7 @@ export function grade(target: Target, sets: SetEntry[], scale: EffortScale = 'ri
   const work = workingSets(sets);
   const out = (verdict: Verdict, detail: string): LiftResult => ({ slotId: target.slotId, exerciseId: target.exerciseId, verdict, detail });
   if (target.isNew) return work.length ? out('new', 'logged') : out('missed', 'not done');
+  if (target.rule === 'custom' && target.setList) return gradeList(target, work, out);
   if ((target.rule === 'start_seed' || target.rule === 'chosen') && target.model === 'double') return gradeSeedDouble(target, work, out);
   if (target.model === 'double' || target.model === 'linear5x5') {
     const r = scoreLift(toWR(work), toLegacy(target));
@@ -510,6 +552,7 @@ export interface PlannedSet {
  */
 export function minimumToKeep(t: Target): PlannedSet[] {
   const w = t.weight;
+  if (t.setList) return t.setList.map((x) => ({ kind: 'working' as const, weight: x.weight, reps: x.reps }));
   if (t.isNew) return [{ kind: t.model === 'topset' ? 'top' : 'working', weight: t.topWeight ?? w, reps: t.topReps ?? t.targetReps }];
   if (t.model === 'topset') {
     return [

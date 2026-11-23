@@ -165,3 +165,39 @@ describe('review fixes', () => {
     expect(next.weight).toBeUndefined();
   });
 });
+
+describe('your own list of sets', () => {
+  const list = [{ weight: 135, reps: 2 }, { weight: 100, reps: 8 }, { weight: 100, reps: 8 }, { weight: 100, reps: 8 }];
+  const slot = { id: 'd', exerciseId: EX.deadlift, model: 'topset' as const, params: { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 } };
+
+  it('plans exactly the list, counts its sets, and says so', async () => {
+    const db = await fresh();
+    const plan = await planWorkout(db, { date: TODAY, focus: [], slots: [{ part: 'Legs', slot, sets: list }] }, TODAY, at(TODAY));
+    expect(plan.slots[0].target).toMatchObject({ rule: 'custom', setList: list });
+    expect(plan.slots[0].plannedSets).toBe(4);
+    expect(plan.reasons[0]).toBe('Your sets');
+    expect(planSummary(plan.slots[0].target, 4)).toBe('135 × 2, then 3 × 8 at 100');
+  });
+  it('the logger after Start shows the same four sets', async () => {
+    const db = await fresh();
+    const plan = await planWorkout(db, { date: TODAY, focus: [], slots: [{ part: 'Legs', slot, sets: list }] }, TODAY, at(TODAY));
+    await commitWorkout(db, plan, 'green', at(TODAY));
+    const logger = await planToday(db, TODAY, at(TODAY, 13));
+    expect(logger.slots[0].ghost.map(g => [g.weight, g.reps])).toEqual(list.map(x => [x.weight, x.reps]));
+  });
+  it('swapping the lift drops the list', () => {
+    const curl = { id: 'db-curl', name: 'DB Curl', aliases: [], muscles: ['biceps'], areasLoaded: [], slotType: 'isolation' as const, increment: 1, bodyweightFactor: 0, benchmarkKey: null };
+    expect(swapLift({ part: 'Legs', slot, sets: list }, curl, 'maintain', new Set()).sets).toBeUndefined();
+  });
+});
+
+describe('last time', () => {
+  it('skips a day with only warm-ups logged', async () => {
+    const db = await fresh();
+    await logRow(db, '2026-11-16');
+    const s = await startSession(db, { programSessionKey: 'B', nameSnapshot: 'B', date: '2026-11-20', now: at('2026-11-20') });
+    await addSet(db, { sessionId: s.id, exerciseId: 'barbell-row', exerciseNameSnapshot: 'Barbell Row', slotOrder: 1, kind: 'warmup', weight: 20, reps: 8, loggedAt: at('2026-11-20') });
+    const d: WorkoutDraft = { date: TODAY, focus: [], slots: [{ part: 'Back', slot: { id: 'x', exerciseId: 'barbell-row', model: 'double', params: { sets: 3, repMin: 8, repMax: 12, rirFloor: 2 } } }] };
+    expect((await planWorkout(db, d, TODAY, at(TODAY))).slots[0].lastTime.length).toBeGreaterThan(0);
+  });
+});

@@ -1,70 +1,60 @@
-// Change one lift of a one-off workout: Top set + back-offs or Straight sets,
-// weight, sets, reps; Swap lift or Remove. A weight the lifter changes is kept
-// as theirs (the plan is then built at it); sets and reps go into the slot.
+// Change one lift of a one-off workout: its sets as one numbered list, in
+// order (weight × reps each), + Add a set, then Swap lift or Remove. A list
+// left as planned keeps the app's own plan (and its progression); an edited
+// list becomes the lifter's plan and is graded set by set.
 import { useState } from 'react';
-import type { Slot } from '../../domain/types';
 import type { SlotPlan } from '../coach';
-import { kg } from '../coach';
-import { RIR_FLOOR } from '../../domain/templates';
-import { backoffWeight } from '../../engine';
-import { Button, ConfirmButton, Segmented, Sheet, Stepper } from '../../ui/kit';
+import { Button, ConfirmButton, PixelIcon, Sheet } from '../../ui/kit';
 import type { DraftSlot } from '../suggest';
 
-type Kind = 'topset' | 'double';
+export interface SetRow { weight: number; reps: number }
 
-/** The slot after the sheet's choices. For a top set, Sets and Reps are the back-offs. */
-export function editedSlot(slot: Slot, kind: Kind, sets: number, reps: number, isolation: boolean): Slot {
-  const top = slot.model === 'topset' ? slot.params.topReps ?? 2 : 2;
-  const pct = slot.params.backoffPct ?? 75;
-  return kind === 'topset'
-    ? { ...slot, model: 'topset', params: { sets: 1, topReps: top, backoffSets: sets, backoffPct: pct, repMin: reps, repMax: reps + 2, rirFloor: RIR_FLOOR.top } }
-    : { ...slot, model: 'double', params: { sets, repMin: reps, repMax: reps + (isolation ? 3 : 2), rirFloor: isolation ? RIR_FLOOR.isolation : RIR_FLOOR.compound } };
+const same = (a: SetRow[], b: SetRow[]) => a.length === b.length && a.every((x, i) => Math.abs(x.weight - b[i].weight) < 1e-9 && x.reps === b[i].reps);
+
+/** Done: an unchanged (or emptied) list leaves the lift as it was; an edited one becomes its plan. */
+export function sheetResult(item: DraftSlot, planned: SetRow[], now: SetRow[]): DraftSlot {
+  if (!now.length || same(planned, now)) return item;
+  const { weight: _w, sets: _s, ...rest } = item;
+  void _w; void _s;
+  return { ...rest, sets: now };
 }
 
-interface SheetState { kind: Kind; sets: number; reps: number; weight: number }
-
-/** Done: the lift after the sheet. Untouched fields leave the lift as it was; a moved weight becomes the lifter's. */
-export function sheetResult(item: DraftSlot, start: SheetState, now: SheetState, isolation: boolean): DraftSlot {
-  const shaped = now.kind !== start.kind || now.sets !== start.sets || now.reps !== start.reps;
-  const slot = shaped ? editedSlot(item.slot, now.kind, now.sets, now.reps, isolation) : item.slot;
-  // The weight is the lifter's once they move it (or had already); 0 means "let the app pick".
-  const chosen = (item.weight !== undefined || now.weight !== start.weight) && now.weight > 0;
-  const { weight: _old, ...rest } = item;
-  void _old;
-  return chosen ? { ...rest, slot, weight: now.weight } : { ...rest, slot };
+/** + Add a set: a copy of the last set (0 × 8 on an empty list). */
+export function addSetRow(list: SetRow[]): SetRow[] {
+  const last = list[list.length - 1];
+  return [...list, last ? { ...last } : { weight: 0, reps: 8 }];
 }
+
+const num = (s: string) => { const v = parseFloat(s.replace(',', '.')); return Number.isFinite(v) && v >= 0 ? v : 0; };
 
 export function WorkoutLiftSheet({ item, plan, onDone, onSwap, onRemove, onClose }: {
   item: DraftSlot; plan: SlotPlan; onDone: (next: DraftSlot) => void; onSwap: () => void; onRemove: () => void; onClose: () => void;
 }) {
-  const t = plan.target;
-  const p = item.slot.params;
-  const start: SheetState = {
-    kind: item.slot.model === 'topset' ? 'topset' : 'double',
-    weight: item.weight ?? (t.model === 'topset' ? t.topWeight ?? t.weight : t.weight),
-    sets: item.slot.model === 'topset' ? p.backoffSets ?? 3 : p.sets,
-    reps: p.repMin,
-  };
-  const [kind, setKind] = useState<Kind>(start.kind);
-  const [weight, setWeight] = useState(start.weight);
-  const [sets, setSets] = useState(start.sets);
-  const [reps, setReps] = useState(start.reps);
-  const iso = plan.exercise.slotType === 'isolation';
-  const inc = p.increment ?? plan.exercise.increment;
-
-  const done = () => onDone(sheetResult(item, start, { kind, sets, reps, weight }, iso));
+  // The list as the plan stands now: the lifter's own sets, or the app's planned working sets in order.
+  const planned: SetRow[] = item.sets ?? plan.ghost.filter(g => g.kind !== 'warmup').map(g => ({ weight: g.weight, reps: g.reps }));
+  const [rows, setRows] = useState<SetRow[]>(planned.map(r => ({ ...r })));
+  const edit = (i: number, patch: Partial<SetRow>) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const bw = plan.exercise.bodyweightFactor > 0;
 
   return (
     <Sheet open title={plan.exercise.name} onClose={onClose}>
-      <Segmented<Kind> label="Plan" value={kind} onChange={setKind}
-        options={[{ value: 'topset', label: 'Top set + back-offs' }, { value: 'double', label: 'Straight sets' }]} />
-      <Stepper label={kind === 'topset' ? 'Top set weight' : 'Weight'} unit="kg" value={weight} step={inc} min={0} max={500} onChange={setWeight} />
-      <div className="grid2 steppers">
-        <Stepper label={kind === 'topset' ? 'Back-off sets' : 'Sets'} value={sets} min={1} max={10} onChange={setSets} />
-        <Stepper label={kind === 'topset' ? 'Back-off reps' : 'Reps'} value={reps} min={1} max={30} onChange={setReps} />
+      <div className="set-list" role="list" aria-label="Sets in order">
+        <div className="set-row set-row-hd" aria-hidden="true"><span /><span className="label">{bw ? 'Added kg' : 'kg'}</span><span /><span className="label">Reps</span><span /></div>
+        {rows.map((r, i) => (
+          <div key={i} className="set-row" role="listitem">
+            <span className="set-n">{i + 1}</span>
+            <input className="field tnum" inputMode="decimal" aria-label={`Set ${i + 1} weight`} value={r.weight || ''} placeholder="0"
+              onChange={e => edit(i, { weight: num(e.target.value) })} />
+            <span className="set-x" aria-hidden="true">×</span>
+            <input className="field tnum" inputMode="numeric" aria-label={`Set ${i + 1} reps`} value={r.reps || ''} placeholder="0"
+              onChange={e => edit(i, { reps: Math.round(num(e.target.value)) })} />
+            <button type="button" className="icon-btn" aria-label={`Remove set ${i + 1}`} data-press="dim" onClick={() => setRows(rows.filter((_, j) => j !== i))}><PixelIcon name="close" scale={1} /></button>
+          </div>
+        ))}
       </div>
-      <p className="note">// Last time: {plan.lastTime.length ? plan.lastTime.join(', ') : 'first time'}{weight > 0 && kind === 'topset' ? `. Back-offs at ${kg(backoffWeight(weight, p.backoffPct ?? 75, inc))} kg` : ''}</p>
-      <Button variant="primary" block iconEnd="check" onClick={done}>Done</Button>
+      <Button block icon="plus" onClick={() => setRows(addSetRow(rows))}>Add a set</Button>
+      <p className="note">// Last time: {plan.lastTime.length ? plan.lastTime.join(', ') : 'first time'}</p>
+      <Button variant="primary" block iconEnd="check" onClick={() => onDone(sheetResult(item, planned, rows.filter(r => r.reps > 0)))}>Done</Button>
       <div className="grid2">
         <Button block onClick={onSwap}>Swap lift</Button>
         <ConfirmButton danger className="block" confirmLabel={`Remove ${plan.exercise.name}?`} confirmText="Remove" onConfirm={onRemove}>Remove</ConfirmButton>

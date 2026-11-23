@@ -41,7 +41,7 @@ export interface MetaValues {
   /** Tip ids dismissed with Got it (app/tips.ts). Unset: not decided yet, no tip shows. */
   tipsSeen: string[];
   /** Today's one-off workout while it is being planned (app/workout.ts WorkoutDraft). Dropped on Start or the next day. */
-  workoutDraft: { date: ISODate; focus: string[]; slots: { slot: Slot; weight?: number; part: string | null }[] };
+  workoutDraft: { date: ISODate; focus: string[]; slots: { slot: Slot; weight?: number; sets?: { weight: number; reps: number }[]; part: string | null }[] };
 }
 export type MetaKey = keyof MetaValues;
 /** Meta keys that describe this device/browser, never exported or restored. */

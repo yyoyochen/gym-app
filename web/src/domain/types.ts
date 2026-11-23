@@ -209,6 +209,8 @@ export interface Target {
   rule: string;
   /** The training principle behind the rule (criteria.why in the old engine). */
   principle?: string;
+  /** A one-off workout's own list of sets, in order (rule 'custom'): each set graded at its weight and reps. */
+  setList?: { weight: number; reps: number }[];
 }
 
 export interface Commit {

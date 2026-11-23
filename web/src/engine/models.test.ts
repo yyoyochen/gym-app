@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { ModelKind, SetEntry, Target } from '../domain/types';
 import { exercise, rng, session, set, slot } from './__fixtures__/build';
-import { backoffWeight, chosenTarget, grade, minimumToKeep, prescribe, toLegacy, type LiftSession, type PrescribeContext } from './models';
+import { backoffWeight, chosenTarget, grade, listTarget, minimumToKeep, prescribe, toLegacy, type LiftSession, type PrescribeContext } from './models';
 import type { PainStatus } from './pain';
 
 const bench = exercise();
@@ -338,5 +338,35 @@ describe('backoffWeight: the one rounding for back-offs', () => {
   it('matches what a top-set target plans', () => {
     const t = chosenTarget(slot('topset', { sets: 1, topReps: 2, backoffSets: 3, backoffPct: 75, repMin: 8, repMax: 10, rirFloor: 2 }), bench, 85, ctx());
     expect(t.weight).toBe(backoffWeight(85, 75, 2.5));
+  });
+});
+
+describe('listTarget: a plan that is your own list of sets, in order', () => {
+  const sl = slot('double', { sets: 3, repMin: 8, repMax: 10, rirFloor: 2 });
+  const list = [{ weight: 135, reps: 2 }, { weight: 100, reps: 8 }, { weight: 100, reps: 8 }];
+  const t = listTarget(sl, bench, list, ctx());
+
+  it('keeps the list and reads it back in the criterion', () => {
+    expect(t).toMatchObject({ rule: 'custom', setList: list, targetSets: 3, weight: 135, targetReps: 2, isNew: false, why: 'Your sets' });
+    expect(t.criterion).toBe('Do these sets in order: 135 × 2, then 2 × 8 at 100kg. Each at its weight for at least its reps; more weight or reps beats it.');
+  });
+  it('every set at its weight and reps hits', () => {
+    expect(grade(t, [set(135, 2), set(100, 8), set(100, 8)]).verdict).toBe('hit');
+  });
+  it('all sets hit and one with more reps or weight beats', () => {
+    expect(grade(t, [set(135, 3), set(100, 8), set(100, 8)]).verdict).toBe('beat');
+    expect(grade(t, [set(140, 2), set(100, 8), set(100, 8)]).verdict).toBe('beat');
+  });
+  it('any set short misses', () => {
+    expect(grade(t, [set(135, 2), set(100, 8), set(100, 7)]).verdict).toBe('missed');
+    expect(grade(t, [set(135, 2), set(100, 8)]).verdict).toBe('missed');
+  });
+  it('a failed rep does not count', () => {
+    expect(grade(t, [set(135, 2, { failed: true }), set(100, 8), set(100, 8)]).verdict).toBe('missed');
+  });
+  it('the plan the logger shows is the list itself, and logging it hits', () => {
+    const plan = minimumToKeep(t);
+    expect(plan.map(p => [p.weight, p.reps])).toEqual([[135, 2], [100, 8], [100, 8]]);
+    expect(grade(t, plan.map(p => set(p.weight, p.reps))).verdict).toBe('hit');
   });
 });

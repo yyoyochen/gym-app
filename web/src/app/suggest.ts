@@ -19,8 +19,8 @@ export const FALLBACK_LIFT: Record<BodyPart, string> = {
 
 export interface PartWeek { part: BodyPart; done: number; target: number; lastTrained: ISODate | null }
 export interface LiftUse { sets90: number; lastDate: ISODate | null }
-/** One lift in a workout draft. `weight` is set only when the lifter chose it. */
-export interface DraftSlot { slot: Slot; weight?: number; part: BodyPart | null }
+/** One lift in a workout draft. `sets` is the lifter's own list (it wins); `weight` is an older single chosen weight. */
+export interface DraftSlot { slot: Slot; weight?: number; sets?: { weight: number; reps: number }[]; part: BodyPart | null }
 
 /** Trained in the last 2 days (yesterday or the day before). */
 const recent = (d: ISODate | null, today: ISODate) => !!d && daysBetween(d, today) <= 2;
