@@ -1,16 +1,16 @@
 // Lift page (#/lift/<id>; spec §3.2) in Ink & Dither: large-title navbar, the
 // best e1RM as the hero, an ink line chart (e1RM / top set / weekly volume),
-// verdicts, PRs, the gym-goer level, the optional powerlifter comparison and
+// PRs, the gym-goer level, the optional powerlifter comparison and
 // the lift's history as spec-sheet rows.
 import { useState } from 'react';
 import { getExercise, getProfile } from '../db';
 import { kg } from '../app/coach';
 import { displayName } from '../app/labels';
 import { formatDate, todayISO } from '../app/dates';
-import { t, te, tn, tr } from '../i18n';
+import { t, tn, tr } from '../i18n';
 import { useLive } from '../ui/useLive';
 import { BigNumber, InfoButton, LabelValueGrid, Legend, NavBar, PixelIcon, Segmented } from '../ui/kit';
-import { latestBodyweight, liftPRs, liftStats, liftVerdicts, trendOf } from '../ui/progress/data';
+import { latestBodyweight, liftPRs, liftStats, trendOf } from '../ui/progress/data';
 import { LiftChart, type LinePoint } from '../ui/progress/LiftChart';
 import { liftChartTargets } from '../ui/progress/chartTargets';
 import { SetCells, SetCellsKey } from '../ui/progress/SetCells';
@@ -29,10 +29,6 @@ import { prFlags, weeklyVolume } from '../ui/progress/stats';
 type Metric = 'e1rm' | 'top' | 'volume';
 const metrics = (): { value: Metric; label: string }[] => [{ value: 'e1rm', label: 'e1RM' }, { value: 'top', label: t('Top set') }, { value: 'volume', label: t('Weekly vol') }];
 const half = (x: number) => kg(Math.round(x * 2) / 2);
-type VerdictKey = 'beat' | 'hit' | 'missed' | 'new';
-const verdictWord = (k: VerdictKey) => (k === 'beat' ? t('Beat') : k === 'hit' ? t('Hit') : k === 'missed' ? t('Missed') : t('New'));
-/** The verdict as the tooltip writes it, lower case: "beat". */
-const verdictLower = (k: VerdictKey) => (k === 'beat' ? t('beat') : k === 'hit' ? t('hit') : k === 'missed' ? t('missed') : t('new'));
 /** A stored session name for display; "(minimum)" is the app's own suffix. */
 const sessionName = (name: string) => {
   const n = displayName(name);
@@ -50,8 +46,7 @@ export function LiftDetail({ params }: { params: string[] }) {
     if (!ex) return null;
     const [profile, bw] = await Promise.all([getProfile(db), latestBodyweight(db, today)]);
     const st = await liftStats(db, ex, today, bw);
-    const verdicts = await liftVerdicts(db, st);
-    return { today, ex, profile, bw, st, verdicts, prs: liftPRs(st) };
+    return { today, ex, profile, bw, st, prs: liftPRs(st) };
   }, [id]);
 
   if (data === undefined) return <section className="screen tk-screen tk-nav" aria-busy="true"><NavBar title="" backLabel={t('Progress')} fallback="progress" large={false} /></section>;
@@ -61,7 +56,7 @@ export function LiftDetail({ params }: { params: string[] }) {
       <p className="tk-quiet">{t('This lift doesn’t exist any more.')}</p>
     </section>
   );
-  const { today, ex, profile, bw, st, verdicts, prs } = data;
+  const { today, ex, profile, bw, st, prs } = data;
   const prE = prFlags(st.series.map(p => p.e1rm));
   const prT = prFlags(st.series.map(p => p.top_weight));
   const points: LinePoint[] = metric === 'e1rm' ? st.series.map((p, i) => ({ date: p.date, value: p.e1rm, pr: prE[i] }))
@@ -72,8 +67,6 @@ export function LiftDetail({ params }: { params: string[] }) {
   const benchIn = { profile, bodyweightKg: bw, year: Number(today.slice(0, 4)) };
   const ctx = standardsContext(benchIn);
   const standing = gym && ctx ? rateExercise(gym, ex, st.history, today, ctx) : null;
-  const vCount = { beat: 0, hit: 0, missed: 0, new: 0 };
-  for (const v of verdicts) vCount[v.verdict]++;
   const shown = st.days.slice(0, 30);
   const decimals = anyDecimals(shown.flatMap(d => d.sets));
   const chartTargets = liftChartTargets({ metric, next: standing?.kind === 'rated' ? standing.next : null, loadType: standing?.kind === 'rated' ? standing.loadType : undefined, goals: profile?.targets ?? [], subject: ex.id });
@@ -111,18 +104,6 @@ export function LiftDetail({ params }: { params: string[] }) {
           {hasHold && <><i className="tk-sw hold" />{t('no sessions')}</>}
         </Legend>}
         <LiftChart points={points} label={chartLabel} kind={metric === 'volume' ? 'bars' : 'step'} targets={chartTargets} current={st.best90 === null ? null : Math.round(st.best90 * 2) / 2} />
-      </section>
-
-      <section className="tk-sec" aria-label={t('Verdicts')}>
-        <SecHead title={t('Verdicts')} meta={verdicts.length ? t('{n} graded', { n: verdicts.length }) : undefined} />
-        {verdicts.length ? (
-          <>
-            <div className="tk-vstrip" role="img" aria-label={t('Beat {beat}, hit {hit}, missed {missed}', { beat: vCount.beat, hit: vCount.hit, missed: vCount.missed })}>
-              {verdicts.map(v => <i key={v.sessionId} className={v.verdict} title={t('{date}: {verdict} — {detail}', { date: v.date, verdict: verdictLower(v.verdict), detail: te(v.detail) })} />)}
-            </div>
-            <p className="tk-mono mid">{(['beat', 'hit', 'missed', 'new'] as const).filter(k => vCount[k]).map(k => `${verdictWord(k)} ${vCount[k]}`).join(t(', '))}</p>
-          </>
-        ) : <p className="tk-quiet">{t('No graded sessions yet.')}</p>}
       </section>
 
       <section className="tk-sec" aria-label={t('Records')}>

@@ -233,7 +233,7 @@ describe('gap scenarios → Today state (spec §3.5)', () => {
     const db = await withLastSessionDaysAgo(1);
     const st = await todayState(db, TODAY, at(TODAY, 10));
     expect(st.gap.kind).toBe('under_24h');
-    expect(st.lastLine).toMatch(/^Last session: B, yesterday/);
+    expect(st.lastLine).toBe('Last session: B, yesterday');
     const p = await planToday(db, TODAY, at(TODAY, 10));
     expect(p.reentry.reentry).toBe('none');
     expect(p.sessionKey).toBe('C');
@@ -415,5 +415,9 @@ describe('done today', () => {
     const st = await todayState(db, TODAY, at(TODAY, 18));
     expect(st.doneToday?.session.date).toBe(TODAY);
     expect(st.doneToday?.session.programSessionKey).toBe('A');
+    const work = (await getSessionSets(db, st.doneToday!.session.id)).filter(x => x.kind !== 'warmup').length;
+    expect(work).toBeGreaterThan(0);
+    expect(st.doneToday?.sets).toBe(work);
+    expect(st.lastLine).toBe('Last session: A, today');
   });
 });

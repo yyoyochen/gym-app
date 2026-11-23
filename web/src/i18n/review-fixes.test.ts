@@ -23,15 +23,14 @@ describe('tn only translates names the app made', () => {
 });
 
 describe('last session line', () => {
-  it('keeps a session name with commas whole, and the counts in place', () => {
+  it('keeps a session name with commas whole', () => {
     applyLang('zh');
-    const line = lastLineText('A: Squat, Bench, Row', '3 天前', 3, 3);
+    const line = lastLineText('A: Squat, Bench, Row', '3 天前');
     expect(line).toContain('A：深蹲、臥推、划船');
-    expect(line).toContain('3/3');
     expect(line).not.toMatch(/Squat|Row|days/);
   });
   it('reads as before in English', () => {
-    expect(lastLineText('A: Squat, Bench, Row', '3 days ago', 2, 3)).toBe('Last session: A: Squat, Bench, Row, 3 days ago, 2/3 kept');
+    expect(lastLineText('A: Squat, Bench, Row', '3 days ago')).toBe('Last session: A: Squat, Bench, Row, 3 days ago');
   });
 });
 

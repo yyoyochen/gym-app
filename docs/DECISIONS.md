@@ -117,3 +117,7 @@ Spec: [superpowers/specs/2026-11-23-plan-todays-workout-design.md](superpowers/s
 **A one-off workout is a session named "Today's workout" with key `workout`**, which no program has, so it never moves a program's rotation. The draft is kept in meta (`workoutDraft`) for the day only and dropped on Start.
 
 **2026-11-23, later: a lift's sets are one list.** The lift sheet in Today's workout no longer switches between "Top set + back-offs" and "Straight sets": it shows the planned sets in order (weight × reps each), editable, with + Add a set. A list left as planned keeps the app's plan and its progression; an edited list becomes the lifter's own (engine `listTarget`, rule `custom`): hit = every set, in order, at its weight for at least its reps; beat = all of that plus more weight or reps on any set; missed = any set short. Rows can be reordered by holding one (`DragList longPress`). "Last time" now means the last day with working sets.
+
+## 2026-11-23: Verdicts shown where they help, not counted
+
+Beat / Hit / Missed stays where it changes what the lifter does: the live "Plan met" note in the logger, and the per-lift stamp and reason on Review and on a past session. Removed: the lift page's Verdicts strip, the "N of M plans met" number on Today and on a past session (Today now shows the working sets logged), and ", 2/3 kept" in Today's last-session line. Verdicts never fed progression (the next plan reads the logged sets) or any stat, so the counts were labels with no use.

@@ -146,9 +146,7 @@ export function Today(_props: { params: string[] }) {
 
       {done && !showNext ? (
         <div className="stack">
-          {done.total > 0
-            ? <BigNumber value={done.kept} unit={t('of {n}', { n: done.total })} caption={done.total === 1 ? t('plan met') : t('plans met')} label={t('{kept} of {total} plans met', { kept: done.kept, total: done.total })} />
-            : <BigNumber value="0" unit={t('graded')} caption={t('logged, nothing to grade')} />}
+          <BigNumber value={done.sets} unit={done.sets === 1 ? t('set') : t('sets')} caption={t('logged today')} />
           <LinkButton block className="split" iconEnd="chevron" href={`#/review/${done.session.id}`}>{t('See the review')}</LinkButton>
         </div>
       ) : showPlan && sp && hero && (

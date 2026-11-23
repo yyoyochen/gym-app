@@ -463,17 +463,14 @@ export interface TodayState {
   lastLine?: string;
   last?: Session;
   /** A session finished today: Today leads with it instead of pushing the next one. */
-  doneToday?: { session: Session; kept: number; total: number };
+  /** A session finished today, with its working-set count (Today's number once you're done). */
+  doneToday?: { session: Session; sets: number };
 }
 
 /** Last activity → gap → what the top of Today shows (§3.5). */
-/** "Last session: A: Squat + Bench, 3 days ago, 2/3 kept", built from its parts so a
- *  name with commas stays whole in Chinese (same English as the engine's lastSessionLine). */
-export function lastLineText(name: string, ago: string, kept?: number, total?: number): string {
-  const shown = tn(displayName(name));
-  return total
-    ? t('Last session: {name}, {ago}, {kept}/{total} kept', { name: shown, ago, kept: kept ?? 0, total })
-    : t('Last session: {name}, {ago}', { name: shown, ago });
+/** "Last session: A: Squat + Bench, 3 days ago" (the name translated when the app made it). */
+export function lastLineText(name: string, ago: string): string {
+  return t('Last session: {name}, {ago}', { name: tn(displayName(name)), ago });
 }
 
 export async function todayState(db: GymDb, today: ISODate, now: Millis): Promise<TodayState> {
@@ -484,11 +481,10 @@ export async function todayState(db: GymDb, today: ISODate, now: Millis): Promis
   const lastSetAt = sets.reduce<number | undefined>((m, s) => (m === undefined || s.loggedAt > m ? s.loggedAt : m), undefined);
   const gap = classifyGap({ date: last.date, startedAt: last.startedAt, endedAt: last.endedAt, sealed: last.sealed, ...(lastSetAt !== undefined ? { lastSetAt } : {}) }, now, today);
   if (gap.kind === 'in_progress') return { gap, open: { session: last, card: resumeCard(sets, now) }, last };
-  const g = await gradeSession(db, last.id);
   const d = daysBetween(last.date, today);
   const ago = d === 0 ? t('today') : d === 1 ? t('yesterday') : t('{n} days ago', { n: d });
-  const lastLine = lastLineText(last.nameSnapshot, ago, g?.kept, g?.total);
-  const doneToday = last.sealed && last.date === today ? { session: last, kept: g?.kept ?? 0, total: g?.total ?? 0 } : undefined;
+  const lastLine = lastLineText(last.nameSnapshot, ago);
+  const doneToday = last.sealed && last.date === today ? { session: last, sets: sets.filter(x => x.kind !== 'warmup').length } : undefined;
   return { gap, lastLine, last, ...(doneToday ? { doneToday } : {}) };
 }
 

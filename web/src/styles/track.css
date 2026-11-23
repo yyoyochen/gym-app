@@ -86,11 +86,6 @@
 .tk-sw.hold { width: 14px; border-top: var(--rule-w) dotted var(--ink); margin-left: var(--space-2); }
 
 /* ---------- verdict strip: fill / outline / dash, no colour ---------- */
-.tk-vstrip { display: flex; flex-wrap: wrap; gap: var(--space-1); }
-.tk-vstrip i { width: 10px; height: 20px; display: block; border: var(--rule-w) solid var(--ink); }
-.tk-vstrip i.beat { background: var(--ink); }
-.tk-vstrip i.missed { border-style: dashed; border-color: var(--mid); }
-.tk-vstrip i.new { border: var(--hair); border-color: var(--mid); }
 
 /* ---------- spec sheet (sets, rep PRs) ---------- */
 .tk-sheet { font: var(--text-mono); }

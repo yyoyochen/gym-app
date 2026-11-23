@@ -10,7 +10,7 @@ import {
 } from '../db';
 import { useLive } from '../ui/useLive';
 import { DatePickerSheet, Errors, useTrainedDays } from '../ui/common';
-import { BigNumber, Button, ConfirmButton, Legend, NavBar, Parts, PixelIcon, Segmented, Select, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
+import { Button, ConfirmButton, Legend, NavBar, Parts, PixelIcon, Segmented, Select, Sheet, Stepper, Toggle, Verdict, back, showHud } from '../ui/kit';
 import { DemoBanner } from '../app/DemoBanner';
 import { gradeCommit } from '../app/coach';
 import { formatDate, todayISO, weekday, weekdayLong } from '../app/dates';
@@ -73,8 +73,6 @@ export function SessionDetail({ params }: { params: string[] }) {
       {commit && grade && (
         <section className="tk-sec" aria-label={t('Plan')}>
           <SecHead title={t('Plan')} meta={t('locked in {date}', { date: formatDate(todayISO(commit.committedAt), { weekday: false }) })} />
-          {grade.total > 0 && <BigNumber size="lg" value={grade.kept} unit={t('of {n}', { n: grade.total })} caption={grade.total === 1 ? t('plan met') : t('plans met')}
-            label={t('{kept} of {total} plans met', { kept: grade.kept, total: grade.total })} />}
           <div className="tk-ledger">
             {grade.slots.map(g => (
               <div key={g.target.slotId} className="tk-led">

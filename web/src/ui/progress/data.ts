@@ -1,11 +1,11 @@
 // Db → Track data for Today's strip, Progress, Review and LiftDetail.
-import type { Exercise, GoalTarget, ISODate, Profile, SetEntry, Verdict } from '../../domain/types';
+import type { Exercise, GoalTarget, ISODate, Profile, SetEntry } from '../../domain/types';
 import type { GymDb } from '../../db';
-import { getActiveProgram, getCommit, getExerciseHistory, listBodyweight, listEvents, listExercises, listSessions, listSetsByDate } from '../../db';
+import { getActiveProgram, getExerciseHistory, listBodyweight, listEvents, listExercises, listSessions, listSetsByDate } from '../../db';
 import { nextRotationKey } from '../../app/coach';
 import { weekBodyPartSets, type BodyPartRow } from '../../app/weekSets';
 import {
-  addDays, bestRecentE1rm, grade, heaviestSingle, liftSeries, pace, prs, recentRate, repMaxes, type DatedSets, type Pace,
+  addDays, bestRecentE1rm, heaviestSingle, liftSeries, pace, prs, recentRate, repMaxes, type DatedSets, type Pace,
 } from '../../engine';
 import { consistency, type Consistency } from './consistency';
 import { kg } from '../../app/coach';
@@ -61,19 +61,6 @@ export async function liftStats(db: GymDb, exercise: Exercise, today: ISODate, b
 
 export function liftPRs(st: LiftStats) {
   return { marks: prs(st.series), heaviest: heaviestSingle(st.exercise, st.history), repMaxes: repMaxes(st.exercise, st.history) };
-}
-
-/** Verdicts this lift earned, oldest first (sessions with a committed target for it). */
-export async function liftVerdicts(db: GymDb, st: LiftStats): Promise<{ date: ISODate; sessionId: string; verdict: Verdict; detail: string }[]> {
-  const out: { date: ISODate; sessionId: string; verdict: Verdict; detail: string }[] = [];
-  for (const d of [...st.days].reverse()) {
-    const c = await getCommit(db, d.sessionId);
-    const i = c?.targets.findIndex(x => x.exerciseId === st.exercise.id) ?? -1;
-    if (!c || i < 0) continue;
-    const r = grade(c.targets[i], d.sets.filter(s => s.slotOrder === i + 1), 'rir');
-    out.push({ date: d.date, sessionId: d.sessionId, verdict: r.verdict, detail: r.detail });
-  }
-  return out;
 }
 
 export type Trend = 'up' | 'down' | 'flat' | 'unknown';
