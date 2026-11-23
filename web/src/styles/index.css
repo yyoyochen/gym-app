@@ -1,8 +1,8 @@
 /* Stylesheet entry. Order matters: tokens → primitives → kit → screens.
    Screen sheets load last, so a single class there overrides a primitive. */
 @import '@fontsource-variable/schibsted-grotesk';
-@import '@fontsource/jetbrains-mono/400.css';
-@import '@fontsource/jetbrains-mono/700.css';
+@import '@fontsource/sometype-mono/400.css';
+@import '@fontsource/sometype-mono/700.css';
 @import './tokens.css';
 @import './type.css';
 @import './base.css';

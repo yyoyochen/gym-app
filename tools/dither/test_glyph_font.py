@@ -5,7 +5,7 @@ from fontTools.ttLib import TTFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 FONT = os.path.join(ROOT, 'web/src/styles/fonts/gymbro-glyph.woff2')
-MONO_400 = os.path.join(ROOT, 'node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-400-normal.woff2')
+MONO_400 = os.path.join(ROOT, 'node_modules/@fontsource/sometype-mono/files/sometype-mono-latin-400-normal.woff2')
 GLYPHS = {0x2591: 0.25, 0x2592: 0.50, 0x2593: 0.75, 0x2588: 1.00}
 
 def rects(font, name):
