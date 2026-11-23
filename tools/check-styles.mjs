@@ -15,9 +15,9 @@ const SPACE_VARS = /var\(--(space-[a-z0-9]+|gutter|section|touch-min|touch-commi
 const LENGTH = /-?\d*\.?\d+(px|rem|em|vh|vw|ch)\b/;
 const COLOUR = /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?)\(/i;
 // Names only tokens.css may define: a custom property with one of these can't be made up elsewhere.
-const RESERVED = /^--(text-|track-|font-|space-|touch-|tabbar-)|^--(hair|rule-w|focus-w|gutter|section|paper|ink|accent|mid|rule|grain|dim|on-ink|behind)$/;
+const RESERVED = /^--(text-|track-|font-|space-|touch-|tabbar-)|^--(hair|rule-w|focus-w|gutter|section|paper|ink|accent|select|mid|rule|grain|dim|on-ink|behind)$/;
 const LINE_VARS = /var\(--(hair|rule-w|focus-w)\)/g;
-const COLOUR_VARS = /var\(--(ink|accent|mid|rule|paper|on-ink|dim|behind)\)/g;
+const COLOUR_VARS = /var\(--(ink|accent|select|mid|rule|paper|on-ink|dim|behind)\)/g;
 
 /** `ds-allow: reason` on a line → the reason, '' when present but empty, null when absent. */
 function allowReason(line) {

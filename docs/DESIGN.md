@@ -29,7 +29,8 @@ LUME colour, radius or shadow should appear in new work. Tokens:
 |---|---|---|---|
 | `--paper` | `#1c1724` (plum grey) | `#fcd0af` (FT salmon) | background |
 | `--ink` | `#fef8ec` (cream) | `#1e2152` (navy) | text, rules, solid blocks |
-| `--accent` | `#fcd0af` | `#1c1724` (plum-black, dark mode's paper) | bars, heatmap, stat values, active tab, `//NOTE`, PR number |
+| `--accent` | `#fcd0af` | `#1c1724` (plum-black, dark mode's paper) | data marks: bars, heatmap, charts, stat values, `//NOTE`, PR number |
+| `--select` | = accent | = ink (navy) | the app's own chrome: active tab, focus ring, links, selected chips, tips, update banner |
 | `--mid` | ink at 58% | ink at 62% | quiet labels, secondary values |
 | `--rule` | ink at 22% | ink at 28% | dotted rules (`--hair`), empty tracks |
 | `--grain` | 0 | 0.55 | paper-grain overlay (light only) |

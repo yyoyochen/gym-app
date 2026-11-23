@@ -36,7 +36,8 @@
   /* ---------- colour (dark, default) ---------- */
   --paper:  #1c1724;                 /* plum grey */
   --ink:    #fef8ec;                 /* warm cream */
-  --accent: #fcd0af;                 /* FT salmon: bars, heatmap, stat values, active tab, //NOTE, PR number */
+  --accent: #fcd0af;                 /* FT salmon: data marks: bars, heatmap, charts, stat values, //NOTE, PR number */
+  --select: var(--accent);           /* the app's own chrome: active tab, focus ring, links, selected chips, tips */
   --mid:    rgb(254 248 236 / 0.58); /* quiet labels, secondary values */
   --rule:   rgb(254 248 236 / 0.22); /* dotted rules, empty tracks */
   --grain:  0;                       /* paper-grain opacity (light only) */
@@ -130,7 +131,8 @@
 :root[data-theme='light'] {
   --paper:  #fcd0af;
   --ink:    #1e2152;
-  --accent: #1c1724;                 /* dark mode's paper: salmon on plum in both themes */
+  --accent: #1c1724;                 /* dark mode's paper: salmon on plum in both themes; data marks only */
+  --select: var(--ink);              /* chrome (active tab, focus, links, tips) stays navy */
   --mid:    rgb(30 33 82 / 0.62);
   --rule:   rgb(30 33 82 / 0.28);
   --grain:  0.55;

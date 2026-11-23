@@ -87,15 +87,15 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 /* The active box's dither shadow sits 2px right and below; the padding keeps it on screen for the last tab too. */
 .tabbar a { display: flex; flex-direction: column; align-items: stretch; justify-content: stretch; min-width: 0; padding: 0 var(--space-half) var(--space-half) 0; color: var(--mid);
   font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
-.tabbar a.on { color: var(--accent); }
+.tabbar a.on { color: var(--select); }
 /* Active tab: a box that fills the tab's whole quarter of the bar, accent outline;
    the icon half is filled (icon in paper colour), the caption half is not. Shadow: dither.css. */
 .tab-box { position: relative; display: flex; flex: 1; flex-direction: column; align-items: stretch; width: 100%;
   border: var(--rule-w) solid transparent; }
 .tab-ico { display: grid; place-items: center; flex: 1; }
 .tab-lbl { padding: var(--space-1) 0 var(--space-1); text-align: center; }
-.tabbar a.on .tab-box { border-color: var(--accent); background: var(--paper); }
-.tabbar a.on .tab-ico { background: var(--accent); color: var(--paper); }
+.tabbar a.on .tab-box { border-color: var(--select); background: var(--paper); }
+.tabbar a.on .tab-ico { background: var(--select); color: var(--paper); }
 
 /* ---------- buttons inside controls ---------- */
 .btn.stepper-btn { min-width: var(--touch-min); width: var(--touch-min); padding: 0; }
@@ -141,7 +141,7 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .cal-day.sel .cal-marker { fill: var(--paper); }
 .cal-legend { margin: var(--space-3) 0; }
 .cal-legend-in { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--mid); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; }
-.cal-day:focus-visible { outline: var(--focus-w) solid var(--accent); outline-offset: calc(-1 * var(--focus-w)); }
+.cal-day:focus-visible { outline: var(--focus-w) solid var(--select); outline-offset: calc(-1 * var(--focus-w)); }
 .seg { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); min-height: var(--touch-min);
   border: var(--rule-w) solid var(--ink); touch-action: none; user-select: none; -webkit-user-select: none; }
 .seg-thumb { position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% / var(--n, 2)); background: var(--ink); opacity: 0;
@@ -259,19 +259,19 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .kit-type { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-2) 0; border-bottom: var(--hair); overflow: hidden; white-space: nowrap; }
 
 /* ---------- tip (in-place, shown once; app/tips.ts) ---------- */
-.tip { position: relative; margin: var(--space-2) 0 var(--space-3); padding: var(--space-3) var(--space-3) 0; border: var(--rule-w) solid var(--accent); background: var(--paper); }
+.tip { position: relative; margin: var(--space-2) 0 var(--space-3); padding: var(--space-3) var(--space-3) 0; border: var(--rule-w) solid var(--select); background: var(--paper); }
 .tip::before { content: ''; position: absolute; top: -7px; left: var(--space-6); width: 12px; height: 12px; background: var(--paper);
-  border-left: var(--rule-w) solid var(--accent); border-top: var(--rule-w) solid var(--accent); transform: rotate(45deg); }
-.tip-k { display: block; margin-bottom: var(--space-1); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--accent); font-weight: var(--font-strong); }
+  border-left: var(--rule-w) solid var(--select); border-top: var(--rule-w) solid var(--select); transform: rotate(45deg); }
+.tip-k { display: block; margin-bottom: var(--space-1); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--select); font-weight: var(--font-strong); }
 .tip-text { margin: 0; font: var(--text-body); color: var(--ink); }
 .tip-foot { display: flex; align-items: center; justify-content: space-between; }
 .tip-n { font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; color: var(--mid); }
-.tip-ok { min-height: 48px; padding: 0 0 0 var(--space-4); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; font-weight: var(--font-strong); color: var(--accent); text-decoration: underline; }
+.tip-ok { min-height: 48px; padding: 0 0 0 var(--space-4); font: var(--text-micro); letter-spacing: var(--track-micro); text-transform: uppercase; font-weight: var(--font-strong); color: var(--select); text-decoration: underline; }
 .tip-link { display: inline-flex; align-items: center; min-height: 48px; }
 
 /* ---------- update banner (app/parts/UpdateBanner): a new version is ready ---------- */
 .update-banner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; min-height: var(--touch-min);
-  padding: var(--space-3) var(--space-4); background: var(--accent); color: var(--paper); text-align: left; }
+  padding: var(--space-3) var(--space-4); background: var(--select); color: var(--paper); text-align: left; }
 .update-banner-txt { display: flex; flex-direction: column; gap: var(--space-half); }
 .update-banner-txt b { font: var(--text-value); letter-spacing: var(--track-value); }
 .update-banner-txt span { font: var(--text-quiet); letter-spacing: var(--track-quiet); }
@@ -282,7 +282,7 @@ button.gheat-c { font: inherit; padding: 0; min-height: 0; }
 .drag-item.lifted { z-index: 2; transition: none; outline: var(--rule-w) solid var(--ink); }
 .drag-grip { display: grid; place-items: center; width: var(--touch-min); height: var(--touch-min); color: var(--mid); touch-action: none; cursor: grab; }
 .drag-list.dragging .drag-grip { cursor: grabbing; }
-.drag-grip:focus-visible { outline: var(--focus-w) solid var(--accent); outline-offset: calc(-1 * var(--focus-w)); }
+.drag-grip:focus-visible { outline: var(--focus-w) solid var(--select); outline-offset: calc(-1 * var(--focus-w)); }
 .row-actions { display: inline-flex; align-items: center; justify-self: end; }
 .drag-item.hold { -webkit-touch-callout: none; user-select: none; -webkit-user-select: none; }
 .drag-item.hold.lifted { scale: 1.02; }
