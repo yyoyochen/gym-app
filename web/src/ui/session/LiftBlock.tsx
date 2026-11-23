@@ -44,7 +44,7 @@ export function LiftBlock({ slot, scale, h, focused, index, count }: {
         {rows.map(r => <Row key={r.key} r={!focused && r.state === 'next' ? { ...r, state: 'todo' } : r} scale={scale} bw={slot.exercise.bodyweightFactor} onTap={() => (r.set ? h.edit(slot, r.set) : h.adjust(slot, r))} />)}
         {slot.stopped && <p className="lg-spec-stop">Stopped for today.</p>}
       </div>
-      {!focused && slot.nudge && <p className={`note nudge ${slot.nudge.kind}`}>{slot.nudge.kind === 'stop' ? 'Stop' : 'Note'}: {slot.nudge.text}</p>}
+      {!focused && slot.nudge && <p className={`note nudge ${slot.nudge.kind}`}>// {slot.nudge.kind === 'stop' ? 'Stop' : 'Note'}: {slot.nudge.text}</p>}
       <div className="lg-spec-foot">
         <button type="button" className="btn quiet" onClick={() => h.addSet(slot)}><PixelIcon name="plus" />Add set</button>
         {plan && !slot.work.length && <button type="button" className="btn quiet" onClick={() => h.swap(slot)}>Swap lift</button>}

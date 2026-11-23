@@ -52,7 +52,7 @@ export function Onboarding({ params }: { params: string[] }) {
 
   return (
     <section className="screen onb">
-      <Lockup left={<span className="tnum">{step + 1}/{COUNT}</span>} mid={`Setup / ${SETUP_STEPS[step]}`} />
+      <Lockup left={<span className="tnum">{step + 1}/{COUNT}</span>} mid={`Setup // ${SETUP_STEPS[step]}`} />
       <DitherBar cells={40} value={(step + 1) / COUNT} label="Setup" valueText={`Step ${step + 1} of ${COUNT}`} />
       {step === 0 && <StepAbout onNext={next} />}
       {step === 1 && <StepProgram onNext={next} onBack={prev} />}

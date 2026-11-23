@@ -74,7 +74,7 @@ export function ProgramEditor(_props: { params: string[] }) {
     <section className="screen setup">
       <DemoBanner />
       <NavBar title="Program" backLabel="Profile" fallback="profile" />
-      <p className="note">Note: edits apply to sessions you start from now on. Sessions already started keep their plan.</p>
+      <p className="note">// Note: edits apply to sessions you start from now on. Sessions already started keep their plan.</p>
 
       {!prog && (
         <>

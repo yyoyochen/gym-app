@@ -79,7 +79,7 @@ export function Profile({ params }: { params: string[] }) {
       <NavBar title="Profile" titleAction={
         <a className="icon-btn" href="#/profile/settings" aria-label="Settings: appearance, effort scale, backup" data-press="dim"><PixelIcon name="settings" /></a>
       }>
-        <Lockup mid={`Profile / ${GOAL_SHORT[p.primaryGoal]}`} />
+        <Lockup mid={`Profile // ${GOAL_SHORT[p.primaryGoal]}`} />
       </NavBar>
 
       <section className="you-hero" aria-label="Bodyweight">
@@ -171,7 +171,7 @@ export function Profile({ params }: { params: string[] }) {
             </div>}
       </Group>
 
-      <p className="note">Note: each save keeps the earlier version with its date.</p>
+      <p className="note">// Note: each save keeps the earlier version with its date.</p>
 
       <BodyweightSheet open={open === 'bodyweight'} onClose={close} entries={bodyweight} />
       <EditSheet open={open === 'where'} title="Where I am" base={p} onClose={close}>{(d, set) => <WhereForm p={d} set={set} />}</EditSheet>

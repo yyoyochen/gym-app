@@ -59,7 +59,7 @@ export function TemplateList({ exercises, selected, onSelect, renderAction }: {
               {onSelect && <span className="tpl-mark" aria-hidden="true">{on ? <PixelIcon name="check" /> : null}</span>}
             </span>
             <span className="tpl-shape">{t.shape}</span>
-            <span className="tpl-fits">Fits: {t.fitsGoal}</span>
+            <span className="tpl-fits">Fits // {t.fitsGoal}</span>
           </>
         );
         return (

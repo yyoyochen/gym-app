@@ -82,7 +82,7 @@ export function Progress(_props: { params: string[] }) {
   return (
     <section className="screen tk-screen">
       <DemoBanner />
-      <Lockup mid={first ? `Progress / Since ${short(first, today)}` : 'Progress'} />
+      <Lockup mid={first ? `Progress // Since ${short(first, today)}` : 'Progress'} />
 
       {stats.sessions === 0 && <p className="tk-quiet">Nothing logged yet. Sessions you log or import show up here.</p>}
 

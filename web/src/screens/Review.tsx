@@ -89,7 +89,7 @@ export function Review({ params }: { params: string[] }) {
 
   return (
     <section className="screen review">
-      <Lockup mid={`Review / ${names.short}`} />
+      <Lockup mid={`Review // ${names.short}`} />
       <div className="place">
         <div>
           <h1 className="title">{names.title}</h1>
@@ -136,7 +136,7 @@ export function Review({ params }: { params: string[] }) {
 
       {top && (
         <section className="pr-inline" aria-label="New bests">
-          <span className="label">[PR] //{top.lift}</span>
+          <span className="label">[PR] // {top.lift}</span>
           {reveal && !prefersReducedMotion()
             ? <DitherNumber text={top.moment.value} height={110} className="accent" />
             : <BigNumber value={top.moment.value} size="display" accent />}
@@ -148,7 +148,7 @@ export function Review({ params }: { params: string[] }) {
       {safety.length > 0 && (
         <section className="stack" aria-label="Safety">
           <span className="label">Safety</span>
-          {safety.map((x, i) => <p key={i} className="note">Stop: {x}</p>)}
+          {safety.map((x, i) => <p key={i} className="note">// Stop: {x}</p>)}
         </section>
       )}
 
@@ -167,7 +167,7 @@ export function Review({ params }: { params: string[] }) {
 
       {next && next.status === 'planned' && nextNames && (
         <section className="stack" aria-label="Next session">
-          <p className="note">Next: {nextNames.title}. Preview only, the plan locks when you start it.</p>
+          <p className="note">// Next: {nextNames.title}. Preview only, the plan locks when you start it.</p>
           <div className="next-list">
             {next.slots.map(sp => (
               <div key={sp.target.slotId} className="next-item">
