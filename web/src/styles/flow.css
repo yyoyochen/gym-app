@@ -68,9 +68,9 @@
 .next-hero { margin-top: var(--space-3); display: flex; align-items: baseline; white-space: nowrap; }
 .next-w { font: var(--text-display); letter-spacing: var(--track-display); }
 .next-r { font: var(--text-title-lg); letter-spacing: var(--track-title-lg); margin-left: var(--space-2); }
-.next-meta { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-4); margin-top: var(--space-3); font: var(--text-body); color: var(--mid); }
+.next-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-4); margin-top: var(--space-3); font: var(--text-body); color: var(--mid); }
 .next-meta b { color: var(--ink); font-weight: var(--font-strong); }
-.next-plates { display: flex; align-items: center; min-height: var(--touch-min); color: var(--mid); text-align: left; border-bottom: var(--hair); }
+.next-plates { display: flex; align-items: center; gap: var(--space-1); min-height: var(--touch-min); color: var(--mid); text-align: left; border-bottom: var(--hair); }
 .next-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-6); }
 .btn.log-btn { min-height: 64px; }
 .btn.adjust-btn { min-height: 48px; }

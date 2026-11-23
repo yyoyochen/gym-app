@@ -98,7 +98,9 @@ export function SquareHeatmap({ counts, weeks = 52, end, thresholds, weekTarget,
           return (
             <g key={c.date} transform={`translate(${x} ${y})`}>
               {c.level < 0
-                ? <rect className="sqheat-empty" x={CELL_W / 2 - 1} y={CELL_H / 2 - 1} width={2} height={2} />
+                ? shape === 'square'
+                  ? <rect className="sqheat-empty-box" x={0.5} y={0.5} width={CELL_W - 1} height={CELL_H - 1} />
+                  : <rect className="sqheat-empty" x={CELL_W / 2 - 1} y={CELL_H / 2 - 1} width={2} height={2} />
                 : cellPixels(c.level, shape).map(([px, py]) => <rect key={`${px},${py}`} className="sqheat-on" x={px} y={py} width={SUB} height={SUB} />)}
               {c.isEnd && <rect className="sqheat-today" x={-0.75} y={-0.75} width={CELL_W + 1.5} height={CELL_H + 1.5} />}
               {onSelect && c.level >= 0 && (

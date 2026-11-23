@@ -72,6 +72,8 @@ body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-in
 .btn.danger { border-style: dashed; }
 .btn.block { width: 100%; }
 .btn:disabled { opacity: 0.4; cursor: default; }
+/* A disabled main button reads as not available yet: an empty dashed outline, not a faded solid block (which turns muddy on the light paper). */
+.btn.primary:disabled { opacity: 1; background: transparent; color: var(--mid); border-color: var(--mid); border-style: dashed; }
 .btn .px { flex: none; }
 
 /* ---------- chips and verdicts: no colour, only fill / outline / dashes ---------- */
