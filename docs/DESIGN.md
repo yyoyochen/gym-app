@@ -29,7 +29,7 @@ LUME colour, radius or shadow should appear in new work. Tokens:
 |---|---|---|---|
 | `--paper` | `#1c1724` (plum grey) | `#fcd0af` (FT salmon) | background |
 | `--ink` | `#fef8ec` (cream) | `#1e2152` (navy) | text, rules, solid blocks |
-| `--accent` | `#fcd0af` | = ink | bars, heatmap, stat values, active tab, `//NOTE`, PR number |
+| `--accent` | `#fcd0af` | `#1c1724` (plum-black, dark mode's paper) | bars, heatmap, stat values, active tab, `//NOTE`, PR number |
 | `--mid` | ink at 58% | ink at 62% | quiet labels, secondary values |
 | `--rule` | ink at 22% | ink at 28% | dotted rules (`--hair`), empty tracks |
 | `--grain` | 0 | 0.55 | paper-grain overlay (light only) |
@@ -295,7 +295,7 @@ the kit, so older screens get the new behaviour without import changes.
 ## 6. Accessibility
 
 - Contrast: ink on paper is about 17:1 (dark) and 10.6:1 (light); accent salmon on
-  dark is about 13.5:1. `--mid` is for labels, never the only carrier of a value.
+  dark is about 13.5:1, and plum-black on light about 12.3:1. `--mid` is for labels, never the only carrier of a value.
 - Touch targets are at least 48px; the primary block is 58px.
 - `prefers-reduced-motion`: springs jump to their end, the PR number shows
   solid at once, CSS durations drop to ~0.
